@@ -1,81 +1,114 @@
 
+from collections import namedtuple
+
 class Entry:
 
     def __init__(self, values):
-        values = [self._convert(f, v) for f, v in zip(self._fields, values)]
-        self._values = values
+        if len(values) != len(self._fields):
+            raise RuntimeError("the number of values does not match with number of fields")
+        self._values = [self._convert(f, v) for f, v in zip(self._fields, values)]
 
     def _convert(self, field, value):
-        if field == self._idx['ref'][0]:
+        if field == self._fields_idx['ref'].col_name:
             value = int(value)
-        elif field == self._idx['strand'][0]:
+        elif field == self._fields_idx['strand'].col_name:
             if value not in ('+', '-'):
                 raise RuntimeError("strand must be '+ or '-' got {}".format(value))
-        elif field == self._idx['start'][0]:
+        elif 'start' in self._fields_idx and field == self._fields_idx['start'].col_name:
             value = int(value)
-        elif field == self._idx['stop'][0]:
+        elif 'stop' in self._fields_idx and field == self._fields_idx['stop'].col_name:
             value = int(value)
         return value
 
+    @property
+    def ref(self):
+        return self._values[self._fields_idx['ref'].idx]
+
+    @property
+    def strand(self):
+        return self._values[self._fields_idx['strand'].idx]
+
+    @property
+    def start(self):
+        if 'start' in self._fields_idx:
+            return self._values[self._fields_idx['start'].idx]
+        else:
+            return None
+    @property
+    def stop(self):
+        if 'stop' in self._fields_idx:
+            return self._values[self._fields_idx['stop'].idx]
+        else:
+            return None
+
     def __str__(self):
-        attrs = [(attr, val) for attr, val in self.__dict__.items()]
-        attrs.sort(key=lambda x: x[0])
-        l = []
-        for attr, value in attrs:
-            l.append('{}={}'.format(attr, value))
-        return '{}({})'.format(self.__class__.__name__, ', '.join(l))
+        return '\t'.join([str(v) for v in self._values])
 
+Idx = namedtuple('Idx', ('col_name', 'idx'))
 
-def generate_entry(header, ref_col, strand_col='strand', start_col=None, stop_col=None):
-    entry_class = type(Entry)
-    entry_class._fields = header.split()
-    entry_class._idx = {}
-    entry_class._idx['ref'] = (ref_col, entry_class._fields.index(ref_col))
-    entry_class._idx['strand'] = (strand_col, entry_class._fields.index(strand_col))
+def new_entry_type(name, header, ref_col, strand_col='strand', start_col=None, stop_col=None):
+    fields = header.split()
+    fields_idx = {}
+    try:
+        fields_idx['ref'] = Idx(ref_col, fields.index(ref_col))
+    except ValueError:
+        raise RuntimeError("The ref_col {} does not match any fields: {}".format(ref_col, header))
+    try:
+        fields_idx['strand'] = Idx(strand_col, fields.index(strand_col))
+    except ValueError:
+        raise RuntimeError("The strand_col {} does not match any fields: {}".format(strand_col, header))
     if start_col:
-        entry_class._idx['start'] = (start_col, entry_class._fields.index(start_col))
-        entry_class._idx['stop'] = (stop_col, entry_class._fields.index(stop_col))
-
-    return entry_class
-
-
-
-def annot_iter(path):
-    """
-    parse an annotation file and yield a :class:`Entry` for each line of the file.
-
-    :param path: the path of the annotation file to parse.
-    :type path: string
-    :return: a generator on a annotation file.
-    """
-    with open(path, 'r') as annot_file:
-        header = annot_file.readline().strip()
-        fields = header.split()
-        line = annot_file.readline()
-        while line:
-            values = line.split()
-            new_entry = Entry(**{k: v for k, v in zip(fields, values)})
-            yield new_entry
-            line = annot_file.readline()
+        try:
+            fields_idx['start'] = Idx(start_col, fields.index(start_col))
+        except ValueError:
+            raise RuntimeError("The start_col {} does not match any fields: {}".format(start_col, header))
+        try:
+            fields_idx['stop'] = Idx(stop_col, fields.index(stop_col))
+        except ValueError:
+            raise RuntimeError("The stop_col {} does not match any fields: {}".format(stop_col, header))
+    return type(name, (Entry,), {'_fields_idx': fields_idx, '_fields': fields})
 
 
+class AnnotationParser:
 
-def max(annot_file_path, ref, start, stop):
-    with open(annot_file_path, 'r') as annot_file:
-        headers = annot_file.readline().split()
-        start_idx = headers.index(start)
-        stop_idx = headers.index(stop)
-        ref_idx = headers.index(ref)
-        max_left = max_right = 0
-        with annot_file as line:
-            values = line.split()
-            ref = int(values[ref_idx])
-            start = int(values[start_idx])
-            stop = int(values[stop_idx])
-            left = ref - start
-            right = stop - ref
-            if left > max_left:
-                max_left = left
-            if right > max_right:
-                max_right = max
-    return (max_left, max_right)
+    def __init__(self, path, ref_col, strand_col='strand', start_col=None, stop_col=None):
+        self.path = path
+        self.ref_col = ref_col
+        self.strand_col = strand_col
+        self.start_col = start_col
+        self.stop_col = stop_col
+
+    def annot_iterator(self):
+        """
+        parse an annotation file and yield a :class:`Entry` for each line of the file.
+
+        :param path: the path of the annotation file to parse.
+        :type path: string
+        :return: a generator on a annotation file.
+        """
+        with open(self.path, 'r') as annot_file:
+            header = annot_file.readline().strip()
+            MyEntryClass = new_entry_type('MyEntry', header, self.ref_col,
+                                          strand_col=self.strand_col,
+                                          start_col=self.start_col,
+                                          stop_col=self.stop_col)
+            for line in annot_file:
+                yield MyEntryClass(line.split())
+
+    def max(self):
+        if self.start_col is not None:
+            max_left = max_right = 0
+            for entry in self.annot_iterator():
+                left = entry.ref - entry.start
+                right = entry.stop - entry.ref
+                if left > max_left:
+                    max_left = left
+                if right > max_right:
+                    max_right = max
+            return max_left, max_right
+
+if __name__ == '__main__':
+
+    ap = AnnotationParser('../../data/annotations_cerevisiae.txt', 'Position')
+    for e in ap.annot_iterator():
+        print(e)
