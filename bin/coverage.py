@@ -1,7 +1,13 @@
 #! /usr/bin/env python3
 
+import os
+import sys
 import argparse
 import itertools
+
+if 'CRAW_HOME' in os.environ and os.environ['CRAW_HOME']:
+    if os.environ['CRAW_HOME'] not in sys.path:
+        sys.path.insert(0, os.environ['CRAW_HOME'])
 
 
 def positive_int(string):
