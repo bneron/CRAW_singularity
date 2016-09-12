@@ -5,7 +5,6 @@ import os
 
 def _run(test_files, test_root_path, verbosity=0):
     if not test_files:
-        print("test_root_path", test_root_path)
         suite = unittest.TestLoader().discover(test_root_path, pattern="test_*.py")
     else:
         test_files = [t for t in test_files if test_root_path in t]
@@ -93,9 +92,9 @@ if __name__ == '__main__':
     result_all_tests = []
 
     if args.unit:
-        print "\n", "#" * 70
-        print "Test Runner: Unit tests"
-        print "#" * 70
+        print("\n", "#" * 70)
+        print("Test Runner: Unit tests")
+        print("#" * 70)
 
         old_path = sys.path
         if 'CRAW_HOME' in os.environ and os.environ['CRAW_HOME']:
@@ -108,9 +107,9 @@ if __name__ == '__main__':
         sys.path = old_path
 
     if args.functional:
-        print "\n", "#" * 70
-        print "Test Runner: Functional tests"
-        print "#" * 70
+        print("\n", "#" * 70)
+        print("Test Runner: Functional tests")
+        print("#" * 70)
 
         old_path = sys.path
         if 'CRAW_HOME' in os.environ and os.environ['CRAW_HOME']:
