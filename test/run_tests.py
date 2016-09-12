@@ -5,6 +5,7 @@ import os
 
 def _run(test_files, test_root_path, verbosity=0):
     if not test_files:
+        print("test_root_path", test_root_path)
         suite = unittest.TestLoader().discover(test_root_path, pattern="test_*.py")
     else:
         test_files = [t for t in test_files if test_root_path in t]
@@ -36,7 +37,7 @@ def run_unittests(test_files, verbosity=0):
     :return: True if the test passed successfully, False otherwise.
     :rtype: bool
     """
-    test_root_path = os.path.join('tests', 'unit')
+    test_root_path = os.path.join(os.path.dirname(__file__), 'unit')
     return _run(test_files, test_root_path, verbosity)
 
 
@@ -53,7 +54,7 @@ def run_functional_tests(test_files, verbosity=0):
     :return: True if the test passed successfully, False otherwise.
     :rtype: bool
     """
-    test_root_path = os.path.join('tests', 'functional')
+    test_root_path = os.path.join(os.path.dirname(__file__), 'functional')
     return _run(test_files, test_root_path, verbosity)
 
 
@@ -97,7 +98,7 @@ if __name__ == '__main__':
         print "#" * 70
 
         old_path = sys.path
-        if 'CRAW_HOME' in os.environ:
+        if 'CRAW_HOME' in os.environ and os.environ['CRAW_HOME']:
             CRAW_HOME = os.environ['CRAW_HOME']
             if CRAW_HOME not in sys.path:
                 sys.path.insert(0, CRAW_HOME)
@@ -112,7 +113,7 @@ if __name__ == '__main__':
         print "#" * 70
 
         old_path = sys.path
-        if 'CRAW_HOME' in os.environ:
+        if 'CRAW_HOME' in os.environ and os.environ['CRAW_HOME']:
             CRAW_HOME = os.environ['CRAW_HOME']
             if CRAW_HOME not in sys.path:
                 sys.path.insert(0, CRAW_HOME)
