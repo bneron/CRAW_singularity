@@ -1,5 +1,5 @@
-
 from collections import namedtuple
+
 
 class Entry:
 
@@ -44,7 +44,9 @@ class Entry:
     def __str__(self):
         return '\t'.join([str(v) for v in self._values])
 
+
 Idx = namedtuple('Idx', ('col_name', 'idx'))
+
 
 def new_entry_type(name, header, ref_col, strand_col='strand', start_col=None, stop_col=None):
     fields = header.split()
