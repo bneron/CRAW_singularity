@@ -1,4 +1,4 @@
-from test import CRAWTest
+from tests import CRAWTest
 from craw.annotation import Entry, Idx, new_entry_type
 
 class TestEntry(CRAWTest):
@@ -32,21 +32,24 @@ class TestEntry(CRAWTest):
         ref_col = 'Position'
         fields = ['name', 'gene', 'chromosome', 'strand', 'Position']
         ne_class = new_entry_type(name, '\t'.join(fields), ref_col)
-        values = []
-        ne = ne_class()
-
+        #values = []
+        #ne = ne_class()
 
         fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'Position']
         ne_class = new_entry_type(name, '\t'.join(fields), ref_col, start_col='beg', stop_col='end')
-        values = []
-        ne = ne_class()
+        #values = []
+        #ne = ne_class()
+
 
     def test_ref(self):
         pass
+
     def test_start(self):
         pass
+
     def test_stop(self):
         pass
+
     def test_str(self):
         pass
 
