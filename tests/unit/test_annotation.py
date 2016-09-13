@@ -32,26 +32,81 @@ class TestEntry(CRAWTest):
         ref_col = 'Position'
         fields = ['name', 'gene', 'chromosome', 'strand', 'Position']
         ne_class = new_entry_type(name, '\t'.join(fields), ref_col)
-        #values = []
-        #ne = ne_class()
+        values = ['YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertListEqual(values, ne._values)
+
+        with self.assertRaises(RuntimeError) as ctx:
+            extra_values = values[:]
+            extra_values.append('extra')
+            ne_class(extra_values)
+        self.assertEqual(str(ctx.exception),
+                         'the number of values does not match with number of fields')
 
         fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'Position']
         ne_class = new_entry_type(name, '\t'.join(fields), ref_col, start_col='beg', stop_col='end')
-        #values = []
-        #ne = ne_class()
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertListEqual(values, ne._values)
+
+        with self.assertRaises(RuntimeError) as ctx:
+            values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '=', 14415]
+            ne = ne_class([str(v) for v in values])
+        self.assertEqual(str(ctx.exception),
+                         "strand must be '+ or '-' got '='")
 
 
     def test_ref(self):
-        pass
+        name = 'toto'
+        ref_col = 'pos_ref'
+        fields = ['name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, '\t'.join(fields), ref_col)
+        values = ['YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.ref, 14415)
 
     def test_start(self):
-        pass
+        name = 'toto'
+        ref_col = 'pos_ref'
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, '\t'.join(fields), ref_col, start_col='beg', stop_col='end')
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.start, 14000)
 
     def test_stop(self):
-        pass
+        name = 'toto'
+        ref_col = 'pos_ref'
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, '\t'.join(fields), ref_col, start_col='beg', stop_col='end')
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.stop, 15000)
+
+    def test_strand(self):
+        name = 'toto'
+        ref_col = 'pos_ref'
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, '\t'.join(fields), ref_col, start_col='beg', stop_col='end')
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.strand, '+')
+
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'brin', 'pos_ref']
+        ne_class = new_entry_type(name, '\t'.join(fields), ref_col, start_col='beg', stop_col='end', strand_col='brin')
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.strand, '+')
 
     def test_str(self):
-        pass
+        name = 'toto'
+        ref_col = 'pos_ref'
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, '\t'.join(fields), ref_col, start_col='beg', stop_col='end')
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(str(ne), '\t'.join([str(v) for v in values]))
+
 
 class TestAnnotationParser(CRAWTest):
     pass
