@@ -13,7 +13,7 @@ class Entry:
             value = int(value)
         elif field == self._fields_idx['strand'].col_name:
             if value not in ('+', '-'):
-                raise RuntimeError("strand must be '+ or '-' got {}".format(value))
+                raise RuntimeError("strand must be '+ or '-' got '{}'".format(value))
         elif 'start' in self._fields_idx and field == self._fields_idx['start'].col_name:
             value = int(value)
         elif 'stop' in self._fields_idx and field == self._fields_idx['stop'].col_name:
