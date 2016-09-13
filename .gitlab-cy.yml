@@ -1,0 +1,11 @@
+# Run tests on gitlab.pasteur.fr after new push
+image: registry-gitlab.pasteur.fr/bneron/craw:centos7
+
+variables:
+  CRAW_HOME: ${CI_PROJECT_DIR}
+
+build:
+    stage: test
+    script:
+        - python3 ${CRAW_HOME}/tests/run_test.py
+
