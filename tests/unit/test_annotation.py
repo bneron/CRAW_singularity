@@ -19,16 +19,28 @@ class TestEntry(CRAWTest):
         fields_idx = {'ref': Idx('Position', 6),
                       'strand': Idx('strand', 5),
                       'start': Idx('beg', 0),
-                      'stop':Idx('end', 1)
+                      'stop': Idx('end', 1)
                       }
         ref_col = 'Position'
-        ne = new_entry_type(name, '\t'.join(fields), ref_col, start_col='beg', stop_col='end')
-        self.assertTrue(issubclass(ne, Entry))
-        self.assertListEqual(fields, ne._fields)
-        self.assertDictEqual(fields_idx, ne._fields_idx)
+        ne_class = new_entry_type(name, '\t'.join(fields), ref_col, start_col='beg', stop_col='end')
+        self.assertTrue(issubclass(ne_class, Entry))
+        self.assertListEqual(fields, ne_class._fields)
+        self.assertDictEqual(fields_idx, ne_class._fields_idx)
 
     def test_entry(self):
-        pass
+        name = 'toto'
+        ref_col = 'Position'
+        fields = ['name', 'gene', 'chromosome', 'strand', 'Position']
+        ne_class = new_entry_type(name, '\t'.join(fields), ref_col)
+        values = []
+        ne = ne_class()
+
+
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'Position']
+        ne_class = new_entry_type(name, '\t'.join(fields), ref_col, start_col='beg', stop_col='end')
+        values = []
+        ne = ne_class()
+
     def test_ref(self):
         pass
     def test_start(self):
