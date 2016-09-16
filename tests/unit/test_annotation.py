@@ -1,5 +1,11 @@
-from tests import CRAWTest
-from craw.annotation import Entry, Idx, new_entry_type
+import os
+try:
+    from tests import CRAWTest
+except ImportError as err:
+    # TODO
+    raise
+
+from craw.annotation import Entry, Idx, new_entry_type, AnnotationParser
 
 class TestEntry(CRAWTest):
 
@@ -109,4 +115,10 @@ class TestEntry(CRAWTest):
 
 
 class TestAnnotationParser(CRAWTest):
-    pass
+
+    def test_max(self):
+        ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_w_start.txt'),
+                              'Position',
+                              start_col='beg',
+                              stop_col='end')
+        self.assertEqual(ap.max(), (845, 903))
