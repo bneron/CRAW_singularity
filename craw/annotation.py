@@ -44,6 +44,11 @@ class Entry:
     def __str__(self):
         return '\t'.join([str(v) for v in self._values])
 
+    def __eq__(self, other):
+        for v , vo in zip(self._values, other._values):
+            if v != vo:
+                return False
+        return True
 
 Idx = namedtuple('Idx', ('col_name', 'idx'))
 
