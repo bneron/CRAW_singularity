@@ -122,3 +122,50 @@ class TestAnnotationParser(CRAWTest):
                               start_col='beg',
                               stop_col='end')
         self.assertEqual(ap.max(), (845, 903))
+
+    def test_annot_iterator(self):
+        ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_w_start.txt'),
+                              'Position',
+                              start_col='beg',
+                              stop_col='end')
+        ne_class = new_entry_type('toto',
+                                  'name	gene	chromosome	strand	Position beg end',
+                                  'Position',
+                                  start_col='beg',
+                                  stop_col='end')
+        entries = [ne_class(['YEL072W', 'RMD6', 'chrV', '+', '14415', '14000', '15000']),
+                   ne_class(['YEL071W', 'DLD3', 'chrV', '+', '17845', '17000', '18000']),
+                   ne_class(['YEL070W', 'DSF1', 'chrV', '+', '21097', '21000', '22000']),
+                   ne_class(['YEL066W', 'HPA3', 'chrV', '+', '27206', '27000', '28000']),
+                   ne_class(['YEL065W', 'SIT1', 'chrV', '+', '29543', '29000', '30000']),
+                   ]
+        it = ap.annot_iterator()
+        for i, e in enumerate(it):
+            self.assertEqual(entries[i], e)
+
+        ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_wo_start.txt'),
+                                  'Position')
+
+        ne_class = new_entry_type('toto',
+                                  'name	gene	chromosome	strand	Position',
+                                  'Position')
+        entries = [ne_class(['YEL072W', 'RMD6', 'chrV', '+', '14415']),
+                   ne_class(['YEL071W', 'DLD3', 'chrV', '+', '17845']),
+                   ne_class(['YEL070W', 'DSF1', 'chrV', '+', '21097']),
+                   ne_class(['YEL066W', 'HPA3', 'chrV', '+', '27206']),
+                   ne_class(['YEL065W', 'SIT1', 'chrV', '+', '29543']),
+                   ]
+        it = ap.annot_iterator()
+        for i, e in enumerate(it):
+            self.assertEqual(entries[i], e)
+
+        ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_bad_header.txt'),
+                              'Position',
+                              start_col='beg',
+                              stop_col='end')
+
+        it = ap.annot_iterator()
+        with self.assertRaises(RuntimeError) as ctx:
+            it.__next__()
+        self.assertEqual(str(ctx.exception),
+                         'the number of values does not match with number of fields')
