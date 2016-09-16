@@ -106,7 +106,7 @@ class AnnotationParser:
                 if left > max_left:
                     max_left = left
                 if right > max_right:
-                    max_right = max
+                    max_right = right
             return max_left, max_right
 
 if __name__ == '__main__':
