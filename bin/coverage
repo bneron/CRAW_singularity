@@ -93,7 +93,7 @@ group_two = (args.start_col, args.stop_col)
 if all([v is None for v in itertools.chain(group_one, group_two)]):
     raise argparse.ArgumentError(None, "[--window or [--before, --after] or [--start-col, --stop-col] options"
                                  " must be specified")
-elif any([v is not None for v in group_one] and any([v is not None for v in group_two])):
+elif any([v is not None for v in group_one]) and any([v is not None for v in group_two]):
     raise argparse.ArgumentError(None, "Options [--before, --after, --window] and [--start-col, --stop-col] "
                                  "are mutually exclusives.")
 elif all([v is None for v in group_two]):
@@ -116,25 +116,30 @@ elif not all(group_two):
     raise argparse.ArgumentError(None, "The two options --start-col and --stop-col work together. "
                                  "The both options must be specified in same time")
 else:
-    if not args.output_file:
-        args.output_file = "{}.{}.txt".format(os.path.splitext(args.annot_file)[0], args.suffix)
+    pass
 
-    annot_parser = annotation.AnnotationParser(args.annot_file, args.ref_col,
-                                               strand_col='strand',
-                                               start_col=args.start_col, stop_col=args.stop_col)
+if not args.output_file:
+    args.output_file = "{}.{}.txt".format(os.path.basename(os.path.splitext(args.annot_file)[0]), args.suffix)
 
-    sam_file = pysam.AlignmentFile(args.bam_file, "rb")
-    annotations = annot_parser.get_annotatons()
+annot_parser = annotation.AnnotationParser(args.annot_file, args.ref_col,
+                                           strand_col='strand',
+                                           start_col=args.start_col, stop_col=args.stop_col)
 
-    with open(args.output_file, 'w') as result_file:
-        print(annot_parser.header, sep='\t', file=result_file)
-        for annot_num, annot_entry in enumerate(annotations):
-            if annot_num % 10 == 0:
-                print('.')
-            forward_cov, reverse_cov = coverage.get_coverage(sam_file,
-                                                             annot_entry,
-                                                             before=args.before, after=args.after,
-                                                             qual_thr=args.qual_thr,
-                                                             max_left=0, max_right=0)
-            print('for', annot_entry, *forward_cov, sep='\t', file=result_file)
-            print('rev', annot_entry, *reverse_cov, sep='\t', file=result_file)
+sam_file = pysam.AlignmentFile(args.bam_file, "rb")
+annotations = annot_parser.get_annotations()
+
+with open(args.output_file, 'w') as result_file:
+    print("mapped", *annot_parser.header, sep='\t', end='\t', file=result_file)
+    print(*list(range(0 - args.before, args.after + 1)), sep='\t', file=result_file)
+    for annot_num, annot_entry in enumerate(annotations):
+        if annot_num % 50 == 0:
+            print('.', end='')
+            sys.stdout.flush()
+        forward_cov, reverse_cov = coverage.get_coverage(sam_file,
+                                                         annot_entry,
+                                                         before=args.before, after=args.after,
+                                                         qual_thr=args.qual_thr,
+                                                         max_left=0, max_right=0)
+        print('for', annot_entry, *forward_cov, sep='\t', file=result_file)
+        print('rev', annot_entry, *reverse_cov, sep='\t', file=result_file)
+    print()
