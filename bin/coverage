@@ -5,10 +5,18 @@ import sys
 import argparse
 import itertools
 
+import pysam
+
 if 'CRAW_HOME' in os.environ and os.environ['CRAW_HOME']:
     if os.environ['CRAW_HOME'] not in sys.path:
         sys.path.insert(0, os.environ['CRAW_HOME'])
+try:
+    from craw import annotation
+except ImportError as err:
+    msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
+    sys.exit(msg)
 
+from craw import coverage
 
 def positive_int(string):
     value = int(string)
@@ -39,8 +47,11 @@ parser.add_argument("--quality-threshold",
                     default=15,
                     help="the minimal quality of read mapping to take it in account")
 parser.add_argument("--suffix",
-                    default="coverage",
+                    default="cov",
                     help="the name of the suffix to use for the output file.")
+parser.add_argument('-o', '--output',
+                    dest='output_file',
+                    help="the path of the output (default= base name of annotation file with --suffix)")
 region_grp = parser.add_argument_group(title="region of interest",
                                        description="""Parameters which define regions to compute
 There is 2 way to define regions:
@@ -63,30 +74,33 @@ region_grp.add_argument("--ref-col",
                         default="position",
                         help="the name of the column for the reference position.")
 region_grp.add_argument("--before",
-                    type=positive_int,
-                    help="the number of base to compute after the position of reference.")
+                        type=positive_int,
+                        help="the number of base to compute after the position of reference.")
 region_grp.add_argument("--after",
-                    type=positive_int,
-                    help="the number of base to compute before the position of reference.")
+                        type=positive_int,
+                        help="the number of base to compute before the position of reference.")
 region_grp.add_argument("--window",
-                    type=positive_int,
-                    help="the number of base to compute around the position of reference.")
+                        type=positive_int,
+                        help="the number of base to compute around the position of reference.")
 region_grp.add_argument("--start-col",
-                    help="the name of the column to define the start position.")
+                        help="the name of the column to define the start position.")
 region_grp.add_argument("--stop-col",
-                    help="the name of the column to define the stop position.")
+                        help="the name of the column to define the stop position.")
 args = parser.parse_args()
 
 group_one = (args.before, args.after, args.window)
 group_two = (args.start_col, args.stop_col)
 if all([v is None for v in itertools.chain(group_one, group_two)]):
-    raise argparse.ArgumentError("[--window or [--before, --after] or [--start-col, --stop-col] options must be specified")
+    raise argparse.ArgumentError(None, "[--window or [--before, --after] or [--start-col, --stop-col] options"
+                                 " must be specified")
 elif any([v is not None for v in group_one] and any([v is not None for v in group_two])):
-    raise argparse.ArgumentError("Options [--before, --after, --window] and [--start-col, --stop-col] are mutually exclusives.")
+    raise argparse.ArgumentError(None, "Options [--before, --after, --window] and [--start-col, --stop-col] "
+                                 "are mutually exclusives.")
 elif all([v is None for v in group_two]):
     if args.window is None:
         if any([v is None for v in (args.before, args.after)]):
-            raise argparse.ArgumentError("The two options --after and --before work together. The both options must be specified in same time")
+            raise argparse.ArgumentError(None, "The two options --after and --before work together."
+                                         " The both options must be specified in same time")
         else:
             pass
             # window is None, before and after are specify
@@ -94,15 +108,33 @@ elif all([v is None for v in group_two]):
     else:
         # args.window is not None:
         if any([v is not None for v in (args.before, args.after)]):
-            raise argparse.ArgumentError("options [--before, --after] and --window are mutually exclusives.")
+            raise argparse.ArgumentError(None, "options [--before, --after] and --window are mutually exclusives.")
         else:
             # --before, --after are None
             args.before = args.after = args.window
 elif not all(group_two):
-    raise argparse.ArgumentError("The two options --start-col and --stop-col work together. The both options must be specified in same time")
+    raise argparse.ArgumentError(None, "The two options --start-col and --stop-col work together. "
+                                 "The both options must be specified in same time")
 else:
-    pass
+    if not args.output_file:
+        args.output_file = "{}.{}.txt".format(os.path.splitext(args.annot_file)[0], args.suffix)
 
+    annot_parser = annotation.AnnotationParser(args.annot_file, args.ref_col,
+                                               strand_col='strand',
+                                               start_col=args.start_col, stop_col=args.stop_col)
 
+    sam_file = pysam.AlignmentFile(args.bam_file, "rb")
+    annotations = annot_parser.get_annotatons()
 
-
+    with open(args.output_file, 'w') as result_file:
+        print(annot_parser.header, sep='\t', file=result_file)
+        for annot_num, annot_entry in enumerate(annotations):
+            if annot_num % 10 == 0:
+                print('.')
+            forward_cov, reverse_cov = coverage.get_coverage(sam_file,
+                                                             annot_entry,
+                                                             before=args.before, after=args.after,
+                                                             qual_thr=args.qual_thr,
+                                                             max_left=0, max_right=0)
+            print('for', annot_entry, *forward_cov, sep='\t', file=result_file)
+            print('rev', annot_entry, *reverse_cov, sep='\t', file=result_file)
