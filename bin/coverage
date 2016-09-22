@@ -115,8 +115,6 @@ elif all([v is None for v in group_two]):
 elif not all(group_two):
     raise argparse.ArgumentError(None, "The two options --start-col and --stop-col work together. "
                                  "The both options must be specified in same time")
-else:
-    pass
 
 if not args.output_file:
     args.output_file = "{}.{}.txt".format(os.path.basename(os.path.splitext(args.annot_file)[0]), args.suffix)
