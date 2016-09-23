@@ -4,6 +4,11 @@ from collections import namedtuple
 class Entry:
 
     def __init__(self, values):
+        """
+
+        :param values:
+        :type values:
+        """
         if len(values) != len(self._fields):
             raise RuntimeError("the number of values does not match with number of fields")
         self._values = [self._convert(f, v) for f, v in zip(self._fields, values)]
@@ -61,9 +66,27 @@ class Entry:
 Idx = namedtuple('Idx', ('col_name', 'idx'))
 
 
-def new_entry_type(name, fields , ref_col,
+def new_entry_type(name, fields, ref_col,
                    strand_col='strand', chr_col='chromosome',
                    start_col=None, stop_col=None):
+    """
+
+    :param name: The name of the new class of entry.
+    :type name: str
+    :param fields: The fields constituting the new type of entry.
+    :type fields: list of string
+    :param ref_col: The name of the column representing the position of reference (default is 'position').
+    :type ref_col: string
+    :param strand_col: The name of the column representing the strand (default is 'strand').
+    :type strand_col: string
+    :param chr_col: The name of the column representing the name of chromosome (default is 'chromosome').
+    :type chr_col: string
+    :param start_col: The name of the column representing the position of the first base to compute the coverage (inclusive).
+    :type start_col: string
+    :param stop_col: The name of the column representing the position of the last base to compute the coverage (inclusive).
+    :type stop_col: string
+    :return:
+    """
     fields_idx = {}
     try:
         fields_idx['ref'] = Idx(ref_col, fields.index(ref_col))
