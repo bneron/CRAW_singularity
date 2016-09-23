@@ -35,6 +35,49 @@ class TestEntry(CRAWTest):
         self.assertListEqual(fields, ne_class._fields)
         self.assertDictEqual(fields_idx, ne_class._fields_idx)
 
+        name = 'toto'
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'Position']
+        fields_idx = {'ref': Idx('Position', 6),
+                      'strand': Idx('strand', 5),
+                      'start': Idx('beg', 0),
+                      'stop': Idx('end', 1),
+                      'chr': Idx('chromosome', 4)
+                      }
+        ref_col = 'foo'
+        with self.assertRaises(RuntimeError) as ctx:
+            ne_class = new_entry_type(name, fields, ref_col)
+        self.assertEqual(str(ctx.exception),
+                         "The ref_col 'foo' does not match any fields: 'beg end name gene chromosome strand Position'\n"
+                         "You must specify the '--ref-col' option")
+
+        ref_col = 'Position'
+        chr_col = 'foo'
+        with self.assertRaises(RuntimeError) as ctx:
+            ne_class = new_entry_type(name, fields, ref_col, chr_col=chr_col)
+        self.assertEqual(str(ctx.exception),
+                         "The chr_col 'foo' does not match any fields: 'beg end name gene chromosome strand Position'\n"
+                         "You must specify the '--chr-col' option")
+
+        with self.assertRaises(RuntimeError) as ctx:
+            ne_class = new_entry_type(name, fields, ref_col, start_col='foo')
+        self.assertEqual(str(ctx.exception),
+                         "if start_col is specified stop_col mustbe too and vie versa")
+
+        with self.assertRaises(RuntimeError) as ctx:
+            ne_class = new_entry_type(name, fields, ref_col, stop_col='foo')
+        self.assertEqual(str(ctx.exception),
+                         "if start_col is specified stop_col mustbe too and vie versa")
+
+        with self.assertRaises(RuntimeError) as ctx:
+            ne_class = new_entry_type(name, fields, ref_col, start_col='foo', stop_col='end')
+        self.assertEqual(str(ctx.exception),
+                         "The start_col 'foo' does not match any fields: 'beg end name gene chromosome strand Position'")
+
+        with self.assertRaises(RuntimeError) as ctx:
+            ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='foo')
+        self.assertEqual(str(ctx.exception),
+                         "The stop_col 'foo' does not match any fields: 'beg end name gene chromosome strand Position'")
+
     def test_entry(self):
         name = 'toto'
         ref_col = 'Position'
@@ -63,6 +106,14 @@ class TestEntry(CRAWTest):
         self.assertEqual(str(ctx.exception),
                          "strand must be '+ or '-' got '='")
 
+    def test_chromosome(self):
+        name = 'toto'
+        ref_col = 'pos_ref'
+        fields = ['name', 'gene', 'chr', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, fields, ref_col, chr_col='chr')
+        values = ['YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.chromosome, 'chrV')
 
     def test_ref(self):
         name = 'toto'
@@ -145,8 +196,7 @@ class TestAnnotationParser(CRAWTest):
         for i, e in enumerate(it):
             self.assertEqual(entries[i], e)
 
-        ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_wo_start.txt'),
-                                  'Position')
+        ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_wo_start.txt'), 'Position')
 
         ne_class = new_entry_type('toto',
                                   ['name', 'gene', 'chromosome', 'strand', 'Position'],
