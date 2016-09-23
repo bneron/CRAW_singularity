@@ -88,45 +88,50 @@ def new_entry_type(name, fields, ref_col,
     :return:
     """
     fields_idx = {}
+    if any((start_col, stop_col)) and not all((start_col, stop_col)):
+        raise RuntimeError("if start_col is specified stop_col mustbe too and vie versa")
     try:
         fields_idx['ref'] = Idx(ref_col, fields.index(ref_col))
     except ValueError:
         raise RuntimeError("The ref_col '{}' does not match any fields: '{}'\n"
-                           "You must specify the '--ref-col' option".format(ref_col, header)) from None
+                           "You must specify the '--ref-col' option".format(ref_col, ' '.join(fields))) from None
     try:
         fields_idx['strand'] = Idx(strand_col, fields.index(strand_col))
     except ValueError:
-        raise RuntimeError("The strand_col '{}' does not match any fields: '{}'".format(strand_col, header))
+        raise RuntimeError("The strand_col '{}' does not match any fields: '{}'".format(strand_col, ' '.join(fields))) from None
     try:
         fields_idx['chr'] = Idx(chr_col, fields.index(chr_col))
     except ValueError:
-        raise RuntimeError("The chr_col '{}' does not match any fields: '{}'".format(chr_col, header))
+        raise RuntimeError("The chr_col '{}' does not match any fields: '{}'\n"
+                           "You must specify the '--chr-col' option".format(chr_col, ' '.join(fields))) from None
 
     if start_col:
         try:
             fields_idx['start'] = Idx(start_col, fields.index(start_col))
         except ValueError:
-            raise RuntimeError("The start_col '{}' does not match any fields: '{}'".format(start_col, header))
+            raise RuntimeError("The start_col '{}' does not match any fields: '{}'".format(start_col, ' '.join(fields))) from None
         try:
             fields_idx['stop'] = Idx(stop_col, fields.index(stop_col))
         except ValueError:
-            raise RuntimeError("The stop_col '{}' does not match any fields: '{}'".format(stop_col, header))
+            raise RuntimeError("The stop_col '{}' does not match any fields: '{}'".format(stop_col, ' '.join(fields))) from None
     return type(name, (Entry,), {'_fields_idx': fields_idx, '_fields': fields})
 
 
 class AnnotationParser:
 
-    def __init__(self, path, ref_col, strand_col='strand', start_col=None, stop_col=None):
+    def __init__(self, path, ref_col, strand_col='strand', chr_col='chromosome', start_col=None, stop_col=None):
         """
 
         :param path:
         :param ref_col:
+        :param chr_col:
         :param strand_col:
         :param start_col:
         :param stop_col:
         """
         self.path = path
         self.ref_col = ref_col
+        self.chr_col = chr_col
         self.strand_col = strand_col
         self.start_col = start_col
         self.stop_col = stop_col
