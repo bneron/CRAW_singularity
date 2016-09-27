@@ -3,21 +3,21 @@
 def get_coverage(sam_file, annot_entry, before=None, after=None, qual_thr=15, max_left=0, max_right=0):
     """
 
-    :param sam_file:
-    :type sam_file:
-    :param annot_entry:
-    :type annot_entry:
-    :param before:
+    :param sam_file: the samfile openend with pysam
+    :type sam_file: :class:`pysam.AlignmentFile` object.
+    :param annot_entry: an entry of the annotation file
+    :type annot_entry: :class:`annotation.Entry` object
+    :param before: The number of bases to take in account before the reference position
     :type before: int
-    :param after:
+    :param after: The number of bases to take in account before the reference position
     :type after: int
-    :param qual_thr:
+    :param qual_thr: The quality threshold
     :type qual_thr: int
-    :param max_left:
+    :param max_left: The highest number of base before the reference position to take in account.
     :type max_left: int
-    :param max_right:
+    :param max_right: The highest number of base after  the reference position to take in account.
     :type max_right: int
-    :return:
+    :return: the coverage (all bases)
     :rtype: tuple of 2 list containing int
     """
 
@@ -30,6 +30,7 @@ def get_coverage(sam_file, annot_entry, before=None, after=None, qual_thr=15, ma
         """
         return not al_seg.is_reverse
 
+
     def on_reverse(al_seg):
         """
         :param al_seg: a pysam aligned segment (the object used by pysam to represent an aligned read)
@@ -38,6 +39,7 @@ def get_coverage(sam_file, annot_entry, before=None, after=None, qual_thr=15, ma
         :rtype: boolean
         """
         return al_seg.is_reverse
+
 
     def coverage_one_strand(sam_file, chromosome, start, end, qual, strand):
         """
@@ -54,7 +56,8 @@ def get_coverage(sam_file, annot_entry, before=None, after=None, qual_thr=15, ma
         :type qual: int
         :param strand:
         :type strand:
-        :return:
+        :return: the coverage on forward then on reverse strand.
+        The coverage is the sum of all kind bases mapped for each position
         :rtype: tuple of 2 list containing int
         """
         call_back = on_forward if strand == '+' else on_reverse

@@ -6,8 +6,8 @@ class Entry:
     def __init__(self, values):
         """
 
-        :param values:
-        :type values:
+        :param values: the values parsed from one line of the annotation file
+        :type values: list of string
         """
         if len(values) != len(self._fields):
             raise RuntimeError("the number of values does not match with number of fields")
@@ -27,24 +27,29 @@ class Entry:
 
     @property
     def chromosome(self):
+        """The name of the Chromosome"""
         return self._values[self._fields_idx['chr'].idx]
 
     @property
     def ref(self):
+        """The position of reference"""
         return self._values[self._fields_idx['ref'].idx]
 
     @property
     def strand(self):
+        """the strand +/-"""
         return self._values[self._fields_idx['strand'].idx]
 
     @property
     def start(self):
+        """The Position to start the coverage computation"""
         if 'start' in self._fields_idx:
             return self._values[self._fields_idx['start'].idx]
         else:
             return None
     @property
     def stop(self):
+        """The position to end the coverage computaion (included)"""
         if 'stop' in self._fields_idx:
             return self._values[self._fields_idx['stop'].idx]
         else:
@@ -52,6 +57,7 @@ class Entry:
 
     @property
     def header(self):
+        """The header of the annotation file"""
         return '\t'.join(self._fields)
 
     def __str__(self):
@@ -85,7 +91,7 @@ def new_entry_type(name, fields, ref_col,
     :type start_col: string
     :param stop_col: The name of the column representing the position of the last base to compute the coverage (inclusive).
     :type stop_col: string
-    :return:
+    :return: a new class child of :class:`Entry` which is able to store informations corresponding to the header.
     """
     fields_idx = {}
     if any((start_col, stop_col)) and not all((start_col, stop_col)):
@@ -122,12 +128,18 @@ class AnnotationParser:
     def __init__(self, path, ref_col, strand_col='strand', chr_col='chromosome', start_col=None, stop_col=None):
         """
 
-        :param path:
-        :param ref_col:
-        :param chr_col:
-        :param strand_col:
-        :param start_col:
-        :param stop_col:
+        :param path: the path to the annotation file to parse.
+        :type path: string
+        :param ref_col: the name of the column for the reference position
+        :type ref_col: string
+        :param chr_col: the name of the column for the chromosome
+        :type chr_col: string
+        :param strand_col: the name of the column for the strand
+        :type strand_col: string
+        :param start_col: the name of the column for start position
+        :type start_col: string
+        :param stop_col: the name of the column for the stop position
+        :type stop_col: string
         """
         self.path = path
         self.ref_col = ref_col
@@ -157,8 +169,8 @@ class AnnotationParser:
 
     def max(self):
         """
-
-        :return:
+        :return: the maximum of bases to take in count before and after the reference position.
+        :rtype: tuple of 2 int
         """
         if self.start_col is not None:
             max_left = max_right = 0
