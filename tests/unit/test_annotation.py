@@ -2,8 +2,8 @@ import os
 try:
     from tests import CRAWTest
 except ImportError as err:
-    # TODO
-    raise
+    msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
+    raise ImportError("Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err))
 
 from craw.annotation import Entry, Idx, new_entry_type, AnnotationParser
 
