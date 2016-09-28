@@ -127,7 +127,7 @@ sam_file = pysam.AlignmentFile(args.bam_file, "rb")
 annotations = annot_parser.get_annotations()
 
 with open(args.output_file, 'w') as result_file:
-    print("mapped", *annot_parser.header, sep='\t', end='\t', file=result_file)
+    print("sense", *annot_parser.header, sep='\t', end='\t', file=result_file)
     max_left, max_right = annot_parser.max()
     if args.start_col:
         print(*list(range(0 - max_left, max_right + 1)), sep='\t', file=result_file)
@@ -150,6 +150,8 @@ with open(args.output_file, 'w') as result_file:
                                                          start=start, stop=stop,
                                                          qual_thr=args.qual_thr,
                                                          max_left=max_left, max_right=max_right)
-        print('for', annot_entry, *forward_cov, sep='\t', file=result_file)
-        print('rev', annot_entry, *reverse_cov, sep='\t', file=result_file)
+        sens = 'S' if annot_entry.strand == '+' else 'AS'
+        print(sens, annot_entry, *forward_cov, sep='\t', file=result_file)
+        sens = 'S' if annot_entry.strand =='-' else 'AS'
+        print(sens, annot_entry, *reverse_cov, sep='\t', file=result_file)
     print()
