@@ -13,14 +13,14 @@ class Entry:
             raise RuntimeError("the number of values does not match with number of fields")
         self._values = [self._convert(f, v) for f, v in zip(self._fields, values)]
         if self.start is not None and self.start > self.ref:
-            raise RuntimeError(" error in line'{}': {} ({}) > {} ({})".format(self,
+            raise RuntimeError(" error in line '{}': {} ({}) > {} ({})".format(self,
                                                                           self.start,
                                                                           self._fields_idx['start'].col_name,
                                                                           self.ref,
-                                                                          self._values[self._fields_idx['ref'].idx]
+                                                                               self._fields_idx['ref'].col_name
                                                                               ))
         if self.stop is not None and self.stop < self.ref:
-            raise RuntimeError(" error in line'{}': {} ({}) < {} ({})".format(self,
+            raise RuntimeError(" error in line '{}': {} ({}) < {} ({})".format(self,
                                                                           self.stop,
                                                                           self._fields_idx['stop'].col_name,
                                                                           self.ref,
