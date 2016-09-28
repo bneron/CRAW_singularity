@@ -128,27 +128,28 @@ annotations = annot_parser.get_annotations()
 
 with open(args.output_file, 'w') as result_file:
     print("mapped", *annot_parser.header, sep='\t', end='\t', file=result_file)
+    max_left, max_right = annot_parser.max()
     if args.start_col:
-        max_left, max_right = annot_parser.max()
         print(*list(range(0 - max_left, max_right + 1)), sep='\t', file=result_file)
     else:
         print(*list(range(0 - args.before, args.after + 1)), sep='\t', file=result_file)
     for annot_num, annot_entry in enumerate(annotations):
         if annot_num % 50 == 0:
             print('.', end='', file=sys.stderr)
+            if annot_num % 2500 == 0:
+                print('', file=sys.stderr)
             sys.stderr.flush()
         if args.start_col:
-            start = annot_entry.start
+            start = annot_entry.start -1
             stop = annot_entry.stop
         else:
-            start = args.before
-            stop = args.after
-
+            start = annot_entry.ref - args.before - 1
+            stop = annot_entry.ref + args.after
         forward_cov, reverse_cov = coverage.get_coverage(sam_file,
                                                          annot_entry,
-                                                         before=start, after=stop,
+                                                         start=start, stop=stop,
                                                          qual_thr=args.qual_thr,
-                                                         max_left=0, max_right=0)
+                                                         max_left=max_left, max_right=max_right)
         print('for', annot_entry, *forward_cov, sep='\t', file=result_file)
         print('rev', annot_entry, *reverse_cov, sep='\t', file=result_file)
     print()

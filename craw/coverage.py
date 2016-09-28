@@ -1,16 +1,17 @@
 
 
-def get_coverage(sam_file, annot_entry, before=None, after=None, qual_thr=15, max_left=0, max_right=0):
+def get_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, max_left=0, max_right=0):
     """
+    Compute the coverage for a region position by position on each strand
 
     :param sam_file: the samfile openend with pysam
     :type sam_file: :class:`pysam.AlignmentFile` object.
     :param annot_entry: an entry of the annotation file
     :type annot_entry: :class:`annotation.Entry` object
-    :param before: The number of bases to take in account before the reference position
-    :type before: int
-    :param after: The number of bases to take in account before the reference position
-    :type after: int
+    :param start: The position to start to compute the coverage(coordinates are 0-based, start position is included).
+    :type start: int
+    :param stop: The position to start to compute the coverage (coordinates are 0-based, stop position is excluded).
+    :type stop: int
     :param qual_thr: The quality threshold
     :type qual_thr: int
     :param max_left: The highest number of base before the reference position to take in account.
@@ -20,7 +21,6 @@ def get_coverage(sam_file, annot_entry, before=None, after=None, qual_thr=15, ma
     :return: the coverage (all bases)
     :rtype: tuple of 2 list containing int
     """
-
     def on_forward(al_seg):
         """
         :param al_seg: a pysam aligned segment (the object used by pysam to represent an aligned read)
@@ -41,21 +41,21 @@ def get_coverage(sam_file, annot_entry, before=None, after=None, qual_thr=15, ma
         return al_seg.is_reverse
 
 
-    def coverage_one_strand(sam_file, chromosome, start, end, qual, strand):
+    def coverage_one_strand(sam_file, chromosome, start, stop, qual, strand):
         """
 
         :param sam_file:
         :type sam_file:
         :param chromosome: the name of the chromosome
         :type chromosome: basestring
-        :param start:
+        :param start: The position to start to compute the coverage(coordinates are 0-based, start position is included).
         :type start: int
-        :param end:
-        :type end: int
-        :param qual:
+        :param stop:The position to start to compute the coverage (coordinates are 0-based, stop position is excluded).
+        :type stop: int
+        :param qual: The quality threshold.
         :type qual: int
-        :param strand:
-        :type strand:
+        :param strand: the strand on which the read match
+        :type strand: string
         :return: the coverage on forward then on reverse strand.
         The coverage is the sum of all kind bases mapped for each position
         :rtype: tuple of 2 list containing int
@@ -63,7 +63,7 @@ def get_coverage(sam_file, annot_entry, before=None, after=None, qual_thr=15, ma
         call_back = on_forward if strand == '+' else on_reverse
         coverage = sam_file.count_coverage(reference=chromosome,
                                            start=start,
-                                           end=end,
+                                           end=stop,
                                            quality_threshold=qual,
                                            read_callback=call_back)
         coverage = [array.tolist() for array in coverage]
@@ -72,20 +72,8 @@ def get_coverage(sam_file, annot_entry, before=None, after=None, qual_thr=15, ma
             window_cov.append(cov_A + cov_T + cov_C + cov_G)
         return window_cov
 
-    if before is not None:
-        # pysam start base numbering at 0
-        # so we need to remove 1
-        start = annot_entry.ref - before - 1
-        # but pysam exclude the end of interval
-        # and we want to include it  -1 + 1
-        stop = annot_entry.ref + after
-        pad_left = []
-        pad_right = []
-    else:
-        start = annot_entry.start -1
-        stop = annot_entry.stop
-        pad_left = [None] * (max_left - (annot_entry.ref - start))
-        pad_right = [None] * (max_right - (stop - annot_entry.ref))
+    pad_left = [None] * (max_left - (annot_entry.ref - start))
+    pad_right = [None] * (max_right - (stop - annot_entry.ref))
     forward_cov = coverage_one_strand(sam_file,
                                       annot_entry.chromosome,
                                       start,

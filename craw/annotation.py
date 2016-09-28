@@ -182,3 +182,5 @@ class AnnotationParser:
                 if right > max_right:
                     max_right = right
             return max_left, max_right
+        else:
+            return 0, 0

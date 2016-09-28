@@ -7,6 +7,7 @@ except ImportError as err:
 
 from craw.annotation import Entry, Idx, new_entry_type, AnnotationParser
 
+
 class TestEntry(CRAWTest):
 
     def test_new_entry_type(self):
@@ -174,7 +175,7 @@ class TestAnnotationParser(CRAWTest):
                               'Position',
                               start_col='beg',
                               stop_col='end')
-        self.assertEqual(ap.max(), (845, 903))
+        self.assertEqual(ap.max(), (10, 10))
 
     def test_get_annotations(self):
         ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_w_start.txt'),
@@ -186,15 +187,15 @@ class TestAnnotationParser(CRAWTest):
                                   'Position',
                                   start_col='beg',
                                   stop_col='end')
-        entries = [ne_class(['YEL072W', 'RMD6', 'chrV', '+', '14415', '14000', '15000']),
-                   ne_class(['YEL071W', 'DLD3', 'chrV', '+', '17845', '17000', '18000']),
-                   ne_class(['YEL070W', 'DSF1', 'chrV', '+', '21097', '21000', '22000']),
-                   ne_class(['YEL066W', 'HPA3', 'chrV', '+', '27206', '27000', '28000']),
-                   ne_class(['YEL065W', 'SIT1', 'chrV', '+', '29543', '29000', '30000']),
+        entries = [ne_class(['YEL072W', 'RMD6', 'chrV', '+', '14415', '14405', '14425']),
+                   ne_class(['YEL071W', 'DLD3', 'chrV', '+', '17848', '17839', '17853']),
+                   ne_class(['snR67', 'SNR67', 'chrV', '+', '61433', '61425', '61439']),
+                   ne_class(['YEL043W', 'YEL043W', 'chrV', '+', '73348', '73345', '73350']),
+                   ne_class(['YPR036W', 'VMA13', 'chrXVI', '+', '645272', '645270', '645272']),
                    ]
         it = ap.get_annotations()
         for i, e in enumerate(it):
-            self.assertEqual(entries[i], e)
+            self.assertEqual(entries[i], e, "\n{}\n{}".format(entries[i], e))
 
         ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_wo_start.txt'), 'Position')
 
@@ -202,14 +203,14 @@ class TestAnnotationParser(CRAWTest):
                                   ['name', 'gene', 'chromosome', 'strand', 'Position'],
                                   'Position')
         entries = [ne_class(['YEL072W', 'RMD6', 'chrV', '+', '14415']),
-                   ne_class(['YEL071W', 'DLD3', 'chrV', '+', '17845']),
-                   ne_class(['YEL070W', 'DSF1', 'chrV', '+', '21097']),
-                   ne_class(['YEL066W', 'HPA3', 'chrV', '+', '27206']),
-                   ne_class(['YEL065W', 'SIT1', 'chrV', '+', '29543']),
+                   ne_class(['YEL071W', 'DLD3', 'chrV', '+', '17848']),
+                   ne_class(['snR67', 'SNR67', 'chrV', '+', '61433']),
+                   ne_class(['YEL043W', 'YEL043W', 'chrV', '+', '73348']),
+                   ne_class(['YPR036W', 'VMA13', 'chrXVI', '+', '645272']),
                    ]
         it = ap.get_annotations()
         for i, e in enumerate(it):
-            self.assertEqual(entries[i], e)
+            self.assertEqual(entries[i], e, "\n{}\n{}".format(entries[i], e))
 
         ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_bad_header.txt'),
                               'Position',

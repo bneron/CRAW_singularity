@@ -35,18 +35,20 @@ class Test(CRAWTest):
         """
         self.out_dir = os.path.join(self.tmp_dir, 'craw')
         os.makedirs(self.out_dir)
-        output_filename = 'coverage_with_fixed_window.cov.txt'
+        output_filename = 'annotation_wo_start.cov.txt'
         test_result_path = os.path.join(self.out_dir, output_filename)
         command = "{bin} --bam={bam_file} --annot={annot_file} " \
                   "--before={before} --after={after} " \
                   "--ref-col={ref_col} " \
+                  "--quality-threshold={qual} " \
                   "--output={out_file} ".format(
                                                  bin=self.bin,
                                                  bam_file=os.path.join(self._data_dir, 'crac_tac4_20160624_plus_uv_sorted_unspliced.bam'),
-                                                 annot_file=os.path.join(self._data_dir, 'annotations_cerevisiae_10.txt'),
+                                                 annot_file=os.path.join(self._data_dir, 'annotation_wo_start.txt'),
                                                  ref_col='Position',
                                                  before=5,
                                                  after=3,
+                                                 qual=0,
                                                  out_file=test_result_path
                                                 )
         #print "\n", command
