@@ -107,6 +107,21 @@ class TestEntry(CRAWTest):
         self.assertEqual(str(ctx.exception),
                          "strand must be '+ or '-' got '='")
 
+        with self.assertRaises(RuntimeError) as ctx:
+            values = [14450, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+            ne = ne_class([str(v) for v in values])
+        self.assertEqual(str(ctx.exception),
+                        " error in line '14450\t15000\tYEL072W\tRMD6\tchrV\t+\t14415': 14450 (beg) > 14415 (Position)"
+        )
+
+        with self.assertRaises(RuntimeError) as ctx:
+            values = [14405, 14000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+            ne = ne_class([str(v) for v in values])
+        self.assertEqual(str(ctx.exception),
+                        " error in line '14405\t14000\tYEL072W\tRMD6\tchrV\t+\t14415': 14000 (end) < 14415 (Position)"
+        )
+
+
     def test_chromosome(self):
         name = 'toto'
         ref_col = 'pos_ref'
