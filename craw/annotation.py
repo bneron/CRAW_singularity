@@ -14,17 +14,17 @@ class Entry:
         self._values = [self._convert(f, v) for f, v in zip(self._fields, values)]
         if self.start is not None and self.start > self.ref:
             raise RuntimeError(" error in line '{}': {} ({}) > {} ({})".format(self,
-                                                                          self.start,
-                                                                          self._fields_idx['start'].col_name,
-                                                                          self.ref,
+                                                                               self.start,
+                                                                               self._fields_idx['start'].col_name,
+                                                                               self.ref,
                                                                                self._fields_idx['ref'].col_name
                                                                               ))
         if self.stop is not None and self.stop < self.ref:
             raise RuntimeError(" error in line '{}': {} ({}) < {} ({})".format(self,
-                                                                          self.stop,
-                                                                          self._fields_idx['stop'].col_name,
-                                                                          self.ref,
-                                                                          self._fields_idx['ref'].col_name))
+                                                                               self.stop,
+                                                                               self._fields_idx['stop'].col_name,
+                                                                               self.ref,
+                                                                               self._fields_idx['ref'].col_name))
 
     def _convert(self, field, value):
         if field == self._fields_idx['ref'].col_name:
@@ -60,6 +60,7 @@ class Entry:
             return self._values[self._fields_idx['start'].idx]
         else:
             return None
+
     @property
     def stop(self):
         """The position to end the coverage computaion (included)"""
@@ -165,10 +166,8 @@ class AnnotationParser:
 
     def get_annotations(self):
         """
-        parse an annotation file and yield a :class:`Entry` for each line of the file.
+        Parse an annotation file and yield a :class:`Entry` for each line of the file.
 
-        :param path: the path of the annotation file to parse.
-        :type path: string
         :return: a generator on a annotation file.
         """
         with open(self.path, 'r') as annot_file:
