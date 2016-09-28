@@ -73,12 +73,16 @@ def get_coverage(sam_file, annot_entry, before=None, after=None, qual_thr=15, ma
         return window_cov
 
     if before is not None:
-        start = annot_entry.ref - before
+        # pysam start base numbering at 0
+        # so we need to remove 1
+        start = annot_entry.ref - before - 1
+        # but pysam exclude the end of interval
+        # and we want to include it  -1 + 1
         stop = annot_entry.ref + after
         pad_left = []
         pad_right = []
     else:
-        start = annot_entry.start
+        start = annot_entry.start -1
         stop = annot_entry.stop
         pad_left = [None] * (max_left - (annot_entry.ref - start))
         pad_right = [None] * (max_right - (stop - annot_entry.ref))
