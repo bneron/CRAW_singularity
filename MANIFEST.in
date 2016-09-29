@@ -1,0 +1,12 @@
+include README.md
+include COPYRIGHT
+include requirements.txt
+
+include setup.py
+include bin/coverage
+include craw/*.py
+recursive-include tests *.py
+recursive-include tests/data *
+
+recursive-include doc/build/html *
+include doc/_build/latex/*.pdf
