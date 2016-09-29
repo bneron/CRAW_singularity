@@ -82,6 +82,8 @@ class Test(CRAWTest):
         with open(test_result_path) as test_result_file:
             test_result = test_result_file.readlines()
         for expected, result in zip(expected_result, test_result):
+            if expected.startswith("# Version :"):
+                continue
             if expected.startswith("# --annot ="):
                 continue
             elif expected.startswith("# --bam ="):

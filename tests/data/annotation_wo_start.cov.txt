@@ -1,5 +1,5 @@
-# Running Counter RnAseq Window version TODO
-#
+# Running Counter RnAseq Window
+# Version: craw NOT packaged, it should be a development version | Python 3.4
 # With the following arguments:
 # --after = 3
 # --annot = tests/data/annotation_wo_start.txt

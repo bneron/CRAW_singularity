@@ -11,13 +11,11 @@ if 'CRAW_HOME' in os.environ and os.environ['CRAW_HOME']:
     if os.environ['CRAW_HOME'] not in sys.path:
         sys.path.insert(0, os.environ['CRAW_HOME'])
 try:
-    from craw import annotation
+    import craw
 except ImportError as err:
     msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
     sys.exit(msg)
-
-from craw import coverage
-
+from craw import annotation, coverage
 
 def positive_int(string):
     value = int(string)
@@ -33,6 +31,18 @@ def quality_checker(string):
         msg = "must be a integer between 0 and 42, got: {}".format(string)
         raise argparse.ArgumentTypeError(msg)
     return value
+
+
+def get_version_message():
+    # if I keep '$ VERSION' (without space) as is
+    # the setup.py will replace it by the value set in setup
+    # so the test become True even if craw is installed using setup.py
+    if craw.__version__ == '$' + 'VERSION':
+        version = "NOT packaged, it should be a development version"
+    else:
+        version = craw.__version__
+    version_text = "craw {0} | Python {1}.{2}".format(version, sys.version_info.major, sys.version_info.minor)
+    return version_text
 
 
 parser = argparse.ArgumentParser()
@@ -87,6 +97,10 @@ region_grp.add_argument("--start-col",
                         help="The name of the column to define the start position.")
 region_grp.add_argument("--stop-col",
                         help="The name of the column to define the stop position.")
+
+parser.add_argument("--version",
+                    action='version',
+                    version=get_version_message())
 args = parser.parse_args()
 
 group_one = (args.before, args.after, args.window)
@@ -128,7 +142,8 @@ sam_file = pysam.AlignmentFile(args.bam, "rb")
 annotations = annot_parser.get_annotations()
 
 with open(args.output, 'w') as result_file:
-    header = "# Running Counter RnAseq Window version {}\n#\n".format('TODO')
+    header = "# Running Counter RnAseq Window\n"
+    header +="# Version: {}\n".format(get_version_message())
     header += "# With the following arguments:\n"
     for a, v in sorted(args.__dict__.items()):
         if v is not None:
