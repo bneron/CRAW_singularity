@@ -29,13 +29,16 @@ using setup.py
 from repository
 ---------------
 
-clone the project 
+clone the project and install with the setup.py
+
 `git clone https://gitlab.pasteur.fr/bneron/craw.git`
+
 `cd craw`
+
 `python setup.py install`
 
 You can also use the package without install it.
-You have to export the CRAW_HOME environment variable.
+You have to export the **CRAW_HOME** environment variable.
 Then you can use it directly
 
 Testing my installation
