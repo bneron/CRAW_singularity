@@ -36,25 +36,23 @@ def quality_checker(string):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--bam",
+parser.add_argument("-b", "--bam",
                     required=True,
-                    dest='bam_file',
-                    help="the path of the bam file to analyse")
-parser.add_argument("--annot",
+                    help="The path of the bam file to analyse")
+parser.add_argument("-a", "--annot",
                     required=True,
-                    dest='annot_file',
-                    help="the path of the annotation file.")
-parser.add_argument("--quality-threshold",
+                    help="The path of the annotation file.")
+parser.add_argument("-q", "--qual-thr",
                     dest='qual_thr',
                     type=quality_checker,
                     default=15,
-                    help="the minimal quality of read mapping to take it in account")
-parser.add_argument("--suffix",
+                    help="The minimal quality of read mapping to take it in account")
+parser.add_argument("-s", "--suffix",
                     default="cov",
-                    help="the name of the suffix to use for the output file.")
+                    help="The name of the suffix to use for the output file.")
 parser.add_argument('-o', '--output',
-                    dest='output_file',
-                    help="the path of the output (default= base name of annotation file with --suffix)")
+                    dest='output',
+                    help="The path of the output (default= base name of annotation file with --suffix)")
 region_grp = parser.add_argument_group(title="region of interest",
                                        description="""Parameters which define regions to compute
 There is 2 way to define regions:
@@ -75,20 +73,20 @@ If all regions have different lengths. The regions must be specified in the anno
 """)
 region_grp.add_argument("--ref-col",
                         default="position",
-                        help="the name of the column for the reference position.")
+                        help="The name of the column for the reference position.")
 region_grp.add_argument("--before",
                         type=positive_int,
-                        help="the number of base to compute after the position of reference.")
+                        help="The number of base to compute after the position of reference.")
 region_grp.add_argument("--after",
                         type=positive_int,
-                        help="the number of base to compute before the position of reference.")
+                        help="The number of base to compute before the position of reference.")
 region_grp.add_argument("--window",
                         type=positive_int,
-                        help="the number of base to compute around the position of reference.")
+                        help="The number of base to compute around the position of reference.")
 region_grp.add_argument("--start-col",
-                        help="the name of the column to define the start position.")
+                        help="The name of the column to define the start position.")
 region_grp.add_argument("--stop-col",
-                        help="the name of the column to define the stop position.")
+                        help="The name of the column to define the stop position.")
 args = parser.parse_args()
 
 group_one = (args.before, args.after, args.window)
@@ -119,24 +117,30 @@ elif not all(group_two):
     raise argparse.ArgumentError(None, "The two options --start-col and --stop-col work together. "
                                  "The both options must be specified in same time")
 
-if not args.output_file:
-    args.output_file = "{}.{}.txt".format(os.path.basename(os.path.splitext(args.annot_file)[0]), args.suffix)
+if not args.output:
+    args.output = "{}.{}.txt".format(os.path.basename(os.path.splitext(args.annot)[0]), args.suffix)
 
-annot_parser = annotation.AnnotationParser(args.annot_file, args.ref_col,
+annot_parser = annotation.AnnotationParser(args.annot, args.ref_col,
                                            strand_col='strand',
                                            start_col=args.start_col, stop_col=args.stop_col)
 
-sam_file = pysam.AlignmentFile(args.bam_file, "rb")
+sam_file = pysam.AlignmentFile(args.bam, "rb")
 annotations = annot_parser.get_annotations()
 
-with open(args.output_file, 'w') as result_file:
+with open(args.output, 'w') as result_file:
+    header = "# Running Counter RnAseq Window version {}\n#\n".format('TODO')
+    header += "# With the following arguments:\n"
+    for a, v in sorted(args.__dict__.items()):
+        if v is not None:
+            header += "# --{opt} = {val}\n".format(opt=a.replace('_', '-'), val=v)
+    print(header.rstrip(), file=result_file)
     print("sense", *annot_parser.header, sep='\t', end='\t', file=result_file)
     max_left, max_right = annot_parser.max()
     if args.start_col:
         print(*list(range(0 - max_left, max_right + 1)), sep='\t', file=result_file)
     else:
         print(*list(range(0 - args.before, args.after + 1)), sep='\t', file=result_file)
-    for annot_num, annot_entry in enumerate(annotations):
+    for annot_num, annot_entry in enumerate(annotations,1):
         if annot_num % 50 == 0:
             print('.', end='', file=sys.stderr)
             if annot_num % 2500 == 0:

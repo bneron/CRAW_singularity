@@ -40,7 +40,7 @@ class Test(CRAWTest):
         command = "{bin} --bam={bam_file} --annot={annot_file} " \
                   "--before={before} --after={after} " \
                   "--ref-col={ref_col} " \
-                  "--quality-threshold={qual} " \
+                  "--qual-thr={qual} " \
                   "--output={out_file} ".format(
                                                  bin=self.bin,
                                                  bam_file=os.path.join(self._data_dir, 'crac_tac4_20160624_plus_uv_sorted_unspliced.bam'),
@@ -79,10 +79,16 @@ class Test(CRAWTest):
         with open(expected_result_path) as expected_result_file:
             expected_result = expected_result_file.readlines()
 
-
         with open(test_result_path) as test_result_file:
             test_result = test_result_file.readlines()
-
-        self.assertListEqual(expected_result, test_result)
+        for expected, result in zip(expected_result, test_result):
+            if expected.startswith("# --annot ="):
+                continue
+            elif expected.startswith("# --bam ="):
+                continue
+            elif expected.startswith("# --output ="):
+                continue
+            else:
+                self.assertEqual(expected, result)
 
 
