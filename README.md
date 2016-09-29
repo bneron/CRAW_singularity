@@ -15,11 +15,15 @@ from package
 ------------
 
 using pip
+
 `pip install craw-x.x.x.tar.gz`
 
 using setup.py
+
 `tar -xzf craw-x.x.x.tar.gz`
+
 `cd craw-x.x.x.tar.gz`
+
 `python setup.py install`
 
 from repository
