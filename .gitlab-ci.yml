@@ -8,4 +8,5 @@ build:
     stage: test
     script:
         - python3 ${CRAW_HOME}/tests/run_tests.py -vvv
-
+    except:
+        - /^feat.*$/
