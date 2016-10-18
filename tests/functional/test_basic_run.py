@@ -60,7 +60,7 @@ class Test(CRAWTest):
             cov_process = Popen(command,
                                 shell=True,
                                 stdin=None,
-                                stderr=DEVNULL,
+                                stderr=PIPE,
                                 close_fds=False
                                 )
         except Exception as err:
@@ -71,9 +71,11 @@ class Test(CRAWTest):
 
         cov_process.wait()
         self.assertEqual(cov_process.returncode, 0,
-                         "coverage finished with non zero exit code: {0} command launched=\n{1}".format(
+                         "coverage finished with non zero exit code: {0} command launched=\n{1}\n{2}".format(
                          cov_process.returncode,
-                         command))
+                         command,
+                         ''.join([l.decode('utf-8') for l in cov_process.stderr.readlines()]),
+                         ))
 
         expected_result_path = os.path.join(self._data_dir, output_filename)
         with open(expected_result_path) as expected_result_file:
