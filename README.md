@@ -24,7 +24,7 @@ using setup.py
 
 `cd craw-x.x.x.tar.gz`
 
-`python setup.py install`
+`python3 setup.py install`
 
 from repository
 ---------------
@@ -35,7 +35,7 @@ clone the project and install with the setup.py
 
 `cd craw`
 
-`python setup.py install`
+`python3 setup.py install`
 
 You can also use the package without install it.
 You have to export the **CRAW_HOME** environment variable.
