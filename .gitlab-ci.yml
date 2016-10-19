@@ -7,13 +7,13 @@ variables:
   CRAW_HOME: ${CI_PROJECT_DIR}
 
 before_script:
- - docker login -u bneron -p "$BNERON_CI_TOKEN" registry-gitlab.pasteur.fr
+ - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry-gitlab.pasteur.fr
  
 build:
 #    image: registry-gitlab.pasteur.fr/bneron/craw:centos7
     stage: test
     script:
-         - docker run  -v $CI_PROJECT_DIR:/build registry-gitlab.pasteur.fr/bneron/craw:centos7 date
+         - docker run -v $CI_PROJECT_DIR:/build registry-gitlab.pasteur.fr/bneron/craw:centos7 date
 #        - python3 ${CRAW_HOME}/tests/run_tests.py -vvv
     except:
         - /^feat.*$/
