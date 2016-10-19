@@ -1,6 +1,8 @@
 # Run tests on gitlab.pasteur.fr after new push
-
-
+image: docker:latest
+services:
+  - docker:dind
+  
 variables:
   CRAW_HOME: ${CI_PROJECT_DIR}
 
