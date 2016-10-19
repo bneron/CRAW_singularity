@@ -201,7 +201,6 @@ class install_data(_install_data):
 
     def run(self):
         self.mkpath(self.install_dir)
-        print("@@@@ L206 install_data run self.install_dir", self.install_dir)
         for f in self.files_2_install:
             if isinstance(f, str):
                 if not os.path.exists(f):
@@ -211,7 +210,6 @@ class install_data(_install_data):
                 if self.warn_dir:
                     self.warn("setup script did not provide a directory for "
                               "'{0}' -- installing right in '{1}'".format((f, self.install_dir)))
-                print("@@@ self.copy_file(",f,self.install_dir,")")
                 (out, _) = self.copy_file(f, self.install_dir)
                 self.outfiles.append(out)
             else:
@@ -235,7 +233,6 @@ class install_data(_install_data):
                             log.warn("WARNING the document {} cannot be found, installation skipped".format(data))
                             continue
                         if os.path.isdir(data):
-                            print("@@@ self.copy_tree(",data, dir_,")")
                             out = self.copy_tree(data, dir_)
                             self.outfiles.extend(out)
                         else:
