@@ -13,7 +13,7 @@ build:
 #    image: registry-gitlab.pasteur.fr/bneron/craw:centos7
     stage: test
     script:
-         - docker run -v $CI_PROJECT_DIR:/build registry-gitlab.pasteur.fr/bneron/craw:centos7 /build/tests/run_tests.py
+         - docker run -v $CI_PROJECT_DIR:/build registry-gitlab.pasteur.fr/bneron/craw:centos7 python3 /build/tests/run_tests.py
 #        - python3 ${CRAW_HOME}/tests/run_tests.py -vvv
     except:
         - /^feat.*$/
