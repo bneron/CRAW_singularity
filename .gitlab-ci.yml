@@ -10,9 +10,10 @@ before_script:
  - docker login -u bneron -p "$BNERON_CI_TOKEN" registry-gitlab.pasteur.fr
  
 build:
-    image: registry-gitlab.pasteur.fr/bneron/craw:centos7
+#    image: registry-gitlab.pasteur.fr/bneron/craw:centos7
     stage: test
     script:
-        - python3 ${CRAW_HOME}/tests/run_tests.py -vvv
+         - docker run registry-gitlab.pasteur.fr/bneron/craw:centos7 "python3 ${CRAW_HOME}/tests/run_tests.py -vvv"
+#        - python3 ${CRAW_HOME}/tests/run_tests.py -vvv
     except:
         - /^feat.*$/
