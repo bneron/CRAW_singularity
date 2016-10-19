@@ -4,7 +4,7 @@ services:
   - docker:dind
   
 variables:
-  CRAW_HOME: ${CI_PROJECT_DIR}
+  CRAW_HOME: /build
 
 before_script:
  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry-gitlab.pasteur.fr
@@ -13,7 +13,7 @@ build:
 #    image: registry-gitlab.pasteur.fr/bneron/craw:centos7
     stage: test
     script:
-         - docker run -v $CI_PROJECT_DIR:/build registry-gitlab.pasteur.fr/bneron/craw:centos7 python3 /build/tests/run_tests.py
+         - docker run -v $CI_PROJECT_DIR:/build registry-gitlab.pasteur.fr/bneron/craw:centos7 python3 /build/tests/run_tests.py -vvv
 #        - python3 ${CRAW_HOME}/tests/run_tests.py -vvv
     except:
         - /^feat.*$/
