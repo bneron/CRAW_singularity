@@ -7,7 +7,7 @@ variables:
   CRAW_HOME: ${CI_PROJECT_DIR}
 
 before_script:
- - docker login -u bneron -p "$BNERON_CI_TOKEN" registry-gitlab.pasteur.fr
+ - docker login -u "bneron" -p "$BNERON_CI_TOKEN" registry-gitlab.pasteur.fr
  
 build:
 #    image: registry-gitlab.pasteur.fr/bneron/craw:centos7
