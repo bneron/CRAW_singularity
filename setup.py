@@ -440,9 +440,6 @@ def subst_vars(src, dst, vars):
             dest_file.write(new_line)
 
 
-require_python = ['python (>3.1)']
-require_packages = ['pysam (>=0.9.1)']
-
 setup(name="craw",
       version='{}-dev'.format(time.strftime('%Y%m%d')),
       author='Bertrand Néron',
@@ -460,7 +457,7 @@ setup(name="craw",
       long_description="""From a bam file and a file containing regions,
 coverage compute the coverage for each positions of these regions in sense and antisense.""",
       platforms=["Unix"],
-      install_requires=['pysam >= 0.9.1.4'],
+      install_requires=['pysam>=0.9.1.4'],
       packages=['craw'],
       scripts=['bin/coverage'],
 
