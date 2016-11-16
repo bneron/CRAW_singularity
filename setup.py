@@ -114,6 +114,15 @@ def get_install_data_dir(inst):
 
 
 def subst_vars(src, dst, vars):
+    """
+    substitute variables (string starting with $) in file
+    :param src: the file containing variable to substitute
+    :type src: string
+    :param dst: the destination file
+    :type dst: string
+    :param vars: the variables to substitute in dict key are variable name
+    :type vars: dict
+    """
     try:
         src_file = open(src, "r")
     except os.error as err:
