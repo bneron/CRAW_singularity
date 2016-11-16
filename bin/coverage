@@ -132,7 +132,7 @@ elif not all(group_two):
                                  "The both options must be specified in same time")
 
 if not args.output:
-    args.output = "{}.{}.txt".format(os.path.basename(os.path.splitext(args.annot)[0]), args.suffix)
+    args.output = "{}.{}.txt".format(os.path.splitext(args.bam)[0], args.suffix)
 
 annot_parser = annotation.AnnotationParser(args.annot, args.ref_col,
                                            strand_col='strand',
