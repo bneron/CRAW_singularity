@@ -61,6 +61,15 @@ def get_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, max_
         :rtype: tuple of 2 list containing int
         """
         call_back = on_forward if strand == '+' else on_reverse
+        real_start = None
+        if start < 0:
+            # if start is negative
+            # when start is compute from large window and reads map at the beginning of the reference
+            # pysam crash see issue #10
+            # so we ask coverage from 0 and pad with None value for negative positions
+            real_start = start
+            start = 0
+
         coverage = sam_file.count_coverage(reference=chromosome,
                                            start=start,
                                            end=stop,
@@ -70,6 +79,8 @@ def get_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, max_
         window_cov = []
         for cov_A, cov_T, cov_C, cov_G in zip(*coverage):
             window_cov.append(cov_A + cov_T + cov_C + cov_G)
+        if real_start:
+            window_cov = [None] * abs(real_start) + window_cov
         return window_cov
 
     pad_left = [None] * (max_left - (annot_entry.ref - start))
