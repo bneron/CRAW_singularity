@@ -1,14 +1,14 @@
 # Running Counter RnAseq Window
 # Version: craw NOT packaged, it should be a development version | Python 3.4
 # With the following arguments:
-# --after = 3
-# --annot = tests/data/annotation_wo_start.txt
-# --bam = tests/data/crac_tac4_20160624_plus_uv_sorted_unspliced.bam
-# --before = 5
-# --output = /tmp/craw/annotation_wo_start.cov.txt
-# --qual-thr = 0
-# --ref-col = Position
-# --suffix = cov
+# --after=3
+# --annot=tests/data/annotation_wo_start.txt
+# --bam=tests/data/crac_tac4_20160624_plus_uv_sorted_unspliced.bam
+# --before=5
+# --output=/tmp/craw/annotation_wo_start.cov.txt
+# --qual-thr=0
+# --ref-col=Position
+# --suffix=cov
 sense	name	gene	chromosome	strand	Position	-5	-4	-3	-2	-1	0	1	2	3
 S	YEL072W	RMD6	chrV	+	14415	0	0	0	0	0	0	0	0	0
 AS	YEL072W	RMD6	chrV	+	14415	0	0	0	0	0	0	0	0	0

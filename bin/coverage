@@ -147,7 +147,7 @@ with open(args.output, 'w') as result_file:
     header += "# With the following arguments:\n"
     for a, v in sorted(args.__dict__.items()):
         if v is not None:
-            header += "# --{opt} = {val}\n".format(opt=a.replace('_', '-'), val=v)
+            header += "# --{opt}={val}\n".format(opt=a.replace('_', '-'), val=v)
     print(header.rstrip(), file=result_file)
     print("sense", *annot_parser.header, sep='\t', end='\t', file=result_file)
     max_left, max_right = annot_parser.max()

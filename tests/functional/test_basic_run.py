@@ -33,7 +33,7 @@ class Test(CRAWTest):
         | test if returncode of coverage is 0 and
         | then test if the generated file is the same as a reference file
         """
-        self.out_dir = os.path.join(self.tmp_dir, 'craw')
+        self.out_dir = os.path.join(self.tmp_dir, 'craw_test')
         os.makedirs(self.out_dir)
         output_filename = 'annotation_wo_start.cov.txt'
         test_result_path = os.path.join(self.out_dir, output_filename)
@@ -86,11 +86,11 @@ class Test(CRAWTest):
         for expected, result in zip(expected_result, test_result):
             if expected.startswith("# Version :"):
                 continue
-            if expected.startswith("# --annot ="):
+            if expected.startswith("# --annot="):
                 continue
-            elif expected.startswith("# --bam ="):
+            elif expected.startswith("# --bam="):
                 continue
-            elif expected.startswith("# --output ="):
+            elif expected.startswith("# --output="):
                 continue
             else:
                 self.assertEqual(expected, result)
