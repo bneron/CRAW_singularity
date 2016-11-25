@@ -12,6 +12,6 @@ build:
     stage: test
     script:
 #         - docker run -v $CI_PROJECT_DIR:/build -e "CRAW_HOME=/build" registry-gitlab.pasteur.fr/bneron/craw:centos7 python3 /build/tests/run_tests.py -vvv
-        - python3 ${CRAW_HOME}/tests/run_tests.py -vvv
+        - python3 ${CI_PROJECT_DIR}/tests/run_tests.py -vvv
     except:
         - /^feat.*$/
