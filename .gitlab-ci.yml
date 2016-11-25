@@ -2,7 +2,7 @@
 image: docker:latest
   
 variables:
-  CRAW_HOME: /build
+  CRAW_HOME: ${CI_PROJECT_DIR}
 
 #before_script:
 # - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry-gitlab.pasteur.fr
