@@ -81,9 +81,10 @@ def heatmap(sense, antisense, color_map=plt.cm.seismic, title=None):
         antisense_plot.set_title("anti-sense")
         draw_one_matrix(antisense, antisense_plot, cmap=color_map)
     title = "unknow" if title is None else title.replace(' ', '_')
-    fig.savefig("{}.png".format(title))
+    #fig.savefig("{}.png".format(title))
 
 cov_file = '/home/bneron/Projects/gwenael/src/crac_tac4_window_200.cov'
+cov_file = 'WTE1_0+2000.cov'
 d = get_data(cov_file)
 sense, antisense = split_data(d)
 sense = remove_metadata(sense)
