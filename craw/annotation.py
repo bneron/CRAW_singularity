@@ -187,7 +187,7 @@ class AnnotationParser:
                                           start_col=self.start_col,
                                           stop_col=self.stop_col)
             for line in annot_file:
-                yield MyEntryClass(line.split())
+                yield MyEntryClass(line.split('\t'))
 
     def max(self):
         """
