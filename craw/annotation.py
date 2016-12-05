@@ -9,8 +9,13 @@ class Entry:
         :param values: the values parsed from one line of the annotation file
         :type values: list of string
         """
+        self._reverse_values = set(('-', '-1', 'rev'))
+        self._forward_values = set(('+', '1', 'for'))
+
         if len(values) != len(self._fields):
-            raise RuntimeError("the number of values does not match with number of fields")
+            raise RuntimeError("the number of values ({}) does not match with number of fields ({}): {}".format(len(values),
+                                                                                                            len(self._fields),
+                                                                                                                values))
         self._values = [self._convert(f, v) for f, v in zip(self._fields, values)]
         if self.start is not None and self.start > self.ref:
             raise RuntimeError(" error in line '{}': {} ({}) > {} ({})".format(self,
@@ -18,7 +23,7 @@ class Entry:
                                                                                self._fields_idx['start'].col_name,
                                                                                self.ref,
                                                                                self._fields_idx['ref'].col_name
-                                                                              ))
+                                                                               ))
         if self.stop is not None and self.stop < self.ref:
             raise RuntimeError(" error in line '{}': {} ({}) < {} ({})".format(self,
                                                                                self.stop,
@@ -30,8 +35,13 @@ class Entry:
         if field == self._fields_idx['ref'].col_name:
             value = int(value)
         elif field == self._fields_idx['strand'].col_name:
-            if value not in ('+', '-'):
-                raise RuntimeError("strand must be '+ or '-' got '{}'".format(value))
+            v = value.lower()
+            if v in self._forward_values:
+                value = '+'
+            elif v in self._reverse_values:
+                value = '-'
+            else:
+                raise RuntimeError("strand must be '+/-', '1/-1' or 'for/rev' got '{}'".format(value))
         elif 'start' in self._fields_idx and field == self._fields_idx['start'].col_name:
             value = int(value)
         elif 'stop' in self._fields_idx and field == self._fields_idx['stop'].col_name:
@@ -109,7 +119,7 @@ def new_entry_type(name, fields, ref_col,
     """
     fields_idx = {}
     if any((start_col, stop_col)) and not all((start_col, stop_col)):
-        raise RuntimeError("if start_col is specified stop_col mustbe too and vie versa")
+        raise RuntimeError("if start_col is specified stop_col must be too and vice versa")
     try:
         fields_idx['ref'] = Idx(ref_col, fields.index(ref_col))
     except ValueError:
@@ -177,7 +187,7 @@ class AnnotationParser:
                                           start_col=self.start_col,
                                           stop_col=self.stop_col)
             for line in annot_file:
-                yield MyEntryClass(line.split())
+                yield MyEntryClass(line.split('\t'))
 
     def max(self):
         """
