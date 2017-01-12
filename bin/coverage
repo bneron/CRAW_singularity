@@ -72,7 +72,7 @@ in both case  a position of reference must be define (--ref-col default = positi
 if all regions have same length:
     --window define the number of nucleotide to take in account before and after the reference position
       (the window will be centered on reference)
-    --before define the number of nucleotide to take in account after the reference position.
+    --before define the number of nucleotide to take in account before the reference position.
     --after define the number of nucleotide to take in account after the reference position.
     --before and --after allow to define non centered window.
 --after and --before options must be set together and are incompatible with --window option.
