@@ -21,6 +21,7 @@ def get_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, max_
     :return: the coverage (all bases)
     :rtype: tuple of 2 list containing int
     """
+    start < stop
     def on_forward(al_seg):
         """
         :param al_seg: a pysam aligned segment (the object used by pysam to represent an aligned read)
@@ -69,12 +70,23 @@ def get_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, max_
             # so we ask coverage from 0 and pad with None value for negative positions
             real_start = start
             start = 0
+        try:
+            coverage = sam_file.count_coverage(reference=chromosome,
+                                               start=start,
+                                               end=stop,
+                                               quality_threshold=qual,
+                                               read_callback=call_back)
+        except SystemError as err:
+            import sys
+            print("ERROR when call count_coverage with following arguments\n",
+                  "reference=", chromosome, "\n",
+                  "start=", start, "\n",
+                  "end=", stop, "\n",
+                  "quality_threshold=", qual, "\n",
+                  "read_callback=", call_back,
+                  file=sys.stderr)
+            raise err
 
-        coverage = sam_file.count_coverage(reference=chromosome,
-                                           start=start,
-                                           end=stop,
-                                           quality_threshold=qual,
-                                           read_callback=call_back)
         coverage = [array.tolist() for array in coverage]
         window_cov = []
         for cov_A, cov_T, cov_C, cov_G in zip(*coverage):
