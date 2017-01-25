@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
+
 def get_data(coverage_file):
     """
 
@@ -9,6 +10,7 @@ def get_data(coverage_file):
     """
     data = pd.read_table(coverage_file, comment='#', na_values='None')
     return data
+
 
 def split_data(data):
     """
@@ -19,6 +21,18 @@ def split_data(data):
     sense = data.loc[data['sense'] == 'S']
     antisense = data.loc[data['sense'] == 'AS']
     return sense, antisense
+
+
+def sort(data, start_col, stop_col):
+    data['gene_len'] = abs(data[stop_col] - data[start_col])
+    data = data.sort_values('gene_len', axis='index')
+    del data['gene_len']
+    return data
+
+
+def crop_matrix(data, start_col, stop_col):
+    return data.loc[:, start_col:stop_col]
+
 
 def remove_metadata(data):
     """
@@ -43,32 +57,28 @@ def remove_metadata(data):
     return coverage_data
 
 
-def draw_one_matrix(mat, cmap=plt.cm.seismic, y_label=None):
+def draw_one_matrix(mat, ax, cmap=plt.cm.seismic, y_label=None):
     """
 
     :param mat:
     :param cmap:
     :return:
     """
-    current_ax = plt.gca()
     row_num, col_num = mat.shape
-    mat_img = plt.imshow(mat,
-                         cmap=cmap,
-                         origin='upper',
-                         interpolation='nearest',
-                         aspect=col_num / row_num,
-                         extent=[mat.columns[0], mat.columns[-1], col_num, 0])
-
-    for ylabel_i in current_ax.axes.get_yticklabels():
+    mat_img = ax.imshow(mat,
+                        cmap=cmap,
+                        origin='upper',
+                        interpolation='nearest',
+                        aspect=col_num / row_num,
+                        extent=[int(mat.columns[0]), int(mat.columns[-2]) + 1, row_num, 0],
+                        )
+    for ylabel_i in ax.axes.get_yticklabels():
         ylabel_i.set_visible(False)
-
-    for tick in current_ax.axes.get_yticklines():
+    for tick in ax.axes.get_yticklines():
         tick.set_visible(False)
     if y_label is not None:
-        current_ax.set_ylabel(y_label)
-    current_ax.set_xlabel("length [bp]")
-
-
+        ax.set_ylabel(y_label, size='large')
+    return mat_img
 
 
 def heatmap(sense, antisense, color_map=plt.cm.seismic):
@@ -85,7 +95,6 @@ def heatmap(sense, antisense, color_map=plt.cm.seismic):
         draw_sense = False
     if antisense is None or antisense.empty:
         draw_antisense = False
-
 
     fig = plt.figure()
     if draw_sense:
