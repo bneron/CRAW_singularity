@@ -1,0 +1,56 @@
+#! /usr/bin/env python3
+
+import sys
+import os
+import matplotlib.pyplot as plt
+import matplotlib as mtp
+
+if 'CRAW_HOME' in os.environ and os.environ['CRAW_HOME']:
+    if os.environ['CRAW_HOME'] not in sys.path:
+        sys.path.insert(0, os.environ['CRAW_HOME'])
+try:
+    import craw
+except ImportError as err:
+    msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
+    sys.exit(msg)
+from craw import heatmap
+
+
+cov_file = sys.argv[1]
+
+d = heatmap.get_data(cov_file)
+sense, antisense = heatmap.split_data(d)
+sense = heatmap.sort(sense, 'annotation_start', 'annotation_end')
+sense = heatmap.remove_metadata(sense)
+
+antisense = heatmap.sort(antisense, 'annotation_start', 'annotation_end')
+antisense = heatmap.remove_metadata(antisense)
+
+##################
+# sense
+##################
+color_map = plt.cm.Blues
+log_norm = mtp.colors.LogNorm()
+
+
+#                                          figsize=(wide, height)
+fig, axes_array = plt.subplots(nrows=2, ncols=1, figsize=(7, 10))
+fig.suptitle("figure name", fontsize='large')
+
+sense_subplot = axes_array[0]
+sense_img = heatmap.draw_one_matrix(sense, sense_subplot, cmap=color_map, y_label="Sense")
+sense_img.set_norm(log_norm)
+
+#####################
+# antisense
+#####################
+
+antisense_subplot = axes_array[1]
+antisense_img = heatmap.draw_one_matrix(antisense, antisense_subplot, cmap=color_map, y_label="Anti sense")
+antisense_img.set_norm(log_norm)
+
+
+fig.tight_layout()
+fig.subplots_adjust(top=0.95)
+fig.canvas.set_window_title('window name')
+plt.show()
