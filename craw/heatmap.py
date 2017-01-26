@@ -1,3 +1,5 @@
+from inspect import isfunction
+
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -23,11 +25,37 @@ def split_data(data):
     return sense, antisense
 
 
-def sort(data, start_col, stop_col):
+def sort(data, criteria, **kwargs):
+    func_name = '_sort_' + criteria
+    all_func = globals()
+    if func_name in all_func and isfunction(all_func[func_name]):
+        s_d = globals()[func_name](data, **kwargs)
+        return s_d
+    else:
+        raise RuntimeError('BLABLA')
+
+def _sort_by_gene_size(data, start_col=None, stop_col=None):
     data['gene_len'] = abs(data[stop_col] - data[start_col])
     data = data.sort_values('gene_len', axis='index')
     del data['gene_len']
     return data
+
+
+def _sort_using_col(data, col=None):
+    data = data.sort_values(col, axis='index')
+    return data
+
+
+def _sort_using_file(data, file=None):
+    ref = pd.read_table(file, comment="#")
+    col_name = ref.columns[0]
+
+    # change the index of the data using the col_name
+    data.set_index(data[col_name], inplace=True)
+
+    # reindex the data according the ref dataframe
+    reindexed_data = data.reindex(ref[col_name])
+    return reindexed_data
 
 
 def crop_matrix(data, start_col, stop_col):

@@ -20,10 +20,10 @@ cov_file = sys.argv[1]
 
 d = heatmap.get_data(cov_file)
 sense, antisense = heatmap.split_data(d)
-sense = heatmap.sort(sense, 'annotation_start', 'annotation_end')
+sense = heatmap.sort(sense, 'by_gene_size', start_col='annotation_start', stop_col='annotation_end')
 sense = heatmap.remove_metadata(sense)
 
-antisense = heatmap.sort(antisense, 'annotation_start', 'annotation_end')
+antisense = heatmap.sort(antisense, 'by_gene_size', start_col='annotation_start', stop_col='annotation_end')
 antisense = heatmap.remove_metadata(antisense)
 
 ##################
