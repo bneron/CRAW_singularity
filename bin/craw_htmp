@@ -19,7 +19,9 @@ from craw import heatmap
 cov_file = sys.argv[1]
 
 d = heatmap.get_data(cov_file)
+
 sense, antisense = heatmap.split_data(d)
+
 sense = heatmap.sort(sense, 'by_gene_size', start_col='annotation_start', stop_col='annotation_end')
 sense = heatmap.remove_metadata(sense)
 
@@ -54,3 +56,5 @@ fig.tight_layout()
 fig.subplots_adjust(top=0.95)
 fig.canvas.set_window_title('window name')
 plt.show()
+#fig = heatmap.draw_heatmap(sense, antisense)
+#fig.show()

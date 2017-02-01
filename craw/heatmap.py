@@ -1,6 +1,8 @@
 from inspect import isfunction
+import sys
 
 import matplotlib.pyplot as plt
+import matplotlib as mtp
 import pandas as pd
 
 
@@ -109,7 +111,7 @@ def draw_one_matrix(mat, ax, cmap=plt.cm.seismic, y_label=None):
     return mat_img
 
 
-def heatmap(sense, antisense, color_map=plt.cm.seismic):
+def draw_heatmap(sense, antisense, color_map=plt.cm.Blues):
     """
 
     :param sense:
@@ -121,24 +123,43 @@ def heatmap(sense, antisense, color_map=plt.cm.seismic):
     draw_antisense = True
     if sense is None or sense.empty:
         draw_sense = False
+        print("there is n")
     if antisense is None or antisense.empty:
         draw_antisense = False
 
-    fig = plt.figure()
+    if all((draw_sense, draw_antisense)):
+        print("all")
+        fig, axes_array = plt.subplots(nrows=2, ncols=1, figsize=(7, 10))
+    elif any((draw_sense, draw_antisense)):
+        print("any")
+        fig, axes_array = plt.subplots(nrows=1, ncols=1, figsize=(7, 10))
+    else:
+        print("WARNING: no matrix to draw", file=sys.stderr)
+        return
+    fig.suptitle("figure name", fontsize='large')
+
+    log_norm = mtp.colors.LogNorm()
+
     if draw_sense:
-        plt.subplot(111)
-        draw_one_matrix(sense, y_label='sense')
+        print("INFO: drawing sense matrix", file=sys.stderr)
+        sense_subplot = axes_array[0]
+        sense_img = draw_one_matrix(sense, sense_subplot, cmap=color_map, y_label="Sense")
+        sense_img.set_norm(log_norm)
     if draw_antisense:
+        print("INFO: drawing sense matrix", file=sys.stderr)
         if draw_sense:
-            plt.subplot(121)
+            antisense_subplot = axes_array[1]
         else:
-            plt.subplot(111)
-        draw_one_matrix(antisense, ylabel='anti sense')
+            antisense_subplot = axes_array[0]
+        antisense_img = draw_one_matrix(antisense, antisense_subplot, cmap=color_map, y_label="Anti sense")
+        antisense_img.set_norm(log_norm)
 
     fig.suptitle('this is the figure title',
                  fontsize=12,
                  horizontalalignment='center',
                  verticalalignment='bottom')
 
-    plt.show()
-
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.95)
+    fig.canvas.set_window_title('window name')
+    return fig
