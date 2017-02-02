@@ -10,6 +10,9 @@ requirements
 
 - python > 3
 - pysam >= 0.9.1.4
+- pandas >= 0.17.1
+- numpy >= 1.11.2
+- matplotlib >= 1.5.3
 
 from package
 ------------
@@ -18,13 +21,8 @@ using pip
 
 `pip install craw-x.x.x.tar.gz`
 
-using setup.py
+if you use virtualenv do not forget to configure the matplotlib backend
 
-`tar -xzf craw-x.x.x.tar.gz`
-
-`cd craw-x.x.x.tar.gz`
-
-`python3 setup.py install`
 
 from repository
 ---------------
@@ -45,7 +43,7 @@ Testing my installation
 -----------------------
 
 The package come from with some functional tests.
-to test if everythings is correctly installed.
+to test if everything is correctly installed.
 
 `python3 tests/run_tests.py -vvv`
 
