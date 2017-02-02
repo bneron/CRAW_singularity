@@ -159,7 +159,6 @@ if args.antisense_only:
 #############
 # sort data #
 #############
-log.info("Sorting data")
 # if data is empty or data is None sort return data
 # so it's error safe, and not time and space consuming
 if args.sort_by_gene_size:

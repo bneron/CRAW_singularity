@@ -43,7 +43,7 @@ def sort(data, criteria, **kwargs):
         raise RuntimeError('BLABLA')
 
 def _sort_by_gene_size(data, start_col=None, stop_col=None):
-    _log.info("by gene size using cols {}:{}".format(start_col, stop_col))
+    _log.info("Sorting data by gene size using cols {}:{}".format(start_col, stop_col))
     data['gene_len'] = abs(data[stop_col] - data[start_col])
     data = data.sort_values('gene_len', axis='index')
     del data['gene_len']
@@ -51,13 +51,13 @@ def _sort_by_gene_size(data, start_col=None, stop_col=None):
 
 
 def _sort_using_col(data, col=None):
-    _log.info("using col {}".format(col))
+    _log.info("Sorting data using col {}".format(col))
     data = data.sort_values(col, axis='index')
     return data
 
 
 def _sort_using_file(data, file=None):
-    _log.info("using file {}".format(file))
+    _log.info("Sorting data using file {}".format(file))
     ref = pd.read_table(file, comment="#")
     col_name = ref.columns[0]
 
