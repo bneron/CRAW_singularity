@@ -156,6 +156,10 @@ def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='t
 
     elif any((draw_sense, draw_antisense)):
         fig, axes_array = plt.subplots(nrows=1, ncols=1, figsize=(7, 10))
+        if draw_sense:
+            sense_subplot = axes_array
+        else:
+            antisense_subplot = axes_array
     else:
         _log.warning("No matrix to draw")
         return
