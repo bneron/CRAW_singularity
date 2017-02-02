@@ -190,11 +190,12 @@ setup(name="craw",
         ],
       description="Compute the coverage at specified regions",
       long_description="""From a bam file and a file containing regions,
-coverage compute the coverage for each positions of these regions in sense and antisense.""",
+coverage compute the coverage for each positions of these regions in sense and antisense.
+It can also display results graphically as a heatmap""",
       platforms=["Unix"],
-      install_requires=['pysam>=0.9.1.4'],
+      install_requires=['pysam>=0.9.1.4', 'matplotlib>=1.5.3', 'pandas>=0.17.1', 'numpy>=1.11.2'],
       packages=['craw'],
-      scripts=['bin/coverage'],
+      scripts=['bin/craw_coverage', 'bin/craw_htmp'],
 
       data_files=expand_data([('share/craw/doc/html', ['doc/build/html/']),
                               ('share/craw/pdf', ['doc/build/latex/craw.pdf'])]),
@@ -204,7 +205,7 @@ coverage compute the coverage for each positions of these regions in sense and a
       # library file where some variable must be fix by install_lib
       fix_lib=['craw/__init__.py'],
       # scripts file where some variable must be fix by install_scripts
-      fix_scripts=['coverage'],
+      fix_scripts=['craw_coverage'],
 
       cmdclass={'install_lib':  install_lib,
                 'install_scripts':  install_scripts,
