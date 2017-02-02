@@ -155,7 +155,7 @@ def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='t
                 antisense_subplot, sense_subplot = axes_array
 
     elif any((draw_sense, draw_antisense)):
-        fig, axes_array = plt.subplots(nrows=1, ncols=1, figsize=(7, 10))
+        fig, axes_array = plt.subplots(nrows=1, ncols=1, figsize=(7, 7))
         if draw_sense:
             sense_subplot = axes_array
         else:
