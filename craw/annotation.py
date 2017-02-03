@@ -109,7 +109,7 @@ def new_entry_type(name, fields, ref_col,
     """
     fields_idx = {}
     if any((start_col, stop_col)) and not all((start_col, stop_col)):
-        raise RuntimeError("if start_col is specified stop_col mustbe too and vie versa")
+        raise RuntimeError("if start_col is specified stop_col must be specified too and vice versa")
     try:
         fields_idx['ref'] = Idx(ref_col, fields.index(ref_col))
     except ValueError:
