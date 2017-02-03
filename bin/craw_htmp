@@ -96,6 +96,8 @@ def _size_fig_parser(value):
         height = int(height)
     except ValueError:
         raise argparse.ArgumentError(None, err_msg.format(value))
+    if wide < 0 or height < 0:
+        raise argparse.ArgumentError(None, err_msg.format(value))
 
     if unit == 'mm':
         wide = mm2in(wide)
