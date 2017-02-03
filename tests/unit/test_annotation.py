@@ -62,12 +62,12 @@ class TestEntry(CRAWTest):
         with self.assertRaises(RuntimeError) as ctx:
             ne_class = new_entry_type(name, fields, ref_col, start_col='foo')
         self.assertEqual(str(ctx.exception),
-                         "if start_col is specified stop_col mustbe too and vie versa")
+                         "if start_col is specified stop_col must be specified too and vice versa")
 
         with self.assertRaises(RuntimeError) as ctx:
             ne_class = new_entry_type(name, fields, ref_col, stop_col='foo')
         self.assertEqual(str(ctx.exception),
-                         "if start_col is specified stop_col mustbe too and vie versa")
+                         "if start_col is specified stop_col must be specified too and vice versa")
 
         with self.assertRaises(RuntimeError) as ctx:
             ne_class = new_entry_type(name, fields, ref_col, start_col='foo', stop_col='end')
