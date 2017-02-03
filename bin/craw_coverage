@@ -17,19 +17,41 @@ except ImportError as err:
     sys.exit(msg)
 from craw import annotation, coverage
 
-def positive_int(string):
-    value = int(string)
+def positive_int(value):
+    """
+    parse value given by the parser
+    :param value: the value given by the parser
+    :type value: string
+    :return: the integer corresponding to the value
+    :rtype: int
+    :raise:  :class:`argparse.ArgumentTypeError`
+    """
+    try:
+        value = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError("must be a positive integer, got: {}".format(value))
     if value < 0:
-        msg = "must be a positive integer, got: {}".format(string)
+        msg = "must be a positive integer, got: {}".format(value)
         raise argparse.ArgumentTypeError(msg)
     return value
 
 
-def quality_checker(string):
-    value = int(string)
+def quality_checker(value):
+    """
+    parse value given by the parser
+    :param value: the value given by the parser
+    :type value:  string
+    :return: the integer >=0 and <=42 corresponding to the value
+    :rtype: int
+    :raise:  :class:`argparse.ArgumentTypeError` if value does not represent a integer >=0 and <=42
+    """
+
+    try:
+        value = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError("must be a integer between 0 and 42, got: {}".format(value))
     if not 0 <= value <= 42:
-        msg = "must be a integer between 0 and 42, got: {}".format(string)
-        raise argparse.ArgumentTypeError(msg)
+        raise argparse.ArgumentTypeError("must be a integer between 0 and 42, got: {}".format(value))
     return value
 
 
