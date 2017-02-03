@@ -42,6 +42,7 @@ def sort(data, criteria, **kwargs):
     else:
         raise RuntimeError('BLABLA')
 
+
 def _sort_by_gene_size(data, start_col=None, stop_col=None):
     _log.info("Sorting data by gene size using cols {}:{}".format(start_col, stop_col))
     data['gene_len'] = abs(data[stop_col] - data[start_col])
@@ -101,7 +102,7 @@ def remove_metadata(data):
     return coverage_data
 
 
-def draw_one_matrix(mat, ax, cmap=plt.cm.seismic, y_label=None):
+def draw_one_matrix(mat, ax, cmap=plt.cm.Blues, y_label=None):
     """
 
     :param mat:
@@ -125,7 +126,7 @@ def draw_one_matrix(mat, ax, cmap=plt.cm.seismic, y_label=None):
     return mat_img
 
 
-def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='top', norm=None):
+def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='top', norm=None, size=None):
     """
 
     :param sense:
@@ -142,20 +143,26 @@ def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='t
 
     if all((draw_sense, draw_antisense)):
         if sense_on in ('bottom', 'top'):
-            fig, axes_array = plt.subplots(nrows=2, ncols=1, figsize=(7, 10))
+            if size is None:
+                size = (7, 10)
+            fig, axes_array = plt.subplots(nrows=2, ncols=1, figsize=size)
             if sense_on == 'top':
                 sense_subplot, antisense_subplot = axes_array
             else:
                 antisense_subplot, sense_subplot = axes_array
         elif sense_on in ('left', 'right'):
-            fig, axes_array = plt.subplots(nrows=1, ncols=2, figsize=(10, 7))
+            if size is None:
+                size = (10, 7)
+            fig, axes_array = plt.subplots(nrows=1, ncols=2, figsize=size)
             if sense_on == 'left':
                 sense_subplot, antisense_subplot = axes_array
             else:
                 antisense_subplot, sense_subplot = axes_array
 
     elif any((draw_sense, draw_antisense)):
-        fig, axes_array = plt.subplots(nrows=1, ncols=1, figsize=(7, 7))
+        if size is None:
+            size = (6, 6)
+        fig, axes_array = plt.subplots(nrows=1, ncols=1, figsize=size)
         if draw_sense:
             sense_subplot = axes_array
         else:

@@ -27,7 +27,6 @@ root_logger.setLevel(logging.DEBUG)
 
 def _gene_size_parser(value):
     """is called only if value is provided to sort-by-gene-size option"""
-    print("_gene_size_parser", value)
     rv = value.split(',')
     if len(rv) == 0:
         rv = ['', '']
@@ -39,6 +38,55 @@ def _gene_size_parser(value):
                                            "default= annotation_start,annotation_end".format(value)) from None
     print("_gene_size_parser", rv)
     return rv
+
+def _size_fig_parser(value):
+    """
+
+    :param value:
+    :return:
+    """
+    def mm2in(value):
+        return value * (1 / 25.4)
+
+    def cm2in(value):
+        return mm2in(value * 10)
+
+    def px2in(value):
+        dpi = plt.rcParams['figure.dpi']
+        return value / dpi
+
+    err_msg = """--size {} invalid value.
+                 The value must be widexheight[unit].
+                 'wide' and 'height' must be positive integers
+                 By default unit is in inches.
+                 eg: 7x10 or 7x10in for 7 inches wide by 10 inches height
+                     70x100mm for 70 mm by 100 mm.
+                 default=7x10 or 10x7 depending of the figure orientation."""
+    unit = 'in'
+    if value[-2:] in ('mm', 'cm', 'in', 'px'):
+        unit = value[-2:]
+        value = value[:-2]
+    try:
+        wide, height = value.split('x')
+    except ValueError:
+        raise argparse.ArgumentError(None, err_msg.format(value))
+    try:
+        wide = int(wide)
+        height = int(height)
+    except ValueError:
+        raise argparse.ArgumentError(None, err_msg.format(value))
+
+    if unit == 'mm':
+        wide = mm2in(wide)
+        height = mm2in(height)
+    elif unit == 'cm':
+        wide = cm2in(wide)
+        height = cm2in(height)
+    elif unit == 'px':
+        wide = px2in(wide)
+        height = px2in(height)
+
+    return wide, height
 
 parser = argparse.ArgumentParser(description="Compute a figure from a file of coverage compute by craw_coverage.")
 
@@ -91,6 +139,19 @@ fig_grp.add_argument("--no-norm",
                      action="store_true",
                      default=False,
                      help="disable logarithmic normalisation.")
+fig_grp.add_argument("--dpi",
+                     type=int,
+                     help="The resolution of the output (default=100)."
+                     "This option work only if --out option is specified")
+fig_grp.add_argument("--size",
+                     type=_size_fig_parser,
+                     help="Specify the figure size "
+                          "The value must be widexheight[unit]. "
+                          "'wide' and 'height' must be positive integers "
+                          "By default unit is in inches. "
+                          "eg: 7x10 or 7x10in for 7 inches wide by 10 inches height "
+                          "70x100mm for 70 mm by 100 mm. "
+                          "default=7x10 or 10x7 depending of the figure orientation.")
 
 layout = fig_grp.add_mutually_exclusive_group()
 layout.add_argument("--sense-on-left",
@@ -145,7 +206,6 @@ if args.sort_by_gene_size == []:
     args.sort_by_gene_size = ['annotation_start', 'annotation_end']
 elif args.sort_by_gene_size:
     args.sort_by_gene_size = args.sort_by_gene_size[0]
-
 
 log.info("Parsing coverage file")
 data = heatmap.get_data(args.cov_file)
@@ -213,9 +273,16 @@ else:
     log.info("Normalizing data (log)")
     log_norm = mtp.colors.LogNorm()
 
-fig = heatmap.draw_heatmap(sense, antisense, color_map=color_map, title=title, sense_on=sense_on, norm=log_norm)
+fig = heatmap.draw_heatmap(sense, antisense,
+                           color_map=color_map,
+                           title=title,
+                           sense_on=sense_on,
+                           norm=log_norm,
+                           size=args.size)
 
 if args.out:
+    if args.dpi:
+        fig.savefig(args.out.name, dpi=args.dpi)
     fig.savefig(args.out.name)
 else:
     plt.show()
