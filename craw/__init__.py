@@ -3,6 +3,11 @@ import sys
 __version__ = '$VERSION'
 
 def get_version_message():
+    """
+
+    :return: A human readable version of the craw version
+    :rtype: string
+    """
     # if I keep '$ VERSION' (without space) as is
     # the setup.py will replace it by the value set in setup
     # so the test become True even if craw is installed using setup.py
