@@ -19,7 +19,8 @@ from craw import annotation, coverage
 
 def positive_int(value):
     """
-    parse value given by the parser
+    Parse value given by the parser
+
     :param value: the value given by the parser
     :type value: string
     :return: the integer corresponding to the value
@@ -38,7 +39,8 @@ def positive_int(value):
 
 def quality_checker(value):
     """
-    parse value given by the parser
+    Parse value given by the parser
+
     :param value: the value given by the parser
     :type value:  string
     :return: the integer >=0 and <=42 corresponding to the value
