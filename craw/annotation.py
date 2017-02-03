@@ -44,6 +44,17 @@ class Entry:
 
 
     def _convert(self, field, value):
+        """
+        Convert field parsed from annotation file in Entry internal value
+
+        :param field: the field name associated to the value.
+        :type field: string
+        :param value: the value to convert
+        :type value: string
+        :return: the converted value
+        :rtype: any
+        :raise: RuntimeError or value Error  if a value cannot be converted
+        """
         if field == self._fields_idx['ref'].col_name:
             value = int(value)
         elif field == self._fields_idx['strand'].col_name:
@@ -62,7 +73,10 @@ class Entry:
 
 
     def _switch_start_stop(self):
-        """ """
+        """
+        Switch start and stop value if self.start > self.stop
+        This situation can occur if annotation regards the reverse strand
+        """
         start, stop = self.stop, self.start
         self._values[self._fields_idx['start'].idx] = start
         self._values[self._fields_idx['stop'].idx] = stop
