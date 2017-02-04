@@ -6,13 +6,20 @@ div.body h2 {
 
 /*class*/
 dl.class dt {
-    background: #fffdae;
-}
-
-dl.method dt, dl.function dt, dl.attribute dt, dl.staticmethod dt {
     background: #dcfbba;
 }
 
+dl.attribute dt {
+    background: #ffeaac;
+}
+
+dl.method dt, dl.function dt, dl.staticmethod dt {
+    background: #fffdae;
+}
+
+dl.function dt {
+    background: #ccf4fb;
+}
 dl.class dd dl.docutils dt {
     background: white;
 }
