@@ -1,0 +1,24 @@
+@import url("classic.css"); /* make sure to sync this with the base theme's css filename */
+
+div.body h2 {
+    background: #f6eeee;
+}
+
+/*class*/
+dl.class dt {
+    background: #fffdae;
+}
+
+dl.method dt, dl.function dt, dl.attribute dt, dl.staticmethod dt {
+    background: #dcfbba;
+}
+
+dl.class dd dl.docutils dt {
+    background: white;
+}
+
+.red-font {
+    color:red;
+}
+
+
