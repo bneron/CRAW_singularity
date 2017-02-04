@@ -14,7 +14,7 @@ User Guide
 
    installation
    quickstart
-   input
+   inputs
    outputs
 
 Developer Guide
@@ -27,10 +27,12 @@ reference API
 -------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
 
+   craw
    annotation
    coverage
+   heatmap
 
 
 Indices and tables
