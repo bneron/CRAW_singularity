@@ -2,6 +2,7 @@ from collections import namedtuple
 
 
 class Entry:
+    """Handle one entry (One line) of annotation file """
 
     def __init__(self, values):
         """
@@ -133,6 +134,7 @@ def new_entry_type(name, fields, ref_col,
                    strand_col='strand', chr_col='chromosome',
                    start_col=None, stop_col=None):
     """
+    From the header of the annotation line create a new Entry Class inherited from Entry Class
 
     :param name: The name of the new class of entry.
     :type name: str
@@ -181,6 +183,11 @@ def new_entry_type(name, fields, ref_col,
 
 
 class AnnotationParser:
+    """
+    Parse the annotation file
+         - create new type of Entry according to the header
+         - create one Entry object for each line of the file
+    """
 
     def __init__(self, path, ref_col, strand_col='strand', chr_col='chromosome', start_col=None, stop_col=None):
         """

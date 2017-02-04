@@ -45,7 +45,7 @@ def get_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, max_
     def coverage_one_strand(sam_file, chromosome, start, stop, qual, strand):
         """
         Compute the coverage for each position between start and stop on the chromosome on the strand.
-        
+
         :param sam_file: the sam alignment to use
         :type sam_file: a :class:`pysam.AlignmentFile` object
         :param chromosome: the name of the chromosome
