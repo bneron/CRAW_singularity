@@ -1,4 +1,4 @@
-# Running Counter RnAseq Window
+# Running Counter RnAseq Window craw_coverage
 # Version: craw NOT packaged, it should be a development version | Python 3.4
 # With the following arguments:
 # --after=3

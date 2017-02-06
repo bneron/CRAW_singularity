@@ -19,7 +19,7 @@ class Test(CRAWTest):
             self.local_install = False
             self.craw_home = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(__file__), '..' '..')))
         self.tmp_dir = tempfile.gettempdir()
-        self.bin = os.path.join(self.craw_home, 'bin', 'coverage') if self.local_install else which('coverage')
+        self.bin = os.path.join(self.craw_home, 'bin', 'craw_coverage') if self.local_install else which('craw_coverage')
 
     def tearDown(self):
         try:

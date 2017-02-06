@@ -93,7 +93,7 @@ class TestEntry(CRAWTest):
             extra_values.append('extra')
             ne_class(extra_values)
         self.assertEqual(str(ctx.exception),
-                         'the number of values does not match with number of fields')
+                         "the number of values (6) does not match with number of fields (5): ['YEL072W', 'RMD6', 'chrV', '+', 14415, 'extra']")
 
         fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'Position']
         ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='end')
@@ -105,20 +105,20 @@ class TestEntry(CRAWTest):
             values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '=', 14415]
             ne = ne_class([str(v) for v in values])
         self.assertEqual(str(ctx.exception),
-                         "strand must be '+ or '-' got '='")
+                         "strand must be '+/-', '1/-1' or 'for/rev' got '='")
 
         with self.assertRaises(RuntimeError) as ctx:
             values = [14450, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
             ne = ne_class([str(v) for v in values])
         self.assertEqual(str(ctx.exception),
-                        " error in line '14450\t15000\tYEL072W\tRMD6\tchrV\t+\t14415': 14450 (beg) > 14415 (Position)"
+                        "error in line '14450\t15000\tYEL072W\tRMD6\tchrV\t+\t14415': Position 14415 is not between beg: 14450 and end: 15000"
         )
 
         with self.assertRaises(RuntimeError) as ctx:
             values = [14405, 14000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
             ne = ne_class([str(v) for v in values])
         self.assertEqual(str(ctx.exception),
-                        " error in line '14405\t14000\tYEL072W\tRMD6\tchrV\t+\t14415': 14000 (end) < 14415 (Position)"
+                        "error in line '14405\t14000\tYEL072W\tRMD6\tchrV\t+\t14415': Position 14415 is not between beg: 14405 and end: 14000"
         )
 
 
@@ -236,4 +236,4 @@ class TestAnnotationParser(CRAWTest):
         with self.assertRaises(RuntimeError) as ctx:
             it.__next__()
         self.assertEqual(str(ctx.exception),
-                         'the number of values does not match with number of fields')
+                         "the number of values (5) does not match with number of fields (7): ['YEL072W', 'RMD6', 'chrV', '+', '14415']")
