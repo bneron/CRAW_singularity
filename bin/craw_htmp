@@ -1,0 +1,288 @@
+#! /usr/bin/env python3
+
+import sys
+import os
+import argparse
+import logging
+import matplotlib.pyplot as plt
+import matplotlib as mtp
+
+if 'CRAW_HOME' in os.environ and os.environ['CRAW_HOME']:
+    if os.environ['CRAW_HOME'] not in sys.path:
+        sys.path.insert(0, os.environ['CRAW_HOME'])
+try:
+    import craw
+except ImportError as err:
+    msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
+    sys.exit(msg)
+from craw import heatmap
+
+
+root_logger = logging.getLogger()
+handler = logging.StreamHandler()
+formatter = logging.Formatter(fmt='{levelname} : {name} : {message}', style='{')
+handler.setFormatter(formatter)
+root_logger.addHandler(handler)
+root_logger.setLevel(logging.DEBUG)
+
+def _gene_size_parser(value):
+    """is called only if value is provided to sort-by-gene-size option"""
+    rv = value.split(',')
+    if len(rv) == 0:
+        rv = ['', '']
+    elif len(rv) == 2:
+        pass
+    else:
+        raise argparse.ArgumentError(None, "--sort-by-gene-size {} invalid value. "
+                                           "Must be start_col, stop_col (separated by a comma), "
+                                           "default= annotation_start,annotation_end".format(value)) from None
+    print("_gene_size_parser", rv)
+    return rv
+
+def _size_fig_parser(value):
+    """
+
+    :param value:
+    :return:
+    """
+    def mm2in(value):
+        return value * (1 / 25.4)
+
+    def cm2in(value):
+        return mm2in(value * 10)
+
+    def px2in(value):
+        dpi = plt.rcParams['figure.dpi']
+        return value / dpi
+
+    err_msg = """--size {} invalid value.
+                 The value must be widexheight[unit].
+                 'wide' and 'height' must be positive integers
+                 By default unit is in inches.
+                 eg: 7x10 or 7x10in for 7 inches wide by 10 inches height
+                     70x100mm for 70 mm by 100 mm.
+                 default=7x10 or 10x7 depending of the figure orientation."""
+    unit = 'in'
+    if value[-2:] in ('mm', 'cm', 'in', 'px'):
+        unit = value[-2:]
+        value = value[:-2]
+    try:
+        wide, height = value.split('x')
+    except ValueError:
+        raise argparse.ArgumentError(None, err_msg.format(value))
+    try:
+        wide = int(wide)
+        height = int(height)
+    except ValueError:
+        raise argparse.ArgumentError(None, err_msg.format(value))
+
+    if unit == 'mm':
+        wide = mm2in(wide)
+        height = mm2in(height)
+    elif unit == 'cm':
+        wide = cm2in(wide)
+        height = cm2in(height)
+    elif unit == 'px':
+        wide = px2in(wide)
+        height = px2in(height)
+
+    return wide, height
+
+parser = argparse.ArgumentParser(description="Compute a figure from a file of coverage compute by craw_coverage.")
+
+parser.add_argument(dest="cov_file",
+                    help="the path to the coverage file")
+
+data_grp = parser.add_argument_group('optional data options')
+data_grp.add_argument("--crop",
+                      nargs=2,
+                      help="crop the matrix. This option need two values the name of the first and last column to keep"
+                           " [start col, stop col] eg --crop -10 1000 ")
+
+sort_grp = data_grp.add_mutually_exclusive_group()
+sort_grp.add_argument("--sort-using-col",
+                      default=False)
+sort_grp.add_argument("--sort-using-file",
+                      type=argparse.FileType('r'),
+                      help="sort the rows using a file. "
+                           "The file must have on the first line the name of the column used to sort"
+                           "and each line must match to a value.")
+sort_grp.add_argument("--sort-by-gene-size",
+                      type=_gene_size_parser,
+                      nargs='*',
+                      metavar='start_col,stop_col',
+                      help="The rows will be sorted by gene size using start_col and stop col to compute length."
+                           "start_col and stop_col must be a string separated by comma."
+                           "If start_col and stop_col are not specify annotation_start,annotation_end will be used."
+                           "(Don't put this option without value just before the coverage file.)")
+
+matrix_grp = data_grp.add_mutually_exclusive_group()
+matrix_grp.add_argument("--sense-only",
+                        action="store_true",
+                        default=False,
+                        help="Display only sense matrix (default is display both).")
+matrix_grp.add_argument("--antisense-only",
+                        action="store_true",
+                        default=False,
+                        help="Display only anti sense matrix (default is display both).")
+
+fig_grp = parser.add_argument_group("optional figure options")
+fig_grp.add_argument("--cmap",
+                     default="Blues",
+                     help="The color map used to display data. The allowed values are defined in"
+                          " http:matplotlib.org/examples/color/colormaps_reference.html "
+                          "eg: Blues, BuGn, Greens, GnBu, ... (default: Blues).")
+fig_grp.add_argument("--title",
+                     help="The figure title. It will display on the top of the figure. "
+                          "(default: the name of the coverage file without extension).")
+fig_grp.add_argument("--no-norm",
+                     action="store_true",
+                     default=False,
+                     help="disable logarithmic normalisation.")
+fig_grp.add_argument("--dpi",
+                     type=int,
+                     help="The resolution of the output (default=100)."
+                     "This option work only if --out option is specified")
+fig_grp.add_argument("--size",
+                     type=_size_fig_parser,
+                     help="Specify the figure size "
+                          "The value must be widexheight[unit]. "
+                          "'wide' and 'height' must be positive integers "
+                          "By default unit is in inches. "
+                          "eg: 7x10 or 7x10in for 7 inches wide by 10 inches height "
+                          "70x100mm for 70 mm by 100 mm. "
+                          "default=7x10 or 10x7 depending of the figure orientation.")
+
+layout = fig_grp.add_mutually_exclusive_group()
+layout.add_argument("--sense-on-left",
+                    action="store_true",
+                    default=False,
+                    help="Where to display the sense matrix relative to antisense matrix (default is left).")
+layout.add_argument("--sense-on-right",
+                    action="store_true",
+                    default=False,
+                    help="Where to display the sense matrix relative to antisense matrix (default is left).")
+layout.add_argument("--sense-on-top",
+                    action="store_true",
+                    default=False,
+                    help="Where to display the sense matrix relative to antisense matrix (default is left).")
+layout.add_argument("--sense-on-bottom",
+                    action="store_true",
+                    default=False,
+                    help="Where to display the sense matrix relative to antisense matrix (default is left).")
+
+parser.add_argument("--out",
+                    type=argparse.FileType('w'),
+                    help="The name of the file (the format will based on the extension) to save the figure."
+                         " Instead of displaying the figure on the screen, save it directly in this file.")
+parser.add_argument("-v", "--verbosity",
+                    action='count',
+                    help="Increase output verbosity.")
+parser.add_argument("--version",
+                    action='version',
+                    version=craw.get_version_message(),
+                    help="Display version information and quit.")
+
+args = parser.parse_args()
+
+if args.verbosity is None:
+    args.verbosity = 0
+level = logging.WARNING - (10 * args.verbosity)
+root_logger.setLevel(level)
+log = logging.getLogger('craw_htmp')
+log.setLevel(logging.NOTSET)
+
+log.debug("args={}".format(args))
+
+###########################
+# validating some options #
+###########################
+try:
+    color_map = plt.cm.get_cmap(args.cmap)
+except AttributeError as err:
+    raise RuntimeError("{} : http:matplotlib.org/examples/color/colormaps_reference.html for example".format(err))
+
+if args.sort_by_gene_size == []:
+    args.sort_by_gene_size = ['annotation_start', 'annotation_end']
+elif args.sort_by_gene_size:
+    args.sort_by_gene_size = args.sort_by_gene_size[0]
+
+log.info("Parsing coverage file")
+data = heatmap.get_data(args.cov_file)
+sense, antisense = heatmap.split_data(data)
+
+if args.sense_only:
+    antisense = None
+if args.antisense_only:
+    sense = None
+
+#############
+# sort data #
+#############
+# if data is empty or data is None sort return data
+# so it's error safe, and not time and space consuming
+if args.sort_by_gene_size:
+    start_col, stop_col = args.sort_by_gene_size
+    sense = heatmap.sort(sense, 'by_gene_size', start_col=start_col, stop_col=stop_col)
+    antisense = heatmap.sort(antisense, 'by_gene_size', start_col=start_col, stop_col=stop_col)
+elif args.sort_using_col:
+    sense = heatmap.sort(sense, 'using_col', col=args.sort_using_col)
+    antisense = heatmap.sort(antisense, 'using_col', col=args.sort_using_col)
+elif args.sort_using_file:
+    sense = heatmap.sort(sense, 'using_file', file=args.sort_using_file)
+    antisense = heatmap.sort(antisense, 'using_file', file=args.sort_using_file)
+
+sense = heatmap.remove_metadata(sense)
+antisense = heatmap.remove_metadata(antisense)
+
+#############
+# crop data #
+#############
+log.info("Croping matrix")
+if args.crop:
+    start_col, stop_col = args.crop
+    sense = heatmap.crop(sense, start_col, stop_col)
+    antisense = heatmap.crop(antisense, start_col, stop_col)
+
+##########
+# layout #
+##########
+if args.sense_on_left:
+    sense_on = 'left'
+elif args.sense_on_right:
+    sense_on = 'right'
+elif args.sense_on_top:
+    sense_on = 'top'
+elif args.sense_on_bottom:
+    sense_on = 'bottom'
+else:
+    sense_on = 'top'
+
+if args.title is None:
+    title = os.path.basename(os.path.splitext(args.cov_file)[0])
+else:
+    title = args.title
+
+##################
+# Drawing figure #
+##################
+log.info("Drawing figure")
+if args.no_norm:
+    log_norm = None
+else:
+    log.info("Normalizing data (log)")
+    log_norm = mtp.colors.LogNorm()
+
+fig = heatmap.draw_heatmap(sense, antisense,
+                           color_map=color_map,
+                           title=title,
+                           sense_on=sense_on,
+                           norm=log_norm,
+                           size=args.size)
+
+if args.out:
+    if args.dpi:
+        fig.savefig(args.out.name, dpi=args.dpi)
+    fig.savefig(args.out.name)
+else:
+    plt.show()

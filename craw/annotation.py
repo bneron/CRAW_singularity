@@ -17,19 +17,31 @@ class Entry:
                                                                                                             len(self._fields),
                                                                                                                 values))
         self._values = [self._convert(f, v) for f, v in zip(self._fields, values)]
-        if self.start is not None and self.start > self.ref:
-            raise RuntimeError(" error in line '{}': {} ({}) > {} ({})".format(self,
-                                                                               self.start,
-                                                                               self._fields_idx['start'].col_name,
-                                                                               self.ref,
-                                                                               self._fields_idx['ref'].col_name
-                                                                               ))
-        if self.stop is not None and self.stop < self.ref:
-            raise RuntimeError(" error in line '{}': {} ({}) < {} ({})".format(self,
-                                                                               self.stop,
-                                                                               self._fields_idx['stop'].col_name,
-                                                                               self.ref,
-                                                                               self._fields_idx['ref'].col_name))
+        if self.start is not None:
+            if self.start < self.ref < self.stop or self.start > self.ref > self.stop:
+                raise RuntimeError("error in line '{line}': {ref_col} {ref} is not"
+                                   "between {start_col}:{start} and {stop_col}: {stop}".format(
+                                    line=self,
+                                    start=self.start,
+                                    start_col=self._fields_idx['start'].col_name,
+                                    ref=self.ref,
+                                    ref_col=self._fields_idx['ref'].col_name,
+                                    stop=self.stop,
+                                    stop_col=self._fields_idx['stop'].col_name)
+                                    )
+            if self.start > self.stop and self.strand == '-':
+                self._switch_start_stop()
+            elif self.start > self.stop:
+                raise RuntimeError("error in line '{line}': {start_col}:{start} > {stop_col}: {stop}"
+                                   "on forward strand".format(
+                                                              line=self,
+                                                              start=self.start,
+                                                              start_col=self._fields_idx['start'].col_name,
+                                                              stop=self.stop,
+                                                              stop_col=self._fields_idx['stop'].col_name
+                                                             )
+                                   )
+
 
     def _convert(self, field, value):
         if field == self._fields_idx['ref'].col_name:
@@ -47,6 +59,13 @@ class Entry:
         elif 'stop' in self._fields_idx and field == self._fields_idx['stop'].col_name:
             value = int(value)
         return value
+
+
+    def _switch_start_stop(self):
+        """ """
+        start, stop = self.stop, self.start
+        self._values[self._fields_idx['start'].idx] = start
+        self._values[self._fields_idx['stop'].idx] = stop
 
     @property
     def chromosome(self):
@@ -187,7 +206,7 @@ class AnnotationParser:
                                           start_col=self.start_col,
                                           stop_col=self.stop_col)
             for line in annot_file:
-                yield MyEntryClass(line.split('\t'))
+                yield MyEntryClass(line.rstrip('\n').split('\t'))
 
     def max(self):
         """
