@@ -15,8 +15,7 @@ User Guide
    overview
    installation
    quickstart
-   inputs
-   outputs
+   inputs-outputs
 
 Developer Guide
 ===============
