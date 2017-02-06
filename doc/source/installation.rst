@@ -66,8 +66,8 @@ matplotlib configuration
 `craw_htmp` use this library to generate heat map.
 The two parameters to configure for craw is:
 
-    - the backend
-    - figure.dpi
+    * the backend
+    * figure.dpi
 
 backend
 """""""
