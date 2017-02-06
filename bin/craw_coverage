@@ -154,7 +154,7 @@ sam_file = pysam.AlignmentFile(args.bam, "rb")
 annotations = annot_parser.get_annotations()
 
 with open(args.output, 'w') as result_file:
-    header = "# Running Counter RnAseq Window\n"
+    header = "# Running Counter RnAseq Window craw_coverage\n"
     header +="# Version: {}\n".format(craw.get_version_message())
     header += "# With the following arguments:\n"
     for a, v in sorted(args.__dict__.items()):
