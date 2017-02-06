@@ -25,8 +25,18 @@ handler.setFormatter(formatter)
 root_logger.addHandler(handler)
 root_logger.setLevel(logging.DEBUG)
 
+
 def _gene_size_parser(value):
-    """is called only if value is provided to sort-by-gene-size option"""
+    """
+    Parse value given by the parser
+
+    :param value: the value given by the parser for --sort-by-gene-size option
+    :type value: string
+    :return: name of column representing the start of gene, name of the column representing the end of gene
+    :rtype: tuple of 2 string
+    :raise: :class:`argparse.ArgumentError` object if value cannot be parsed
+    """
+    # this function is called only if value is provided to sort-by-gene-size option
     rv = value.split(',')
     if len(rv) == 0:
         rv = ['', '']
@@ -36,14 +46,25 @@ def _gene_size_parser(value):
         raise argparse.ArgumentError(None, "--sort-by-gene-size {} invalid value. "
                                            "Must be start_col, stop_col (separated by a comma), "
                                            "default= annotation_start,annotation_end".format(value)) from None
-    print("_gene_size_parser", rv)
     return rv
 
 def _size_fig_parser(value):
     """
+    Parse value given by the parser for --size option
+    the value must follow the syntax widexheight[unit]
+    if the unit is omitted unit is inch
+    otherwise unit must be
+     - 'mm' for millimeters
+     - 'cm' for centimeters
+     - 'in' for inches
+     - 'px' for pixels
+    wide and height must be positive integers.
 
-    :param value:
-    :return:
+    :param value: the size of the figure
+    :type value: string
+    :return: the size in inch aks by the user
+    :rtype: tuple of float
+    :raise: :class:`argparse.ArgumentError` object
     """
     def mm2in(value):
         return value * (1 / 25.4)
@@ -75,6 +96,8 @@ def _size_fig_parser(value):
         height = int(height)
     except ValueError:
         raise argparse.ArgumentError(None, err_msg.format(value))
+    if wide < 0 or height < 0:
+        raise argparse.ArgumentError(None, err_msg.format(value))
 
     if unit == 'mm':
         wide = mm2in(wide)
@@ -87,6 +110,7 @@ def _size_fig_parser(value):
         height = px2in(height)
 
     return wide, height
+
 
 parser = argparse.ArgumentParser(description="Compute a figure from a file of coverage compute by craw_coverage.")
 
