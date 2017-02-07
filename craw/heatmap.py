@@ -193,7 +193,7 @@ def draw_one_matrix(mat, ax, cmap=plt.cm.Blues, y_label=None):
     mat_img = ax.imshow(mat,
                         cmap=cmap,
                         origin='upper',
-                        interpolation='nearest',
+                        interpolation='none',
                         aspect=col_num / row_num,
                         extent=[int(mat.columns[0]), int(mat.columns[-2]) + 1, row_num, 0],
                         )
