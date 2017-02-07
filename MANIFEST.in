@@ -12,4 +12,4 @@ recursive-include tests *.py
 recursive-include tests/data *
 
 recursive-include doc/build/html *
-include doc/_build/latex/*.pdf
+include doc/build/latex/*.pdf
