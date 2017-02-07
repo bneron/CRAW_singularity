@@ -19,7 +19,7 @@ class Entry:
                                                                                                                 values))
         self._values = [self._convert(f, v) for f, v in zip(self._fields, values)]
         if self.start is not None:
-            if not self.start <= self.ref <= self.stop or self.start >= self.ref >= self.stop:
+            if not self.start < self.ref < self.stop or self.start > self.ref > self.stop:
                 raise RuntimeError("error in line '{line}': {ref_col} {ref} is not "
                                    "between {start_col}: {start} and {stop_col}: {stop}".format(
                                     line=self,
