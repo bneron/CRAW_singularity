@@ -176,7 +176,7 @@ def expand_data(data_to_expand):
 
 
 setup(name="craw",
-      version='{}-dev'.format(time.strftime('%Y%m%d')),
+      version='0.5b1',
       author='Bertrand Néron',
       author_email='bneron@pasteur.fr',
       url="https://gitlab.pasteur.fr/bneron/craw",
