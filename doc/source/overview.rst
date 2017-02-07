@@ -25,7 +25,7 @@ The results in the matrix are centered on the position of reference of each gene
 In the case of variable length of window the results are padded on left and right if necessary with
 `None` value.
 The results is saved in a file as a tabulated separated value by default with the same name as the bam file
-with the `.cov` extension (see `outputs`_ for more details).
+with the `.cov` extension (see :ref:`cov_out` for more details).
 
 
 craw_htmp:
