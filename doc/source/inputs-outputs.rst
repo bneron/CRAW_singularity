@@ -64,12 +64,25 @@ All lines starting with '#' character will be ignored. ::
 mandatory columns
 """""""""""""""""
 
+There is 3 mandatory columns in the annotation file.
+
 columns with fixed name
 '''''''''''''''''''''''
+two with a fixed name:
 
+* **strand** indicate on which strand is located the region of interest. The authorized values for this columns are +/- , 1/-1 or for/rev.
+* **chromosome** the chromosome name where is located the region of interest.
 
 columns with variable name
 ''''''''''''''''''''''''''
+
+In addition of these two columns the column to define the position of reference is mandatory too, but the name of this
+column can be specified by the user. If it's not craw_coverage will use a column name 'position'.
+
+If we want to compute coverage on variable window size, 2 extra columns whose name must be specified by the user by the following option:
+
+* \-\-start-col to define the beginning of the window (this position is included in the window)
+* \-\-stop-col to define the end of the window (this position is included in the window)
 
 ::
 
@@ -85,7 +98,20 @@ columns with variable name
     YEL052W AFG1    gene    chrV    1       56571   58100   1       58105   56537
 
 
-All other columns are not necessary but will report as is in coverage file.
+::
+
+    craw_coverage --bam file.bam --annot annot.txt --ref-col annotation_start --start-col annotation_start --stop-col annotation_end
+
+
+The position of reference must be between start and end.
+The authorized values are positive integers.
+
+.. note::
+    the position of reference can be used to define the reference and the start ot the end of the window. ::
+
+        craw_coverage --bam file.bam --annot annot.txt --ref-col annotation_start --start-col annotation_start --stop-col annotation_end
+
+All other columns are not necessary but will be reported as is in the coverage file.
 
 
 .. _cov_out:
