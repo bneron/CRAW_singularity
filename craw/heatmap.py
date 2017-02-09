@@ -290,3 +290,16 @@ def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='t
         fig.subplots_adjust(top=0.95)
     fig.canvas.set_window_title(title)
     return fig
+
+
+def normalize(data):
+    pass
+
+def log_norm(data):
+    pass
+
+def normalize_row_by_row(data):
+    pass
+
+def draw_raw_image(data, color_map=lt.cm.Blues, format='png'):
+    pass
