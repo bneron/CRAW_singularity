@@ -51,7 +51,7 @@ class Test(CRAWTest):
                                                  qual=0,
                                                  out_file=test_result_path
                                                 )
-        #print "\n", command
+        #print("\n@@@", command)
         if not self.bin:
             raise RuntimeError('coverage not found, CRAW_HOME must be either in your path or CRAW_HOME must be defined '
                                'command launch: \n{}'.format(command))
