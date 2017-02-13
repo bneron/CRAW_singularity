@@ -1,5 +1,29 @@
 #! /usr/bin/env python3
 
+###########################################################################
+#                                                                         #
+# This file is part of Counter RNAseq Window (craw) package.              #
+#                                                                         #
+#    Authors: Bertrand Néron                                              #
+#    Copyright © 2017  Institut Pasteur (Paris).                          #
+#    see COPYRIGHT file for details.                                      #
+#                                                                         #
+#    craw is free software: you can redistribute it and/or modify         #
+#    it under the terms of the GNU General Public License as published by #
+#    the Free Software Foundation, either version 3 of the License, or    #
+#    (at your option) any later version.                                  #
+#                                                                         #
+#    craw is distributed in the hope that it will be useful,              #
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of       #
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 #
+#    See the GNU General Public License for more details.                 #
+#                                                                         #
+#    You should have received a copy of the GNU General Public License    #
+#    along with craw (see COPYING file).                                  #
+#    If not, see <http://www.gnu.org/licenses/>.                          #
+#                                                                         #
+###########################################################################
+
 import os
 import sys
 import argparse
@@ -57,6 +81,53 @@ def quality_checker(value):
     return value
 
 
+def get_result_header(annot_parser, cmdline_args):
+    """
+
+    :param annot_parser:
+    :param cmdline_args:
+    :return:
+    """
+    header = "# Running Counter RnAseq Window craw_coverage\n"
+    header += "# Version: {}\n".format(craw.get_version_message())
+    header += "# With the following arguments:\n"
+    for a, v in sorted(cmdline_args.__dict__.items()):
+        if v is not None:
+            header += "# --{opt}={val}\n".format(opt=a.replace('_', '-'), val=v)
+
+    header = header.rstrip() + '\n'
+
+    metadata = '\t'.join([str(f) for f in annot_parser.header])
+    if cmdline_args.start_col:
+        max_left, max_right = annot_parser.max()
+        pos = '\t'.join(str(p) for p in range(0 - max_left, max_right + 1))
+    else:
+        pos = '\t'.join(str(p) for p in range(0 - cmdline_args.before, cmdline_args.after + 1))
+    header += "sense\t{metadata}\t{pos}".format(metadata=metadata, pos=pos)
+    return header
+
+
+def get_results_file(sense_opt, basename, suffix):
+    if sense_opt == 'S':
+        sense_filename = "{filename}.sense.{suffix}".format(filename=basename, suffix=suffix)
+        sense = open(sense_filename, 'w')
+        antisense = open(os.devnull, 'w')
+    elif sense_opt == 'AS':
+        sense = open(os.devnull, 'w')
+        antisense_filename = "{filename}.antisense.{suffix}".format(filename=basename, suffix=suffix)
+        antisense = open(antisense_filename, 'w')
+    elif sense_opt == 'split':
+        sense_filename = "{filename}.sense.{suffix}".format(filename=basename, suffix=suffix)
+        sense = open(sense_filename, 'w')
+        antisense_filename = "{filename}.antisense.{suffix}".format(filename=basename, suffix=suffix)
+        antisense = open(antisense_filename, 'w')
+    else:
+        output_filename = "{filename}.{suffix}".format(filename=basename, suffix=suffix)
+        sense = open(output_filename, 'w')
+        antisense = sense
+    return sense, antisense
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-b", "--bam",
                     required=True,
@@ -110,6 +181,16 @@ region_grp.add_argument("--start-col",
 region_grp.add_argument("--stop-col",
                         help="The name of the column to define the stop position.")
 
+parser.add_argument("--sense",
+                    choices=('S', 'AS', 'split', 'mixed'),
+                    default='mixed',
+                    help="compute result only on: "
+                         "sense (S), "
+                         "antisense (AS), "
+                         "on both senses but produce two separated files (split), "
+                         "or in one file (mixed)."
+                    )
+
 parser.add_argument("--version",
                     action='version',
                     version=craw.get_version_message())
@@ -143,8 +224,6 @@ elif not all(group_two):
     raise argparse.ArgumentError(None, "The two options --start-col and --stop-col work together. "
                                  "The both options must be specified in same time")
 
-if not args.output:
-    args.output = "{}.{}.txt".format(os.path.splitext(args.bam)[0], args.suffix)
 
 annot_parser = annotation.AnnotationParser(args.annot, args.ref_col,
                                            strand_col='strand',
@@ -153,21 +232,25 @@ annot_parser = annotation.AnnotationParser(args.annot, args.ref_col,
 sam_file = pysam.AlignmentFile(args.bam, "rb")
 annotations = annot_parser.get_annotations()
 
-with open(args.output, 'w') as result_file:
-    header = "# Running Counter RnAseq Window craw_coverage\n"
-    header +="# Version: {}\n".format(craw.get_version_message())
-    header += "# With the following arguments:\n"
-    for a, v in sorted(args.__dict__.items()):
-        if v is not None:
-            header += "# --{opt}={val}\n".format(opt=a.replace('_', '-'), val=v)
-    print(header.rstrip(), file=result_file)
-    print("sense", *annot_parser.header, sep='\t', end='\t', file=result_file)
+if not args.output:
+    args.output = os.path.splitext(args.bam)[0]
+    out_name = args.output
+else:
+    out_name, suffix = os.path.splitext(args.output)
+    suffix = suffix.strip('.')
+    if not suffix:
+        suffix = args.suffix
+
+sense_file, antisense_file = get_results_file(args.sense, out_name, suffix)
+
+with sense_file, antisense_file:
+    header = get_result_header(annot_parser, args)
     max_left, max_right = annot_parser.max()
-    if args.start_col:
-        print(*list(range(0 - max_left, max_right + 1)), sep='\t', file=result_file)
-    else:
-        print(*list(range(0 - args.before, args.after + 1)), sep='\t', file=result_file)
-    for annot_num, annot_entry in enumerate(annotations,1):
+    if args.sense in ('S', 'split', 'mixed'):
+        print(header, file=sense_file)
+    if args.sense in ('AS', 'split'):
+        print(header, file=antisense_file)
+    for annot_num, annot_entry in enumerate(annotations, 1):
         if annot_num % 50 == 0:
             print('.', end='', file=sys.stderr)
             if annot_num % 2500 == 0:
@@ -185,7 +268,15 @@ with open(args.output, 'w') as result_file:
                                                          qual_thr=args.qual_thr,
                                                          max_left=max_left, max_right=max_right)
         sens = 'S' if annot_entry.strand == '+' else 'AS'
-        print(sens, annot_entry, *forward_cov, sep='\t', file=result_file)
+        if sens == 'S':
+            print(sens, annot_entry, *forward_cov, sep='\t', file=sense_file)
+        else:
+            print(sens, annot_entry, *forward_cov, sep='\t', file=antisense_file)
+
         sens = 'S' if annot_entry.strand == '-' else 'AS'
-        print(sens, annot_entry, *reverse_cov, sep='\t', file=result_file)
-    print()
+        if sens == 'S':
+            print(sens, annot_entry, *reverse_cov, sep='\t', file=sense_file)
+        else:
+            print(sens, annot_entry, *reverse_cov, sep='\t', file=antisense_file)
+
+print(file=sys.stderr)
