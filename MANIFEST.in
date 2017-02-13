@@ -1,5 +1,6 @@
 include README.md
 include COPYRIGHT
+include COPYING
 include requirements.txt
 
 include setup.py
