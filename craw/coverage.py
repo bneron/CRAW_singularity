@@ -44,7 +44,7 @@ def get_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, max_
     :return: the coverage (all bases)
     :rtype: tuple of 2 list containing int
     """
-    start < stop
+
     def on_forward(al_seg):
         """
         :param al_seg: a pysam aligned segment (the object used by pysam to represent an aligned read)
