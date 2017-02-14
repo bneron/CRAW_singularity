@@ -163,7 +163,7 @@ def crop_matrix(data, start_col, stop_col):
     :return: sorted data.
     :rtype: a :class:`pandas.DataFrame` object.
     """
-    if data is None or data.emtpy:
+    if data is None or data.empty:
         return data
     return data.loc[:, start_col:stop_col]
 
@@ -181,7 +181,7 @@ def normalize(data):
     :return:
     :rtype:
     """
-    if data is None:
+    if data is None or data.empty:
         return
     # data is a 2D DataFrame
     # so min() return a Series of min by columns
