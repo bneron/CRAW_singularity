@@ -1,0 +1,17 @@
+# Running Counter RnAseq Window craw_coverage
+# Version: craw NOT packaged, it should be a development version | Python 3.4
+# With the following arguments:
+# --after=3
+# --annot=tests/data/annotation_wo_start.txt
+# --bam=tests/data/crac_tac4_20160624_plus_uv_sorted_unspliced.bam
+# --before=5
+# --output=/tmp/craw/annotation_wo_start.cov
+# --qual-thr=0
+# --ref-col=Position
+# --sense=mixed
+# --suffix=cov
+sense	name	gene	chromosome	strand	Position	0	1	2	3	4
+S	name_d	RMD6	chrV	+	14415	0	1	10	100	1000
+AS	name_c	RMD6	chrV	+	14415	1000	100	10	1	0
+S	name_b	DLD3	chrV	+	17848	10	100	10	100	10
+AS	name_a	DLD3	chrV	+	17848	1000	100	1000	100	1000
