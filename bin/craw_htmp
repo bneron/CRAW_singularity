@@ -101,39 +101,42 @@ def _size_fig_parser(value):
         return value / dpi
 
     err_msg = """--size {} invalid value.
-                 The value must be widexheight[unit].
+                 The value must be widexheight[unit] or 'raw'.
                  'wide' and 'height' must be positive integers
                  By default unit is in inches.
                  eg: 7x10 or 7x10in for 7 inches wide by 10 inches height
                      70x100mm for 70 mm by 100 mm.
                  default=7x10 or 10x7 depending of the figure orientation."""
-    unit = 'in'
-    if value[-2:] in ('mm', 'cm', 'in', 'px'):
-        unit = value[-2:]
-        value = value[:-2]
-    try:
-        wide, height = value.split('x')
-    except ValueError:
-        raise argparse.ArgumentError(None, err_msg.format(value))
-    try:
-        wide = int(wide)
-        height = int(height)
-    except ValueError:
-        raise argparse.ArgumentError(None, err_msg.format(value))
-    if wide < 0 or height < 0:
-        raise argparse.ArgumentError(None, err_msg.format(value))
+    if value == 'raw':
+        return 'raw'
+    else:
+        unit = 'in'
+        if value[-2:] in ('mm', 'cm', 'in', 'px'):
+            unit = value[-2:]
+            value = value[:-2]
+        try:
+            wide, height = value.split('x')
+        except ValueError:
+            raise argparse.ArgumentError(None, err_msg.format(value))
+        try:
+            wide = int(wide)
+            height = int(height)
+        except ValueError:
+            raise argparse.ArgumentError(None, err_msg.format(value))
+        if wide < 0 or height < 0:
+            raise argparse.ArgumentError(None, err_msg.format(value))
 
-    if unit == 'mm':
-        wide = mm2in(wide)
-        height = mm2in(height)
-    elif unit == 'cm':
-        wide = cm2in(wide)
-        height = cm2in(height)
-    elif unit == 'px':
-        wide = px2in(wide)
-        height = px2in(height)
+        if unit == 'mm':
+            wide = mm2in(wide)
+            height = mm2in(height)
+        elif unit == 'cm':
+            wide = cm2in(wide)
+            height = cm2in(height)
+        elif unit == 'px':
+            wide = px2in(wide)
+            height = px2in(height)
 
-    return wide, height
+        return wide, height
 
 
 parser = argparse.ArgumentParser(description="Compute a figure from a file of coverage compute by craw_coverage.")
@@ -183,10 +186,6 @@ fig_grp.add_argument("--cmap",
 fig_grp.add_argument("--title",
                      help="The figure title. It will display on the top of the figure. "
                           "(default: the name of the coverage file without extension).")
-fig_grp.add_argument("--no-norm",
-                     action="store_true",
-                     default=False,
-                     help="disable logarithmic normalisation.")
 fig_grp.add_argument("--dpi",
                      type=int,
                      help="The resolution of the output (default=100)."
@@ -194,12 +193,24 @@ fig_grp.add_argument("--dpi",
 fig_grp.add_argument("--size",
                      type=_size_fig_parser,
                      help="Specify the figure size "
-                          "The value must be widexheight[unit]. "
-                          "'wide' and 'height' must be positive integers "
+                          "The value must be widexheight[unit] or 'raw'. "
+                          "If value is raw it will be produce two image files (for sense and antisense) "
+                          "with one pixel correspond to one coverage value. "
+                          "Otherwise, 'wide' and 'height' must be positive integers "
                           "By default unit is in inches. "
                           "eg: 7x10 or 7x10in for 7 inches wide by 10 inches height "
                           "70x100mm for 70 mm by 100 mm. "
                           "default=7x10 or 10x7 depending of the figure orientation.")
+
+fig_grp.add_argument("--norm",
+                     choices=["log", "row", "log+row", "row+log"],
+                     help="Which normalization to apply to the data before display them. "
+                          "A step of normalisation is mandatory, if the option is not set, "
+                          "a simple normalisation will be applied. If log is set a 10 base logarithm "
+                          "will be applied on the data before normalisation. "
+                          "'row' mean that the normalisation is compute row by row. "
+                          "'log+row' mean a 10 base logarithm will be applied before a normalisation by row. "
+                          "('raow+log' is an alias for 'log+row').")
 
 layout = fig_grp.add_mutually_exclusive_group()
 layout.add_argument("--sense-on-left",
@@ -220,9 +231,11 @@ layout.add_argument("--sense-on-bottom",
                     help="Where to display the sense matrix relative to antisense matrix (default is left).")
 
 parser.add_argument("--out",
-                    type=argparse.FileType('w'),
-                    help="The name of the file (the format will based on the extension) to save the figure."
-                         " Instead of displaying the figure on the screen, save it directly in this file.")
+                    help="The name of the file (the format will based on the extension) to save the figure. "
+                         "Instead of displaying the figure on the screen, save it directly in this file. "
+                         "If this option is used with --size raw the 'sense' or 'antisense' will be added "
+                         "between the name and the suffix: eg --size raw --out foo.png give 2 files "
+                         "'foo.sense.png' and 'foo.antisense.png'. if no format is given 'png' will be used.")
 parser.add_argument("-v", "--verbosity",
                     action='count',
                     help="Increase output verbosity.")
@@ -255,82 +268,148 @@ if args.sort_by_gene_size == []:
 elif args.sort_by_gene_size:
     args.sort_by_gene_size = args.sort_by_gene_size[0]
 
+if args.out:
+    out_dir = os.path.dirname(args.out) or '.'
+    if not os.access(out_dir, os.W_OK):
+        msg = "{} is not writable".format(out_dir)
+        log.error(msg)
+        raise RuntimeError(msg)
+
 log.info("Parsing coverage file")
 data = heatmap.get_data(args.cov_file)
-sense, antisense = heatmap.split_data(data)
+
+sense_data, antisense_data = heatmap.split_data(data)
 
 if args.sense_only:
-    antisense = None
+    antisense_data = None
 if args.antisense_only:
-    sense = None
+    sense_data = None
 
-#############
-# sort data #
-#############
+################
+# sorting data #
+################
 # if data is empty or data is None sort return data
 # so it's error safe, and not time and space consuming
 if args.sort_by_gene_size:
     start_col, stop_col = args.sort_by_gene_size
-    sense = heatmap.sort(sense, 'by_gene_size', start_col=start_col, stop_col=stop_col)
-    antisense = heatmap.sort(antisense, 'by_gene_size', start_col=start_col, stop_col=stop_col)
+    sense_data = heatmap.sort(sense_data, 'by_gene_size', start_col=start_col, stop_col=stop_col)
+    antisense_data = heatmap.sort(antisense_data, 'by_gene_size', start_col=start_col, stop_col=stop_col)
 elif args.sort_using_col:
-    sense = heatmap.sort(sense, 'using_col', col=args.sort_using_col)
-    antisense = heatmap.sort(antisense, 'using_col', col=args.sort_using_col)
+    sense_data = heatmap.sort(sense_data, 'using_col', col=args.sort_using_col)
+    antisense = heatmap.sort(antisense_data, 'using_col', col=args.sort_using_col)
 elif args.sort_using_file:
-    sense = heatmap.sort(sense, 'using_file', file=args.sort_using_file)
-    antisense = heatmap.sort(antisense, 'using_file', file=args.sort_using_file)
+    sense_data = heatmap.sort(sense_data, 'using_file', file=args.sort_using_file)
+    antisense_data = heatmap.sort(antisense_data, 'using_file', file=args.sort_using_file)
 
-sense = heatmap.remove_metadata(sense)
-antisense = heatmap.remove_metadata(antisense)
+sense_data = heatmap.remove_metadata(sense_data)
+antisense_data = heatmap.remove_metadata(antisense_data)
 
-#############
-# crop data #
-#############
+################
+# croping data #
+################
 log.info("Croping matrix")
 if args.crop:
     start_col, stop_col = args.crop
-    sense = heatmap.crop(sense, start_col, stop_col)
-    antisense = heatmap.crop(antisense, start_col, stop_col)
+    sense_data = heatmap.crop(sense_data, start_col, stop_col)
+    antisense_data = heatmap.crop(antisense_data, start_col, stop_col)
 
-##########
-# layout #
-##########
-if args.sense_on_left:
-    sense_on = 'left'
-elif args.sense_on_right:
-    sense_on = 'right'
-elif args.sense_on_top:
-    sense_on = 'top'
-elif args.sense_on_bottom:
-    sense_on = 'bottom'
-else:
-    sense_on = 'top'
+####################
+# Normalizing data #
+####################
+log.info("Normalizing data")
 
-if args.title is None:
-    title = os.path.basename(os.path.splitext(args.cov_file)[0])
+if not args.norm:
+    log.info("Simple normalisation")
+    sense_data = heatmap.normalize(sense_data)
+    antisense_data = heatmap.normalize(antisense_data)
+elif args.norm == 'log':
+    log.info("10 base logarithm and normalisation")
+    sense_data = heatmap.log_norm(sense_data)
+    antisense_data = heatmap.log_norm(antisense_data)
+elif args.norm == 'row':
+    log.info("Simple normalisation by row")
+    sense_data = heatmap.normalize_row_by_row(sense_data)
+    antisense_data = heatmap.normalize_row_by_row(antisense_data)
 else:
-    title = args.title
+    # log+row or row+log
+    log.info("10 base logarithm and normalisation by row")
+    sense_data = heatmap.log_norm_row_by_row(sense_data)
+    antisense_data = heatmap.log_norm_row_by_row(antisense_data)
+
 
 ##################
 # Drawing figure #
 ##################
 log.info("Drawing figure")
-if args.no_norm:
-    log_norm = None
-else:
-    log.info("Normalizing data (log)")
-    log_norm = mtp.colors.LogNorm()
+if args.size == 'raw':
+    # pillow backend
+    if args.sense_only:
+        sense_to_compute = ('sense', )
+    elif args.antisense_only:
+        sense_to_compute = ('antisense', )
+    else:
+        sense_to_compute = ('sense', 'antisense')
 
-fig = heatmap.draw_heatmap(sense, antisense,
-                           color_map=color_map,
-                           title=title,
-                           sense_on=sense_on,
-                           norm=log_norm,
-                           size=args.size)
+    if args.out:
+        root_name, im_format = os.path.splitext(args.out)
+        im_format = im_format.lstrip('.')
+        if not im_format:
+            im_format = 'png'
+    else:
+        im_format = 'png'
+        root_name = os.path.splitext(args.cov_file)[0]
 
-if args.out:
-    if args.dpi:
-        fig.savefig(args.out.name, dpi=args.dpi)
-    fig.savefig(args.out.name)
+    out_filename = {}
+    for sense in sense_to_compute:
+        filename = "{filename}.{sense}.{format}".format(filename=root_name, sense=sense, format=im_format)
+        out_filename[sense] = filename
+        if os.path.exists(filename):
+            msg = "{} already exists".format(filename)
+            log.error(msg)
+            raise RuntimeError(msg)
+
+    for sense in sense_to_compute:
+        log.info("Drawing {}".format(sense))
+        data = globals()[sense + '_data']
+        if data is not None:
+            heatmap.draw_raw_image(data, out_filename[sense], color_map)
+        else:
+            log.warning("{} data are empty: skip drawing.".format(sense))
 else:
-    plt.show()
+    # matplotlib backend
+    ##########
+    # layout #
+    ##########
+    if args.sense_on_left:
+        sense_on = 'left'
+    elif args.sense_on_right:
+        sense_on = 'right'
+    elif args.sense_on_top:
+        sense_on = 'top'
+    elif args.sense_on_bottom:
+        sense_on = 'bottom'
+    else:
+        sense_on = 'top'
+
+    if args.title is None:
+        title = os.path.basename(os.path.splitext(args.cov_file)[0])
+    else:
+        title = args.title
+
+    fig = heatmap.draw_heatmap(sense_data, antisense_data,
+                               color_map=color_map,
+                               title=title,
+                               sense_on=sense_on,
+                               size=args.size)
+
+    if args.out:
+        if os.path.exists(args.out):
+            msg = "The output file: {} already exists.".format(args.out)
+            log.error(msg)
+            raise RuntimeError(msg)
+
+        if args.dpi:
+            fig.savefig(args.out, dpi=args.dpi)
+        fig.savefig(args.out)
+    else:
+        plt.show()
