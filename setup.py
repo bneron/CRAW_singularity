@@ -193,7 +193,7 @@ setup(name="craw",
 coverage compute the coverage for each positions of these regions in sense and antisense.
 It can also display results graphically as a heatmap""",
       platforms=["Unix"],
-      install_requires=['pysam>=0.9.1.4', 'matplotlib>=1.5.3', 'pandas>=0.17.1', 'numpy>=1.11.2'],
+      install_requires=['pysam>=0.9.1.4', 'matplotlib>=1.5.3', 'pandas>=0.17.1', 'numpy>=1.11.2', 'pillow>=3.4.2'],
       packages=['craw'],
       scripts=['bin/craw_coverage', 'bin/craw_htmp'],
 

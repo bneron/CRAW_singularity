@@ -25,8 +25,10 @@
 from inspect import isfunction
 import logging
 
-import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+from PIL import Image
 
 _log = logging.getLogger(__name__)
 _log.setLevel(logging.NOTSET)
@@ -166,6 +168,110 @@ def crop_matrix(data, start_col, stop_col):
     return data.loc[:, start_col:stop_col]
 
 
+def normalize(data):
+    """
+    Ensure that the resulting value are comprise between 0 and 1
+    The formula applied to obtain the results is:
+
+        zi = xi − min(x) / max(x)−min(x)
+    where x=(x1,...,xn) and zi is now your ith normalized data.
+
+    :param data:
+    :type data:
+    :return:
+    :rtype:
+    """
+    if data is None:
+        return
+    # data is a 2D DataFrame
+    # so min() return a Series of min by columns
+    # and min.min is the min of the matrix
+    # idem for max
+    vmin = data.min().min()
+    vmax = data.max().max()
+    data -= vmin
+    data /= vmax - vmin
+    return data
+
+
+def log_norm(data):
+    """
+    The base 10 logarithm is compute for all values before
+    a normalization (see :func:`normalize` ) to ensure
+    that all values are comprise between 0 and 1 .
+
+    .. note::
+        coverage scores are integers >= 0.
+        log10(0) = -inf
+        to normalize data the -inf value are change in 0.
+
+    :param data:
+    :type data:
+    :return:
+    :rtype:
+    """
+    if data is None:
+        return
+    data = np.log10(data)
+    # log10(0) = -inf
+    # so transform all negative values in 0
+    # normally only -inf because coverage scores are integers >=0
+    data = np.maximum(data, 0)
+    data = normalize(data)
+    return data
+
+
+def normalize_row_by_row(data):
+    """
+    Normalize data to ensure that all values are between 0 and 1 but
+    instead to normalize all the matrix, the normalization formula
+    (see :func:`normalize`) is applied row by row.
+
+    :param data:
+    :type data:
+    :return:
+    :rtype:
+    """
+    if data is None:
+        return
+    # axis=0 operation on columns
+    # axis=1 operation on rows
+
+    # subtract for each value the min of the corresponding row
+    norm_data = data.sub(data.min(axis=1), axis=0)
+    # compute a series for each row value = max - min
+    amplitude = data.max(axis=1) - data.min(axis=1)
+    # for each value divide this value by the corresponding amplitude of the row
+    norm_data = norm_data.div(amplitude, axis=0)
+    return norm_data
+
+
+def log_norm_row_by_row(data):
+    """
+    as :func:`normalize_row_by_row` but prior normalisation
+    a 10 base logarithm is applied.
+
+    .. note::
+        coverage scores are integers >= 0.
+        log10(0) = -inf
+        to normalize data the -inf value are change in 0.
+
+    :param data:
+    :type data:
+    :return:
+    :rtype:
+    """
+    if data is None:
+        return
+    data = np.log10(data)
+    # log10(0) = -inf
+    # so transform all negative values in 0
+    # normally only -inf because coverage scores are integers >=0
+    data = np.maximum(data, 0)
+    data = normalize_row_by_row(data)
+    return data
+
+
 def remove_metadata(data):
     """
     Remove all information which is not coverage value (as chromosome, strand, name, ...)
@@ -212,7 +318,10 @@ def draw_one_matrix(mat, ax, cmap=plt.cm.Blues, y_label=None):
     """
 
     row_num, col_num = mat.shape
-    mat_img = ax.imshow(mat,
+    # Classes that are ‘array-like’ such as pandas data objects and np.matrix may or may not work as intended.
+    # It is best to convert these to np.array objects prior to plotting.
+    # http://matplotlib.org/faq/usage_faq.html#types-of-inputs-to-plotting-functions
+    mat_img = ax.imshow(mat.values,
                         cmap=cmap,
                         origin='upper',
                         interpolation='none',
@@ -228,13 +337,13 @@ def draw_one_matrix(mat, ax, cmap=plt.cm.Blues, y_label=None):
     return mat_img
 
 
-def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='top', norm=None, size=None):
+def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='top', size=None):
     """
     Create a figure with subplot to represent the data as heat map.
 
-    :param sense: the data representing coverage on sense.
+    :param sense: the data normalized (xi ∈ [0,1]) representing coverage on sense.
     :type sense: a :class:`pandas.DataFrame` object.
-    :param antisense: the data representing coverage on anti sense.
+    :param antisense: the data normalized (xi ∈ [0,1]) representing coverage on anti sense.
     :type sense: a :class:`pandas.DataFrame` object.
     :param color_map: the color map to use to represent the data.
     :type color_map: a :class:`matplotlib.pyplot.cm` object.
@@ -243,8 +352,6 @@ def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='t
     :param sense_on: specify the lay out. Where to place the heat map representing the sense data.
      the available values are: 'left', 'right', 'top', 'bottom' (default = 'top').
     :type sense_on: string.
-    :param norm: a color normalisation.
-    :type norm: :class:`mtp.colors.Normalize` object.
     :param size: the size of the figure in inches (wide, height).
     :type size: tuple of 2 float.
     :return: The figure.
@@ -290,17 +397,12 @@ def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='t
 
     fig.suptitle(title, fontsize='large')
 
-
     if draw_sense:
         _log.info("Drawing sense matrix")
         sense_img = draw_one_matrix(sense, sense_subplot, cmap=color_map, y_label="Sense")
-        if norm:
-            sense_img.set_norm(norm)
     if draw_antisense:
         _log.info("Drawing antisense matrix")
         antisense_img = draw_one_matrix(antisense, antisense_subplot, cmap=color_map, y_label="Anti sense")
-        if norm:
-            antisense_img.set_norm(norm)
 
     fig.suptitle(title,
                  fontsize=12,
@@ -312,3 +414,32 @@ def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='t
         fig.subplots_adjust(top=0.95)
     fig.canvas.set_window_title(title)
     return fig
+
+
+
+def draw_raw_image(data, out_name, color_map=plt.cm.Blues, format='PNG'):
+    """
+    Generate an image file with one pixel for each values of the data matrix.
+    the data can be either the coverage on sense or on antisense.
+
+    :param data: a **Normalized** (where all values are between 0 and 1) matrix.
+    :type data: 2D :class:`pandas.DataFrame` or :class:`numpy.array` object
+    :param out_name: The name of the generated graphic file.
+    :type out_name: string
+    :param color_map:
+    :type color_map:
+    :param format: the format of the result png, jpeg, ... (see pillow supported formats)
+    :type format: string
+    :raise: RuntimeError if data are not normalized.
+    """
+    # the data was normalized to ensure that values are in [0,1]
+    # I apply directly a matplotlib.colormap on this values
+    # then rescale the values to [0, 255]
+    # and convert them in integer 8 bits
+    # save it with pillow
+    # see the whole recipe at
+    # http://stackoverflow.com/questions/10965417/how-to-convert-numpy-array-to-pil-image-applying-matplotlib-colormap
+    if data.max().max() > 1 or data.min().min() < 0:
+        raise RuntimeError("data must be normalized (between [0,1])")
+    im = Image.fromarray(np.uint8(color_map(data)*255))
+    im.save(out_name, format=format)
