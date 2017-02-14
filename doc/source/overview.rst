@@ -11,6 +11,7 @@ The craw package contains two scripts `craw_coverage` and `craw_htmp`.
 `craw_coverage` compute the coverage, whereas craw_htmp allow to represent graphically the results
 of `craw_coverage` with a heat map.
 
+
 craw_coverage:
 ==============
 
@@ -36,4 +37,26 @@ It can produce either a file or an interactive graphic. The look and feel of the
 of supported outputs vary in function of the backend of matplotlib used (see :ref:`matplotlibrc` ).
 
 
+Licensing
+=========
 
+All files belonging to the **C**ounter **R**N**A**seq **W**indow (craw) package.
+are distributed under the GPLv3 licensing.
+
+You should have received a copy of the GNU General Public License
+along with the package (see COPYING file).
+If not, see <http://www.gnu.org/licenses/>.
+
+craw is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+craw is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
+
+Authors: Bertrand Néron
+Copyright © 2017  Institut Pasteur (Paris).
+see COPYRIGHT file for details.
