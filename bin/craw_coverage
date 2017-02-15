@@ -235,6 +235,7 @@ annotations = annot_parser.get_annotations()
 if not args.output:
     args.output = os.path.splitext(args.bam)[0]
     out_name = args.output
+    suffix = args.suffix
 else:
     out_name, suffix = os.path.splitext(args.output)
     suffix = suffix.strip('.')
