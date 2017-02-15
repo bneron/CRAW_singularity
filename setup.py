@@ -176,7 +176,7 @@ def expand_data(data_to_expand):
 
 
 setup(name="craw",
-      version='{}-dev'.format(time.strftime('%Y%m%d')),
+      version='0.6-dev{}'.format(time.strftime('%Y%m%d')),
       author='Bertrand Néron',
       author_email='bneron@pasteur.fr',
       url="https://gitlab.pasteur.fr/bneron/craw",
@@ -198,9 +198,7 @@ It can also display results graphically as a heatmap""",
       scripts=['bin/craw_coverage', 'bin/craw_htmp'],
 
       data_files=expand_data([('share/craw/doc/html', ['doc/build/html/']),
-                              ('share/craw/pdf', ['doc/build/latex/craw.pdf'])]),
-      doc_files=[('html', ['doc/build/html/']),
-                 ('pdf', ['doc/build/latex/craw.pdf'])],
+                              ('share/craw/doc/pdf/', ['doc/build/latex/CounterRNAseqWindow.pdf'])]),
 
       # library file where some variable must be fix by install_lib
       fix_lib=['craw/__init__.py'],
