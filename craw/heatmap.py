@@ -84,10 +84,10 @@ def sort(data, criteria, **kwargs):
         s_d = globals()[func_name](data, **kwargs)
         return s_d
     else:
-        raise RuntimeError('BLABLA')
+        raise RuntimeError("The '{}' sorting method does not exists.".format(criteria))
 
 
-def _sort_by_gene_size(data, start_col=None, stop_col=None):
+def _sort_by_gene_size(data, start_col=None, stop_col=None, ascending=True):
     """
     Sort the matrix in function of the gene size.
 
@@ -102,9 +102,10 @@ def _sort_by_gene_size(data, start_col=None, stop_col=None):
     """
     _log.info("Sorting data by gene size using cols {}:{}".format(start_col, stop_col))
     data['gene_len'] = abs(data[stop_col] - data[start_col])
-    data = data.sort_values('gene_len', axis='index')
+    sorted_data = data.sort_values('gene_len', axis='index', ascending=ascending)
     del data['gene_len']
-    return data
+    del sorted_data['gene_len']
+    return sorted_data
 
 
 def _sort_using_col(data, col=None):
