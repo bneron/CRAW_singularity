@@ -174,7 +174,8 @@ def normalize(data):
     Ensure that the resulting value are comprise between 0 and 1
     The formula applied to obtain the results is:
 
-        zi = xi − min(x) / max(x)−min(x)
+        zi = xi - min(x) / max(x) - min(x)
+
     where x=(x1,...,xn) and zi is now your ith normalized data.
     return None if data is None, return empty :class:`pd.DataFrame` object if data is empty.
 
@@ -343,9 +344,9 @@ def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='t
     """
     Create a figure with subplot to represent the data as heat map.
 
-    :param sense: the data normalized (xi ∈ [0,1]) representing coverage on sense.
+    :param sense: the data normalized (xi in [0,1]) representing coverage on sense.
     :type sense: a :class:`pandas.DataFrame` object.
-    :param antisense: the data normalized (xi ∈ [0,1]) representing coverage on anti sense.
+    :param antisense: the data normalized (xi in [0,1]) representing coverage on anti sense.
     :type sense: a :class:`pandas.DataFrame` object.
     :param color_map: the color map to use to represent the data.
     :type color_map: a :class:`matplotlib.pyplot.cm` object.
