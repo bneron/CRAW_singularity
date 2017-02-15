@@ -22,6 +22,7 @@ For craw_htmp
   - pandas >= 0.17.1
   - numpy >= 1.11.2
   - matplotlib >= 1.5.3
+  - pillow >= 3.4.2
 
 
 Installation
