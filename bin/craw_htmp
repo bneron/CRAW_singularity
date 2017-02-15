@@ -203,14 +203,14 @@ fig_grp.add_argument("--size",
                           "default=7x10 or 10x7 depending of the figure orientation.")
 
 fig_grp.add_argument("--norm",
-                     choices=["log", "row", "log+row", "row+log"],
+                     choices=["lin", "log", "row", "log+row", "row+log"],
+                     default="lin",
                      help="Which normalization to apply to the data before display them. "
-                          "A step of normalisation is mandatory, if the option is not set, "
-                          "a simple normalisation will be applied. If log is set a 10 base logarithm "
-                          "will be applied on the data before normalisation. "
-                          "'row' mean that the normalisation is compute row by row. "
-                          "'log+row' mean a 10 base logarithm will be applied before a normalisation by row. "
-                          "('raow+log' is an alias for 'log+row').")
+                          "By default a linear ('lin') normalization is applied on the whole matrix. "
+                          "If 'log' is set, a 10 base logarithm will be applied on the data before matrix normalization."
+                          "'row' mean that a linear normalisation is compute row by row. "
+                          "'log+row' mean a 10 base logarithm will be applied before a normalisation row by row. "
+                          "('row+log' is an alias for 'log+row').")
 
 layout = fig_grp.add_mutually_exclusive_group()
 layout.add_argument("--sense-on-left",
@@ -318,18 +318,18 @@ if args.crop:
 ####################
 log.info("Normalizing data")
 
-if not args.norm:
-    log.info("Simple normalisation")
-    sense_data = heatmap.normalize(sense_data)
-    antisense_data = heatmap.normalize(antisense_data)
+if args.norm == "lin":
+    log.info("Linear normalisation")
+    sense_data = heatmap.lin_norm(sense_data)
+    antisense_data = heatmap.lin_norm(antisense_data)
 elif args.norm == 'log':
-    log.info("10 base logarithm and normalisation")
+    log.info("10 base logarithm normalisation")
     sense_data = heatmap.log_norm(sense_data)
     antisense_data = heatmap.log_norm(antisense_data)
 elif args.norm == 'row':
-    log.info("Simple normalisation by row")
-    sense_data = heatmap.normalize_row_by_row(sense_data)
-    antisense_data = heatmap.normalize_row_by_row(antisense_data)
+    log.info("Linear normalisation by row")
+    sense_data = heatmap.lin_norm_row_by_row(sense_data)
+    antisense_data = heatmap.lin_norm_row_by_row(antisense_data)
 else:
     # log+row or row+log
     log.info("10 base logarithm and normalisation by row")
