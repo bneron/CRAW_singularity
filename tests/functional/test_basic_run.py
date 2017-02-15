@@ -35,7 +35,7 @@ class Test(CRAWTest):
         """
         self.out_dir = os.path.join(self.tmp_dir, 'craw_test')
         os.makedirs(self.out_dir)
-        output_filename = 'annotation_wo_start.cov.txt'
+        output_filename = 'small.cov'
         test_result_path = os.path.join(self.out_dir, output_filename)
         command = "{bin} --bam={bam_file} --annot={annot_file} " \
                   "--before={before} --after={after} " \
@@ -43,7 +43,7 @@ class Test(CRAWTest):
                   "--qual-thr={qual} " \
                   "--output={out_file} ".format(
                                                  bin=self.bin,
-                                                 bam_file=os.path.join(self._data_dir, 'crac_tac4_20160624_plus_uv_sorted_unspliced.bam'),
+                                                 bam_file=os.path.join(self._data_dir, 'small.bam'),
                                                  annot_file=os.path.join(self._data_dir, 'annotation_wo_start.txt'),
                                                  ref_col='Position',
                                                  before=5,
