@@ -40,7 +40,7 @@ of supported outputs vary in function of the backend of matplotlib used (see :re
 Licensing
 =========
 
-All files belonging to the **C**ounter **R**N**A**seq **W**indow (craw) package.
+All files belonging to the **C**\ ounter **R**\ N\ **A**\ seq\ **W**\ indow (craw) package.
 are distributed under the GPLv3 licensing.
 
 You should have received a copy of the GNU General Public License
