@@ -160,18 +160,28 @@ Figure options
   eg: Blues, BuGn, Greens, GnBu, ... (default: Blues).
 * **\-\-title TITLE** The figure title. It will display on the top of the figure.
   (default: the name of the coverage file without extension).
-* **\-\-no-norm** by default data are color use a step of logaritmic normalization.
-  you can skip this step with this option.
+* **\-\-norm** Which normalization to apply to the data before display them.
+
+  * By default a linear ('lin') normalization is applied on the whole matrix.
+  * If 'log' is set, a 10 base logarithm will be applied on the data before matrix normalization.
+  * 'row' mean that a linear normalisation is compute row by row.
+  * 'log+row' mean a 10 base logarithm will be applied before a normalisation row by row.
+    ('row+log' is an alias for 'log+row').")
+
 * **\-\-dpi DPI** The resolution of the output (default=100).
   This option work only if **\-\-out** option is specified. |br|
   To set the right dpi for screen displaying use the :ref:`matplotlibrc` file.
-* **\-\-size SIZE**  Specify the figure size. The value must be widexheight[unit].
-  'wide' and 'height' must be positive integers. By default *unit* is in inches. eg:
+* **\-\-size SIZE** Specify the figure size
+  The value must be widexheight[unit] or 'raw'.
+  If value is 'raw' it will be produce two image files (for sense and antisense)
+  with one pixel correspond to one coverage value.
+  Otherwise, 'wide' and 'height' must be positive integers
+  By default *unit* is in inches. eg:
 
- * 7x10 or 7x10in for 7 inches wide by 10 inches height.
- * 70x100mm for 70 mm by 100 mm.
+  * 7x10 or 7x10in for 7 inches wide by 10 inches height.
+  * 70x100mm for 70 mm by 100 mm.
 
- default=7x10 or 10x7 depending of the figure orientation (see layout).
+  default=7x10 or 10x7 depending of the figure orientation (see layout).
 
 
 Layout options
