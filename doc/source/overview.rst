@@ -35,6 +35,7 @@ craw_htmp:
 `craw_htmp` read coverage file produced by `craw_coverage` and generate a graphical representation.
 It can produce either a file or an interactive graphic. The look and feel of the graphic and the format
 of supported outputs vary in function of the backend of matplotlib used (see :ref:`matplotlibrc` ).
+It can also produce raw images using pillow where 1 nucleotide is represent by 1 pixel.
 
 
 Licensing

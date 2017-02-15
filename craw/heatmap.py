@@ -169,14 +169,15 @@ def crop_matrix(data, start_col, stop_col):
     return data.loc[:, start_col:stop_col]
 
 
-def normalize(data):
+def lin_norm(data):
     """
-    Ensure that the resulting value are comprise between 0 and 1
+    Normalize data with linear algorithm.
     The formula applied to obtain the results is:
 
         zi = xi - min(x) / max(x) - min(x)
 
-    where x=(x1,...,xn) and zi is now your ith normalized data.
+    where x=(x1,...,xn) and zi is now your with normalized data.
+    Ensure that the resulting values are comprise between 0 and 1.
     return None if data is None, return empty :class:`pd.DataFrame` object if data is empty.
 
     :param data: the data to normalize, this 2D matrix must contains only coverage scores (no more metadata).
@@ -205,8 +206,8 @@ def log_norm(data):
 
     .. note::
         coverage scores are integers >= 0.
-        log10(0) = -inf
-        to normalize data the -inf value are change in 0.
+        log10(0) = -inf or warning in macos
+        prior to normalize data the 0 values are replace by 1.
 
     :param data: the data to normalize, this 2D matrix must contains only coverage scores (no more metadata).
     :type data: a 2D :class:`pandas.DataFrame` object.
@@ -215,20 +216,21 @@ def log_norm(data):
     """
     if data is None or data.empty:
         return data
+    # log10(0) = -inf or warning on macos
+    # so transform all value below 1 to 1
+    # normally only 0 because coverage scores are integers >=0
+    data = np.maximum(data, 1)
     data = np.log10(data)
-    # log10(0) = -inf
-    # so transform all negative values in 0
-    # normally only -inf because coverage scores are integers >=0
-    data = np.maximum(data, 0)
-    data = normalize(data)
+    data = lin_norm(data)
     return data
 
 
-def normalize_row_by_row(data):
+def lin_norm_row_by_row(data):
     """
-    Normalize data to ensure that all values are between 0 and 1 but
+    Normalize data with linear algorithm but
     instead to normalize all the matrix, the normalization formula
     (see :func:`normalize`) is applied row by row.
+    It ensure that all values are between 0 and 1.
 
     :param data: the data to normalize, this 2D matrix must contains only coverage scores (no more metadata).
     :type data: a 2D :class:`pandas.DataFrame` object.
@@ -266,12 +268,12 @@ def log_norm_row_by_row(data):
     """
     if data is None or data.empty:
         return data
+    # log10(0) = -inf or warning on macos
+    # so transform all negative values below 1
+    # normally only 0 because coverage scores are integers >=0
+    data = np.maximum(data, 1)
     data = np.log10(data)
-    # log10(0) = -inf
-    # so transform all negative values in 0
-    # normally only -inf because coverage scores are integers >=0
-    data = np.maximum(data, 0)
-    data = normalize_row_by_row(data)
+    data = lin_norm_row_by_row(data)
     return data
 
 
@@ -279,7 +281,8 @@ def remove_metadata(data):
     """
     Remove all information which is not coverage value (as chromosome, strand, name, ...)
 
-    :param data: the data comming from a coverage file parsing containing coverage information and metadata chromosome, gene name , ...
+    :param data: the data coming from a coverage file parsing containing coverage information and metadata chromosome,
+                 gene name , ...
     :type data: :class:`pandas.DataFrame`.
     :return: sorted data.
     :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.
@@ -306,7 +309,7 @@ def remove_metadata(data):
 
 def draw_one_matrix(mat, ax, cmap=plt.cm.Blues, y_label=None):
     """
-    Draw a matrix sing matplotlib imshow object
+    Draw a matrix using matplotlib imshow object
 
     :param mat: the data to represent graphically.
     :type mat: a :class:`pandas.DataFrame` object.

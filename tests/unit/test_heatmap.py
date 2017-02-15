@@ -171,7 +171,7 @@ class TestHeatmap(CRAWTest):
         assert_frame_equal(empty_df, htmp.crop_matrix(pd.DataFrame(), start_col='1', stop_col='2'))
 
 
-    def test_normalize(self):
+    def test_lin_norm(self):
         data = pd.DataFrame([
             [0, 1, 10, 100, 1000],
             [1000, 100, 10, 1, 0],
@@ -188,11 +188,11 @@ class TestHeatmap(CRAWTest):
             ],
             columns=['0', '1', '2', '3', '4'])
 
-        received_data = htmp.normalize(data)
+        received_data = htmp.lin_norm(data)
         assert_frame_equal(expected_data, received_data)
-        self.assertIsNone(htmp.normalize(None))
+        self.assertIsNone(htmp.lin_norm(None))
         empty_df = pd.DataFrame()
-        assert_frame_equal(empty_df, htmp.normalize(empty_df))
+        assert_frame_equal(empty_df, htmp.lin_norm(empty_df))
 
 
     def test_log_norm(self):
@@ -219,7 +219,7 @@ class TestHeatmap(CRAWTest):
         assert_frame_equal(empty_df, htmp.log_norm(empty_df))
 
 
-    def test_normalize_row_by_row(self):
+    def test_lin_norm_row_by_row(self):
         data = pd.DataFrame([
             [0, 1, 10, 100, 1000],
             [1000, 100, 10, 1, 0],
@@ -236,11 +236,11 @@ class TestHeatmap(CRAWTest):
             ],
             columns=['0', '1', '2', '3', '4'])
 
-        received_data = htmp.normalize_row_by_row(data)
+        received_data = htmp.lin_norm_row_by_row(data)
         assert_frame_equal(expected_data, received_data)
-        self.assertIsNone(htmp.normalize_row_by_row(None))
+        self.assertIsNone(htmp.lin_norm_row_by_row(None))
         empty_df = pd.DataFrame()
-        assert_frame_equal(empty_df, htmp.normalize_row_by_row(empty_df))
+        assert_frame_equal(empty_df, htmp.lin_norm_row_by_row(empty_df))
 
 
     def test_log_norm_row_by_row(self):
