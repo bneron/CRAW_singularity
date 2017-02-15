@@ -47,22 +47,93 @@ class TestHeatmap(CRAWTest):
         assert_frame_equal(expected_antisense, received_antisense)
 
 
-    # def test_sort(self):
-    #     pass
-    #
-    #
-    # def test_sort_by_gene_size(self):
-    #     pass
-    #
-    #
-    # def test_sort_using_col(self):
-    #     pass
-    #
-    #
-    # def test_sort_using_file(self):
-    #     pass
-    #
-    #
+    def test_sort(self):
+        # all kind of test is test is independent unit test below
+        # here I just test corner case
+        self.assertIsNone(htmp.sort(None, 'by_gene_size'))
+        empty_df = pd.DataFrame()
+        assert_frame_equal(empty_df, htmp.sort(empty_df, 'by_gene_size'))
+        with self.assertRaises(RuntimeError) as ctx:
+            data = pd.DataFrame([
+                ['S', 'name_d', 'RMD6', 'chrV', '+', 100, 500, 0, 1, 10, 100, 1000],
+                ['AS', 'name_c', 'RMD6', 'chrV', '+', 100, 400, 1000, 100, 10, 1, 0],
+                ['S', 'name_b', 'DLD3', 'chrV', '+', 100, 300, 10, 100, 10, 100, 10],
+                ['AS', 'name_a', 'DLD3', 'chrV', '+', 100, 200, 1000, 100, 1000, 100, 1000]
+                ])
+            htmp.sort(data, 'foo_bar')
+        self.assertEqual("The 'foo_bar' sorting method does not exists.", str(ctx.exception))
+
+
+    def test_sort_by_gene_size(self):
+        data = pd.DataFrame([
+            ['S', 'name_d', 'RMD6', 'chrV', '+', 100, 500, 0, 1, 10, 100, 1000],
+            ['AS', 'name_c', 'RMD6', 'chrV', '+', 100, 400, 1000, 100, 10, 1, 0],
+            ['S', 'name_b', 'DLD3', 'chrV', '+', 100, 300, 10, 100, 10, 100, 10],
+            ['AS', 'name_a', 'DLD3', 'chrV', '+', 100, 200, 1000, 100, 1000, 100, 1000]
+        ],
+            columns=['sense', 'name', 'gene', 'chromosome', 'strand', 'Position', 'gene_stop', '0', '1', '2', '3', '4'],
+            index=[0, 1, 2, 3])
+
+        expected_data = pd.DataFrame([
+            ['AS', 'name_a', 'DLD3', 'chrV', '+', 100, 200, 1000, 100, 1000, 100, 1000],
+            ['S', 'name_b', 'DLD3', 'chrV', '+', 100, 300, 10, 100, 10, 100, 10],
+            ['AS', 'name_c', 'RMD6', 'chrV', '+', 100, 400, 1000, 100, 10, 1, 0],
+            ['S', 'name_d', 'RMD6', 'chrV', '+', 100, 500, 0, 1, 10, 100, 1000]
+        ],
+            columns=['sense', 'name', 'gene', 'chromosome', 'strand', 'Position', 'gene_stop', '0', '1', '2', '3', '4'],
+            index=[3, 2, 1, 0])
+
+        received_data = htmp._sort_by_gene_size(data, start_col='Position', stop_col='gene_stop')
+        assert_frame_equal(expected_data, received_data)
+        received_data = htmp._sort_by_gene_size(expected_data, start_col='Position', stop_col='gene_stop', ascending=False)
+        assert_frame_equal(data, received_data)
+
+
+    def test_sort_using_col(self):
+        data = pd.DataFrame([
+            ['S', 'name_d', 'RMD6', 'chrV', '+', 14415, 0, 1, 10, 100, 1000],
+            ['AS', 'name_c', 'RMD6', 'chrV', '+', 14415, 1000, 100, 10, 1, 0],
+            ['S', 'name_b', 'DLD3', 'chrV', '+', 17848, 10, 100, 10,  100, 10],
+            ['AS', 'name_a', 'DLD3', 'chrV', '+', 17848, 1000, 100, 1000, 100, 1000]
+            ],
+            columns=['sense', 'name', 'gene', 'chromosome', 'strand', 'Position', '0', '1', '2', '3', '4'],
+            index=[0, 1, 2, 3])
+
+        expected_data = pd.DataFrame([
+            ['AS', 'name_a', 'DLD3', 'chrV', '+', 17848, 1000, 100, 1000, 100, 1000],
+            ['S', 'name_b', 'DLD3', 'chrV', '+', 17848, 10, 100, 10, 100, 10],
+            ['AS', 'name_c', 'RMD6', 'chrV', '+', 14415, 1000, 100, 10, 1, 0],
+            ['S', 'name_d', 'RMD6', 'chrV', '+', 14415, 0, 1, 10, 100, 1000],
+            ],
+            columns=['sense', 'name', 'gene', 'chromosome', 'strand', 'Position', '0', '1', '2', '3', '4'],
+            index=[3, 2, 1, 0])
+
+        received_data = htmp._sort_using_col(data, col='name')
+        assert_frame_equal(expected_data, received_data)
+
+
+    def test_sort_using_file(self):
+        data = pd.DataFrame([
+            ['S', 'name_d', 'RMD6', 'chrV', '+', 14415, 0, 1, 10, 100, 1000],
+            ['AS', 'name_c', 'RMD6', 'chrV', '+', 14415, 1000, 100, 10, 1, 0],
+            ['S', 'name_b', 'DLD3', 'chrV', '+', 17848, 10, 100, 10,  100, 10],
+            ['AS', 'name_a', 'DLD3', 'chrV', '+', 17848, 1000, 100, 1000, 100, 1000]
+            ],
+            columns=['sense', 'name', 'gene', 'chromosome', 'strand', 'Position', '0', '1', '2', '3', '4'],
+            index=[0, 1, 2, 3])
+
+        expected_data = pd.DataFrame([
+            ['S', 'name_b', 'DLD3', 'chrV', '+', 17848, 10, 100, 10,  100, 10],
+            ['AS', 'name_a', 'DLD3', 'chrV', '+', 17848, 1000, 100, 1000, 100, 1000],
+            ['S', 'name_d', 'RMD6', 'chrV', '+', 14415, 0, 1, 10, 100, 1000],
+            ['AS', 'name_c', 'RMD6', 'chrV', '+', 14415, 1000, 100, 10, 1, 0],
+            ],
+            columns=['sense', 'name', 'gene', 'chromosome', 'strand', 'Position', '0', '1', '2', '3', '4'],
+            index=['name_b', 'name_a', 'name_d', 'name_c'])
+        expected_data.index.name = 'name'
+        received_data = htmp._sort_using_file(data, file=os.path.join(self._data_dir, 'sorting_file.txt'))
+        assert_frame_equal(expected_data, received_data)
+
 
     def test_remove_metadata(self):
         expected_data = pd.DataFrame([
