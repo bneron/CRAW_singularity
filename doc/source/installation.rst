@@ -39,6 +39,21 @@ Do not forget to configure the `matplotlib` backend, specially if you use virtua
 Otherwise on some platform there won't any output.
 See :ref:`matplotlibrc` for more explanation.
 
+.. note::
+    On MacOS install python > 3 from image on http://python.org . Then
+    install craw using pip ::
+
+        pip3 install craw-x.x.x.tar.gz
+
+    craw will be installed in `/Library/Framework/Python.Framework/Version/3.6/`
+    So if you want to use directly craw_coverage and craw_htmp just create a symbolic linc like this::
+
+        ln -s /Library/Framework/Python.Framework/Version/3.6/bin/craw_coverage /usr/local/bin/craw_coverage
+        ln -s /Library/Framework/Python.Framework/Version/3.6/bin/craw_htmp /usr/local/bin/craw_htmp
+
+    The documentation (html and pdf) is located in /Library/Framework/Python.Framework/Version/3.6/share/craw/
+
+
 Installation from repository
 ----------------------------
 
