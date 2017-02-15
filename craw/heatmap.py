@@ -155,13 +155,13 @@ def crop_matrix(data, start_col, stop_col):
     Crop matrix (remove columns). The resulting matrix will be [start_col, stop_col]
 
     :param data: the data to sort.
-    :type data: :class:`pandas.DataFrame`.
+    :type data: a 2D :class:`pandas.DataFrame` object.
     :param start_col: The name of the first column to keep.
     :type start_col: string.
     :param stop_col: The name of the last column to keep.
     :type stop_col: string.
     :return: sorted data.
-    :rtype: a :class:`pandas.DataFrame` object.
+    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.
     """
     if data is None or data.empty:
         return data
@@ -175,14 +175,15 @@ def normalize(data):
 
         zi = xi − min(x) / max(x)−min(x)
     where x=(x1,...,xn) and zi is now your ith normalized data.
+    return None if data is None, return empty :class:`pd.DataFrame` object if data is empty.
 
-    :param data:
-    :type data:
-    :return:
-    :rtype:
+    :param data: the data to normalize, this 2D matrix must contains only coverage scores (no more metadata).
+    :type data: a 2D :class:`pandas.DataFrame` object.
+    :return: a normalize matrix, where  0 <= zi <=1 where z=(z1, ..., zn)
+    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.
     """
     if data is None or data.empty:
-        return
+        return data
     # data is a 2D DataFrame
     # so min() return a Series of min by columns
     # and min.min is the min of the matrix
@@ -205,13 +206,13 @@ def log_norm(data):
         log10(0) = -inf
         to normalize data the -inf value are change in 0.
 
-    :param data:
-    :type data:
-    :return:
-    :rtype:
+    :param data: the data to normalize, this 2D matrix must contains only coverage scores (no more metadata).
+    :type data: a 2D :class:`pandas.DataFrame` object.
+    :return: a normalize matrix, where  0 <= zi <=1 where z=(z1, ..., zn)
+    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.
     """
-    if data is None:
-        return
+    if data is None or data.empty:
+        return data
     data = np.log10(data)
     # log10(0) = -inf
     # so transform all negative values in 0
@@ -227,13 +228,13 @@ def normalize_row_by_row(data):
     instead to normalize all the matrix, the normalization formula
     (see :func:`normalize`) is applied row by row.
 
-    :param data:
-    :type data:
-    :return:
-    :rtype:
+    :param data: the data to normalize, this 2D matrix must contains only coverage scores (no more metadata).
+    :type data: a 2D :class:`pandas.DataFrame` object.
+    :return: a normalize matrix, where  0 <= zi <=1 where z=(z1, ..., zn)
+    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.
     """
-    if data is None:
-        return
+    if data is None or data.empty:
+        return data
     # axis=0 operation on columns
     # axis=1 operation on rows
 
@@ -256,13 +257,13 @@ def log_norm_row_by_row(data):
         log10(0) = -inf
         to normalize data the -inf value are change in 0.
 
-    :param data:
-    :type data:
-    :return:
-    :rtype:
+    :param data: the data to normalize, this 2D matrix must contains only coverage scores (no more metadata).
+    :type data: a 2D :class:`pandas.DataFrame` object.
+    :return: a normalize matrix, where  0 <= zi <=1 where z=(z1, ..., zn)
+    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.
     """
-    if data is None:
-        return
+    if data is None or data.empty:
+        return data
     data = np.log10(data)
     # log10(0) = -inf
     # so transform all negative values in 0
@@ -276,10 +277,10 @@ def remove_metadata(data):
     """
     Remove all information which is not coverage value (as chromosome, strand, name, ...)
 
-    :param data: the data to sort.
+    :param data: the data comming from a coverage file parsing containing coverage information and metadata chromosome, gene name , ...
     :type data: :class:`pandas.DataFrame`.
     :return: sorted data.
-    :rtype: a :class:`pandas.DataFrame` object.
+    :rtype: a 2D :class:`pandas.DataFrame` object or None if data is None.
     """
     if data is None or data.empty:
         return data
