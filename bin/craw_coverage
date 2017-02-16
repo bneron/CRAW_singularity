@@ -198,11 +198,17 @@ parser.add_argument("--sense",
                          "antisense (AS), "
                          "on both senses but produce two separated files (split), "
                          "or in one file (mixed)."
+                         "(default: mixxed)"
                     )
 
 parser.add_argument("--version",
                     action=argparse_util.VersionAction,
                     version=get_version_message())
+parser.add_argument("--quiet",
+                    action="store_true",
+                    default=False,
+                    help="suppress dot progression.")
+
 args = parser.parse_args()
 
 group_one = (args.before, args.after, args.window)
@@ -261,11 +267,12 @@ with sense_file, antisense_file:
     if args.sense in ('AS', 'split'):
         print(header, file=antisense_file)
     for annot_num, annot_entry in enumerate(annotations, 1):
-        if annot_num % 50 == 0:
-            print('.', end='', file=sys.stderr)
-            if annot_num % 2500 == 0:
-                print('', file=sys.stderr)
-            sys.stderr.flush()
+        if not args.quiet:
+            if annot_num % 50 == 0:
+                print('.', end='', file=sys.stderr)
+                if annot_num % 2500 == 0:
+                    print('', file=sys.stderr)
+                sys.stderr.flush()
         if args.start_col:
             start = annot_entry.start - 1
             stop = annot_entry.stop
