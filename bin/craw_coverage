@@ -39,7 +39,10 @@ try:
 except ImportError as err:
     msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
     sys.exit(msg)
+from craw import argparse_util
+
 from craw import annotation, coverage
+
 
 def positive_int(value):
     """
@@ -81,6 +84,11 @@ def quality_checker(value):
     return value
 
 
+def get_version_message():
+    version_text = craw._get_version_message()
+    version_text += "\nUsing: pysam {} (samtools {})".format(pysam.__version__, pysam.__samtools_version__)
+    return version_text
+
 def get_result_header(annot_parser, cmdline_args):
     """
 
@@ -89,8 +97,9 @@ def get_result_header(annot_parser, cmdline_args):
     :return:
     """
     header = "# Running Counter RnAseq Window craw_coverage\n"
-    header += "# Version: {}\n".format(craw.get_version_message())
-    header += "# With the following arguments:\n"
+    commented_ver = get_version_message().replace('\n', '\n# ')
+    header += "# Version: {}\n".format(commented_ver)
+    header += "#\n# craw_coverage run with the following arguments:\n"
     for a, v in sorted(cmdline_args.__dict__.items()):
         if v is not None:
             header += "# --{opt}={val}\n".format(opt=a.replace('_', '-'), val=v)
@@ -192,8 +201,8 @@ parser.add_argument("--sense",
                     )
 
 parser.add_argument("--version",
-                    action='version',
-                    version=craw.get_version_message())
+                    action=argparse_util.VersionAction,
+                    version=get_version_message())
 args = parser.parse_args()
 
 group_one = (args.before, args.after, args.window)

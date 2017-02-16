@@ -1,5 +1,3 @@
-import sys
-
 ###########################################################################
 #                                                                         #
 # This file is part of Counter RNAseq Window (craw) package.              #
@@ -24,9 +22,12 @@ import sys
 #                                                                         #
 ###########################################################################
 
+
+import sys
+
 __version__ = '$VERSION'
 
-def get_version_message():
+def _get_version_message():
     """
 
     :return: A human readable version of the craw version
