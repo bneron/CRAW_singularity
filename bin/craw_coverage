@@ -137,13 +137,13 @@ def get_results_file(sense_opt, basename, suffix):
     return sense, antisense
 
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument("-b", "--bam",
                     required=True,
-                    help="The path of the bam file to analyse")
+                    help="The path of the bam file to analyse (required).")
 parser.add_argument("-a", "--annot",
                     required=True,
-                    help="The path of the annotation file.")
+                    help="The path of the annotation file (required).")
 parser.add_argument("-q", "--qual-thr",
                     dest='qual_thr',
                     type=quality_checker,
@@ -156,26 +156,38 @@ parser.add_argument('-o', '--output',
                     dest='output',
                     help="The path of the output (default= base name of annotation file with --suffix)")
 region_grp = parser.add_argument_group(title="region of interest",
-                                       description="""Parameters which define regions to compute
-There is 2 way to define regions:
-    - all regions have same length
-    - each region have different lengths
-in both case  a position of reference must be define (--ref-col default = position)
-if all regions have same length:
-    --window define the number of nucleotide to take in account before and after the reference position
-      (the window will be centered on reference)
-    --before define the number of nucleotide to take in account before the reference position.
-    --after define the number of nucleotide to take in account after the reference position.
-    --before and --after allow to define non centered window.
---after and --before options must be set together and are incompatible with --window option.
+                                       description="""Parameters which define regions to compute.
 
-If all regions have different lengths. The regions must be specified in the annotation file.
-    --start-col define the name of the column in annotation file which define the start position of the region to compute.
-    --stop-col define the name of the column in annotation file which define the stop position of the region to compute.
+There is 2 way to define regions:
+    * all regions have same length.
+    * each region have different lengths.
+
+In both case a position of reference must be define (--ref-col).
+
+If all regions have same length:
+
+    --window define the number of nucleotide to take in account before and
+      after the reference position (the window will be centered on reference)
+    --before define the number of nucleotide to take in account before the
+      reference position.
+    --after define the number of nucleotide to take in account after the
+      reference position.
+    --before and --after allow to define non centered window.
+
+    --after and --before options must be set together and are
+    incompatible with --window option.
+
+If all regions have different lengths:
+
+    The regions must be specified in the annotation file.
+    --start-col define the name of the column in annotation file which define
+      the start position of the region to compute.
+    --stop-col define the name of the column in annotation file which define
+      the stop position of the region to compute.
 """)
 region_grp.add_argument("--ref-col",
                         default="position",
-                        help="The name of the column for the reference position.")
+                        help="The name of the column for the reference position (default: position).")
 region_grp.add_argument("--before",
                         type=positive_int,
                         help="The number of base to compute after the position of reference.")
@@ -198,7 +210,7 @@ parser.add_argument("--sense",
                          "antisense (AS), "
                          "on both senses but produce two separated files (split), "
                          "or in one file (mixed)."
-                         "(default: mixxed)"
+                         "(default: mixed)"
                     )
 
 parser.add_argument("--version",
