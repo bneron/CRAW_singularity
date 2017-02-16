@@ -133,7 +133,9 @@ on so on until '2000' (here we display only the first 3 columns of the coverage)
 
     # Running Counter RnAseq Window
     # Version: craw NOT packaged, it should be a development version | Python 3.4
-    # With the following arguments:
+    # Using: pysam 0.9.1.4 (samtools 1.3.1)
+    #
+    # craw_coverage ran with the following arguments:
     # --after=2000
     # --annot=../data/craw_data_test/annotations.txt
     # --bam=../data/craw_data_test/WTE1.bam
@@ -174,3 +176,14 @@ The output format will be deduced form the filename extension provide to --out o
   --out foo.jpeg  for jpeg image or --out foo.png  for png image
 
 The supported format vary in function of the matloblib backend used (see :ref:`matplotlibrc`).
+
+If --size raw is used 2 files will be generated one for the sense and the other for the antisense.
+If --out is not specified it will be the name of the coverage file without extension and the format will be png. ::
+
+    craw_htmp foo_bar.cov --size raw
+
+will produce *foo_bar.sense.png* and *foo_bar.antisense.png* ::
+
+   craw_htmp foo_bar.cov --size raw --out Xyzzy.jpeg
+
+will produce *Xyzzy.sense.jpeg* and *Xyzzy.antisense.jpeg*

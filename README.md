@@ -13,6 +13,7 @@ requirements
 - pandas >= 0.17.1
 - numpy >= 1.11.2
 - matplotlib >= 1.5.3
+- pillow >= 3.4.2
 
 from package
 ------------
@@ -23,6 +24,20 @@ using pip
 
 if you use virtualenv do not forget to configure the matplotlib backend
 
+##### Notes for MacOS
+    
+On MacOS install python > 3 from image on http://python.org . 
+Then install craw using pip 
+
+    pip3 install craw-x.x.x.tar.gz
+
+craw will be installed in `/Library/Framework/Python.Framework/Version/3.6/`
+So if you want to use directly craw_coverage and craw_htmp just create a symbolic linc like this::
+
+    ln -s /Library/Framework/Python.Framework/Version/3.6/bin/craw_coverage /usr/local/bin/craw_coverage
+    ln -s /Library/Framework/Python.Framework/Version/3.6/bin/craw_htmp /usr/local/bin/craw_htmp
+
+The craw documentation (html and pdf) is located in /Library/Framework/Python.Framework/Version/3.6/share/craw/
 
 from repository
 ---------------
@@ -51,20 +66,19 @@ to test if everything is correctly installed.
 Quickstart
 ==========
 
-.. _inputs-outputs:
+A detailed documentation is available in html and pdf format in INSTALL_DIR/share/craw/doc/(html|pdf) 
 
-================
+
 Inputs / Outputs
 ================
 
 
 craw_coverage
-=============
+-------------
 
-Inputs
-------
+### Inputs
 
-bam file
+#### bam file
 
 *craw_coverage* need a file of alignment reads called bam file.
 a bam file is a short DNA sequence read alignments in the Binary Alignment/Map format (.bam).
@@ -72,18 +86,18 @@ a bam file is a short DNA sequence read alignments in the Binary Alignment/Map f
 with the same name instead to have the *.bam* extension it end by *.bai* extension.
 If you have not  the index file you have to create it.
 
-To index a bam file you need samtools. The command line is ::
+To index a bam file you need samtools. The command line is
 
     samtools index file.bam
 
 For more explanation see http://www.htslib.org/doc/ .
 
 
-annotation file
+#### annotation file
 
 The annotation file is a `tsv` file. It's mean that it is a text file with value separated by tabulation (not spaces).
 The first line of the file must be the name of the columns
-the other lines the values. Each line represent a row. ::
+the other lines the values. Each line represent a row.
 
     name    gene    chromosome      strand  Position
     YEL072W RMD6    chrV    +       14415
@@ -91,7 +105,7 @@ the other lines the values. Each line represent a row. ::
     YEL070W DSF1    chrV    +       21097
 
 
-All lines starting with '#' character will be ignored. ::
+All lines starting with '#' character will be ignored.
 
     # This is the annotation file for Wild type
     # bla bla ...
@@ -110,7 +124,8 @@ columns with fixed name
 
 two with a fixed name:
 
-* **strand** indicate on which strand is located the region of interest. The authorized values for this columns are +/- , 1/-1 or for/rev.
+* **strand** indicate on which strand is located the region of interest. 
+  The authorized values for this columns are +/- , 1/-1 or for/rev.
 * **chromosome** the chromosome name where is located the region of interest.
 
 columns with variable name
@@ -124,7 +139,6 @@ If we want to compute coverage on variable window size, 2 extra columns whose na
 * \-\-start-col to define the beginning of the window (this position is included in the window)
 * \-\-stop-col to define the end of the window (this position is included in the window)
 
-::
 
     name    gene    type    chromosome      strand  annotation_start        annotation_end  has_transcript  transcription_end       transcription_start
     YEL072W RMD6    gene    chrV    1       13720   14415   1       14745   13569
@@ -133,18 +147,16 @@ If we want to compute coverage on variable window size, 2 extra columns whose na
 
 
 
-::
-
     craw_coverage --bam file.bam --annot annot.txt --ref-col annotation_start --start-col annotation_start --stop-col annotation_end
 
 
 The position of reference must be between start and end.
 The authorized values are positive integers.
 
-.. note::
-    the position of reference can be used to define the reference and the start ot the end of the window. ::
 
-        craw_coverage --bam file.bam --annot annot.txt --ref-col annotation_start --start-col annotation_start --stop-col annotation_end
+The position of reference can be used to define the reference and the start ot the end of the window. ::
+
+     craw_coverage --bam file.bam --annot annot.txt --ref-col annotation_start --start-col annotation_start --stop-col annotation_end
 
 All other columns are not necessary but will be reported as is in the coverage file.
 
@@ -153,8 +165,8 @@ All other columns are not necessary but will be reported as is in the coverage f
 Outputs
 -------
 
-coverage_file
-^^^^^^^^^^^^^
+#### coverage_file
+
 
 It's a `tsv` file with all columns found in annotation file plus the result of coverage position by position centered
 on the reference position define for each line. for instance ::
@@ -194,22 +206,35 @@ craw_htmp
 Inputs
 ------
 
-see craw_covergae output
+see craw_coverage output
 
 Outputs
 -------
 
-The default output of *craw_htmp* (if --out is omitted) is grapical window on the screen.
+The default output of *craw_htmp* (if --out is omitted) is graphical window on the screen.
 The figure display on the screen can be saved using the window menu.
 It is also possible to generate directly a image file in various format by specifying the --out option.
-The output format will be deduced form the filename extension provide to --out option. ::
+The output format will be deduced form the filename extension provide to --out option.
 
   --out foo.jpeg  for jpeg image or --out foo.png  for png image
 
-The supported format vary in function of the matloblib backend used (see ).
+The supported format vary in function of the matplotlib backend used (see ).
 
+If --size raw is used 2 files will be generated one for the sense and the other for the antisense.
+If --out is not specified it will be the name of the coverage file without extension and the format will be png.
+ 
+   craw_htmp foo_bar.cov --size raw 
+
+will produce *foo_bar.sense.png* and *foo_bar.antisense.png*
+
+   craw_htmp foo_bar.cov --size raw --out Xyzzy.jpeg
+   
+will produce *Xyzzy.sense.jpeg* and *Xyzzy.antisense.jpeg*
+   
+   
 
 command line options
 --------------------
 
-TODO
+there is many option for each craw scripts to have an exhausted list of options use --help options
+ or read the manual (html or pdf)
