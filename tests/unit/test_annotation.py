@@ -217,6 +217,7 @@ class TestAnnotationParser(CRAWTest):
                               stop_col='end')
         self.assertEqual(ap.max(), (10, 10))
 
+
     def test_get_annotations(self):
         ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_w_start.txt'),
                               'Position',

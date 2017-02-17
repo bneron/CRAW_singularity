@@ -4,18 +4,18 @@
 #
 # craw_coverage run with the following arguments:
 # --after=3
-# --annot=tests/data/annotation_wo_start.txt
+# --annot=tests/data/annotation_wo_start_chr_strand_col.txt
 # --bam=tests/data/small.bam
 # --before=5
-# --chr-col=chromosome
-# --output=tests/data/small
+# --chr-col=chr
+# --output=toto.cov
 # --qual-thr=0
 # --quiet=False
 # --ref-col=Position
 # --sense=mixed
-# --strand-col=strand
+# --strand-col=brin
 # --suffix=cov
-sense	name	gene	chromosome	strand	Position	-5	-4	-3	-2	-1	0	1	2	3
+sense	name	gene	chr	brin	Position	-5	-4	-3	-2	-1	0	1	2	3
 S	YEL072W	RMD6	chrV	+	14415	0	0	0	0	0	0	0	0	0
 AS	YEL072W	RMD6	chrV	+	14415	0	0	0	0	0	0	0	0	0
 S	YEL071W	DLD3	chrV	+	17848	227	227	227	227	227	226	225	224	224
