@@ -23,6 +23,17 @@ Developer Guide
 Overview
 --------
 
+Scripts are located in *bin* directory, and use some modules located in *craw* directory.
+
+* *craw_coverage* use module :mod:`craw.annotation` to handle annotation file and module :mod:`craw.coverage`
+  to compute coverage this module rely on pysam.
+* *craw_htmp* read coverage file generate by *craw_coverage* and produce graphical representation of data.
+  This script use functions in module :mod:`craw.heatmap` in the form of heatmap.
+  The module :mod:`craw.heatmap` have some capabilities to sort, crop, normalize data before represent them.
+  this module rely on numpy, pandas to manipulate data (:mod:`craw.heatmap.sort`, :mod:`craw.heatmap.crop_matrix`,
+  :mod:`craw.heatmap.lin_norm`, ...) and matplotlib and/or pillow to generate images (:mod:`craw.heatmap.draw_heatmap` ,
+  :mod:`craw.heatmap.draw_raw_image`)
+
 reference API
 -------------
 
