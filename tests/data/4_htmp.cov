@@ -1,0 +1,28 @@
+# Running Counter RnAseq Window craw_coverage
+# Version: craw NOT packaged, it should be a development version | Python 3.4
+# Using: pysam 0.9.1.4 (samtools 1.3.1)
+#
+# craw_coverage run with the following arguments:
+# --after=3
+# --annot=tests/data/annotation_wo_start.txt
+# --bam=tests/data/small.bam
+# --before=3
+# --chr-col=chromosome
+# --output=tests/data/small
+# --qual-thr=0
+# --quiet=False
+# --ref-col=Position
+# --sense=mixed
+# --strand-col=strand
+# --suffix=cov
+sense	name	gene	chromosome	strand	Position	-3	-2	-1	0	1	2	3
+S	YEL072W	RMD6	chrV	+	1	0	1	2	30	40	50	60
+AS	YEL072W	RMD6	chrV	+	2	60	50	40	30	2	1	0
+S	YEL071W	DLD3	chrV	+	3	0	1	10	100	1000	10000	100000
+AS	YEL071W	DLD3	chrV	+	4	100000	10000	1000	100	10	1	0
+S	snR67	SNR67	chrV	+	5	10	1	10	1	10	1	10
+AS	snR67	SNR67	chrV	+	6	0	10	0	10	0	10	0
+S	YEL043W	YEL043W	chrV	+	7	1000	100	10	0	10	100	1000
+AS	YEL043W	YEL043W	chrV	+	8	1000	100	10	0	10	100	1000
+S	YPR036W	VMA13	chrXVI	+	9	0	10	100	1000	100	10	0
+AS	YPR036W	VMA13	chrXVI	+	10	0	10	100	1000	100	10	0
