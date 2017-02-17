@@ -162,11 +162,13 @@ Figure options
   (default: the name of the coverage file without extension).
 * **\-\-norm** Which normalization to apply to the data before display them.
 
-  * By default a linear ('lin') normalization is applied on the whole matrix.
-  * If 'log' is set, a 10 base logarithm will be applied on the data before matrix normalization.
-  * 'row' mean that a linear normalisation is compute row by row.
-  * 'log+row' mean a 10 base logarithm will be applied before a normalisation row by row.
-    ('row+log' is an alias for 'log+row').")
+    * **lin** a linear normalization is applied on the whole matrix.
+    * **log** a 10 base logarithm will be applied on the data before matrix
+    normalization.
+    * **row** mean that a linear normalisation is compute row by row.
+    * **log+row** mean a 10 base logarithm will be applied before a normalisation
+    row by row. ('row+log' is an alias for 'log+row').
+    (default: lin)
 
 * **\-\-dpi DPI** The resolution of the output (default=100).
   This option work only if **\-\-out** option is specified. |br|

@@ -201,6 +201,13 @@ region_grp.add_argument("--start-col",
                         help="The name of the column to define the start position.")
 region_grp.add_argument("--stop-col",
                         help="The name of the column to define the stop position.")
+col_name = parser.add_argument_group(title="specify the name of columns")
+col_name.add_argument("--strand-col",
+                      default='strand',
+                      help="Specify the name of the column representing the strand (default: strand)")
+col_name.add_argument("--chr-col",
+                      default='chromosome',
+                      help="Specify the name of the column representing the chromosome (default: chromosome)")
 
 parser.add_argument("--sense",
                     choices=('S', 'AS', 'split', 'mixed'),
@@ -253,8 +260,10 @@ elif not all(group_two):
 
 
 annot_parser = annotation.AnnotationParser(args.annot, args.ref_col,
-                                           strand_col='strand',
-                                           start_col=args.start_col, stop_col=args.stop_col)
+                                           chr_col=args.chr_col,
+                                           strand_col=args.strand_col,
+                                           start_col=args.start_col,
+                                           stop_col=args.stop_col)
 
 sam_file = pysam.AlignmentFile(args.bam, "rb")
 annotations = annot_parser.get_annotations()
