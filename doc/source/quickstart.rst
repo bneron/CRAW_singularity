@@ -164,11 +164,11 @@ Figure options
 
     * **lin** a linear normalization is applied on the whole matrix.
     * **log** a 10 base logarithm will be applied on the data before matrix
-    normalization.
+      normalization.
     * **row** mean that a linear normalisation is compute row by row.
     * **log+row** mean a 10 base logarithm will be applied before a normalisation
-    row by row. ('row+log' is an alias for 'log+row').
-    (default: lin)
+      row by row. ('row+log' is an alias for 'log+row').
+      (default: lin)
 
 * **\-\-dpi DPI** The resolution of the output (default=100).
   This option work only if **\-\-out** option is specified. |br|
@@ -217,8 +217,8 @@ Other options
 * **-h, \-\-help**  Display the help message and exit
 * **\-\-out OUT**  The name of the file (the format will based on the extension) to save the figure.
   Instead of displaying the figure on the screen, save it directly in this file.
-*  **-v, \-\-verbosity** Increase output verbosity. By default craw_htmp is relatively quiet (display only warning and error),
-   if you want to display also the processing step just add -v on the commandline (or -vv to display also the debugging message).
-*  **\-\-version** Display version information and quit.
+* **-v, \-\-verbosity** Increase output verbosity. By default craw_htmp is relatively quiet (display only warning and error),
+  if you want to display also the processing step just add -v on the commandline (or -vv to display also the debugging message).
+* **\-\-version** Display version information and quit.
 
 
