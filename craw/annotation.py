@@ -132,7 +132,7 @@ class Entry:
 
     @property
     def stop(self):
-        """The position to end the coverage computaion (included)"""
+        """The position to end the coverage computation (included)"""
         if 'stop' in self._fields_idx:
             return self._values[self._fields_idx['stop'].idx]
         else:
@@ -156,8 +156,10 @@ Idx = namedtuple('Idx', ('col_name', 'idx'))
 
 
 def new_entry_type(name, fields, ref_col,
-                   strand_col='strand', chr_col='chromosome',
-                   start_col=None, stop_col=None):
+                   strand_col='strand',
+                   chr_col='chromosome',
+                   start_col=None,
+                   stop_col=None):
     """
     From the header of the annotation line create a new Entry Class inherited from Entry Class
 
@@ -175,7 +177,7 @@ def new_entry_type(name, fields, ref_col,
     :type start_col: string
     :param stop_col: The name of the column representing the position of the last base to compute the coverage (inclusive).
     :type stop_col: string
-    :return: a new class child of :class:`Entry` which is able to store informations corresponding to the header.
+    :return: a new class child of :class:`Entry` which is able to store information corresponding to the header.
     """
     fields_idx = {}
     if any((start_col, stop_col)) and not all((start_col, stop_col)):
@@ -249,6 +251,7 @@ class AnnotationParser:
             _ = annot_file.readline()
             MyEntryClass = new_entry_type('MyEntry', self.header, self.ref_col,
                                           strand_col=self.strand_col,
+                                          chr_col=self.chr_col,
                                           start_col=self.start_col,
                                           stop_col=self.stop_col)
             for line in annot_file:
