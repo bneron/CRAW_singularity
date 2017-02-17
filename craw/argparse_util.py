@@ -25,8 +25,15 @@
 
 import argparse
 
+
 class VersionAction(argparse._VersionAction):
-     def __call__(self, parser, namespace, values, option_string=None):
+    """Class to allow argparse to handel more complex version output"""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Override the :meth:`argparse._VersionAction.__call__` to use
+           a RawTextHelpFormatter only for version action whatever the class_formatter
+           specified for the :class:`argparse.ArgumentParser` object.
+        """
         version = self.version
         if version is None:
             version = parser.version
@@ -34,4 +41,5 @@ class VersionAction(argparse._VersionAction):
         formatter.add_text(version)
         parser._print_message(formatter.format_help(), argparse._sys.stdout)
         parser.exit()
+
 

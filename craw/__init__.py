@@ -30,7 +30,7 @@ __version__ = '$VERSION'
 def _get_version_message():
     """
 
-    :return: A human readable version of the craw version
+    :return: A human readable version of the craw package version
     :rtype: string
     """
     # if I keep '$ VERSION' (without space) as is

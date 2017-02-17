@@ -33,6 +33,7 @@ reference API
    annotation
    coverage
    heatmap
+   argparse_util
 
 
 Indices and tables

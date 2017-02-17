@@ -48,7 +48,7 @@ def get_data(coverage_file):
 
 def split_data(data):
     """
-    Split the matrix in 2 matrices one for sens the other for antisense.
+    Split the matrix in 2 matrices one for sense the other for antisense.
 
     :param data: the coverage data to split
     :type data: a 2 dimension :class:`pandas.DataFrame` object
