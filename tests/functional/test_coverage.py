@@ -106,17 +106,8 @@ class Test(CRAWTest):
 
         with open(test_result_path) as test_result_file:
             test_result = test_result_file.readlines()
-        for expected, result in zip(expected_result, test_result):
-            if expected.startswith("# Version :"):
-                continue
-            if expected.startswith("# --annot="):
-                continue
-            elif expected.startswith("# --bam="):
-                continue
-            elif expected.startswith("# --output="):
-                continue
-            else:
-                self.assertEqual(expected, result)
+
+        self._check_coverage_file(expected_result, test_result)
 
 
     def test_with_chr_strand_col(self):
@@ -179,17 +170,8 @@ class Test(CRAWTest):
 
         with open(test_result_path) as test_result_file:
             test_result = test_result_file.readlines()
-        for expected, result in zip(expected_result, test_result):
-            if expected.startswith("# Version :") or expected.startswith("# Using:"):
-                continue
-            if expected.startswith("# --annot="):
-                continue
-            elif expected.startswith("# --bam="):
-                continue
-            elif expected.startswith("# --output="):
-                continue
-            else:
-                self.assertEqual(expected, result)
+
+        self._check_coverage_file(expected_result, test_result)
 
 
     def test_with_var_window(self):
@@ -248,8 +230,13 @@ class Test(CRAWTest):
 
         with open(test_result_path) as test_result_file:
             test_result = test_result_file.readlines()
+
+        self._check_coverage_file(expected_result, test_result)
+
+
+    def _check_coverage_file(self, expected_result, test_result):
         for expected, result in zip(expected_result, test_result):
-            if expected.startswith("# Version :"):
+            if expected.startswith("# Version:"):
                 continue
             if expected.startswith("# --annot="):
                 continue
