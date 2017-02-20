@@ -5,7 +5,7 @@ variables:
   CRAW_HOME: ${CI_PROJECT_DIR}
 
 build:
-    image: registry-gitlab.pasteur.fr/bneron/craw:centos7
+    image: registry-gitlab.pasteur.fr/bneron/craw:centos-dep-0.6
     stage: test
     script:
         - python3 ${CI_PROJECT_DIR}/tests/run_tests.py -vvv
