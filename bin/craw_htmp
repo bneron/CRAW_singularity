@@ -29,7 +29,7 @@ import os
 import argparse
 import logging
 import matplotlib as mtp
-import matplotlib.pyplot as plt
+
 
 if 'CRAW_HOME' in os.environ and os.environ['CRAW_HOME']:
     if os.environ['CRAW_HOME'] not in sys.path:
@@ -40,7 +40,6 @@ except ImportError as err:
     msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
     sys.exit(msg)
 from craw import argparse_util
-from craw import heatmap
 
 
 root_logger = logging.getLogger()
@@ -140,6 +139,7 @@ def _size_fig_parser(value):
         return wide, height
 
 def get_version_message():
+    return "TOTO"
     version_text = craw._get_version_message()
     version_text += """
 Using:
@@ -295,6 +295,30 @@ log.debug("args={}".format(args))
 ###########################
 # validating some options #
 ###########################
+# test if DISPlAY
+if not os.environ.get('DISPLAY'):
+    if args.out is not None:
+        _, out_format = os.path.splitext(args.out)
+        from craw import mpl_util
+        try:
+            backend = mpl_util.non_interactive_backends[out_format.lstrip('.')]
+        except KeyError:
+            raise RuntimeError("The '{}' format is not supported, choose among {}.".format(
+                out_format,
+                list(mpl_util.non_interactive_backends.keys())
+            ))
+        mtp.use(backend)
+    else:
+        raise RuntimeError("""
+'DISPLAY' variable is not set (you probably run craw_htmp in non graphic environment)
+So you cannot use interactive output
+please specify an output file (--out).
+""")
+
+# the import of pyplot must be done after setting the backend
+import matplotlib.pyplot as plt
+from craw import heatmap
+
 try:
     color_map = plt.cm.get_cmap(args.cmap)
 except AttributeError as err:
