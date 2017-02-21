@@ -11,3 +11,5 @@ build:
         - python3 ${CI_PROJECT_DIR}/tests/run_tests.py -vvv
     except:
         - /^feat.*$/
+        - /^fix.*$/
+
