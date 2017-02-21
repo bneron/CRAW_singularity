@@ -6,7 +6,7 @@ USER root
 
 RUN yum clean all && \
     yum install -y epel-release &&\
-    yum install -y make gcc gcc-c++ python34-devel zlib-devel && \
+    yum install -y make gcc gcc-c++ python34-devel zlib-devel python34-tkinter && \
     yum clean all
 
 WORKDIR /tmp
