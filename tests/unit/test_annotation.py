@@ -104,6 +104,7 @@ class TestEntry(CRAWTest):
         self.assertEqual(str(ctx.exception),
                          "The stop_col 'foo' does not match any fields: 'beg, end, name, gene, chromosome, strand, Position'")
 
+
     def test_entry(self):
         name = 'toto'
         ref_col = 'Position'
@@ -146,6 +147,7 @@ class TestEntry(CRAWTest):
                         "error in line '14405\t14000\tYEL072W\tRMD6\tchrV\t+\t14415': Position 14415 is not between beg: 14405 and end: 14000"
         )
 
+
     def test_chromosome(self):
         name = 'toto'
         ref_col = 'pos_ref'
@@ -155,6 +157,7 @@ class TestEntry(CRAWTest):
         ne = ne_class([str(v) for v in values])
         self.assertEqual(ne.chromosome, 'chrV')
 
+
     def test_ref(self):
         name = 'toto'
         ref_col = 'pos_ref'
@@ -163,6 +166,7 @@ class TestEntry(CRAWTest):
         values = ['YEL072W', 'RMD6', 'chrV', '+', 14415]
         ne = ne_class([str(v) for v in values])
         self.assertEqual(ne.ref, 14415)
+
 
     def test_start(self):
         name = 'toto'
@@ -176,6 +180,7 @@ class TestEntry(CRAWTest):
         values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
         ne = ne_class([str(v) for v in values])
         self.assertIsNone(ne.start)
+
 
     def test_stop(self):
         name = 'toto'
@@ -216,20 +221,19 @@ class TestEntry(CRAWTest):
         ne = ne_class([str(v) for v in values])
         self.assertEqual(ne.strand, '+')
 
-
         fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
         ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='end')
         values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '-', 14415]
         ne = ne_class([str(v) for v in values])
         self.assertEqual(ne.strand, '-')
 
-        ields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
         ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='end')
         values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', 'rev', 14415]
         ne = ne_class([str(v) for v in values])
         self.assertEqual(ne.strand, '-')
 
-        ields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
         ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='end')
         values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '-1', 14415]
         ne = ne_class([str(v) for v in values])
@@ -251,6 +255,7 @@ class TestEntry(CRAWTest):
         ne = ne_class([str(v) for v in values])
         self.assertEqual(str(ne), '\t'.join([str(v) for v in values]))
 
+
     def test_header(self):
         name = 'toto'
         ref_col = 'pos_ref'
@@ -259,6 +264,7 @@ class TestEntry(CRAWTest):
         values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
         ne = ne_class([str(v) for v in values])
         self.assertEqual(ne.header, '\t'.join(fields))
+
 
     def test_eq(self):
         name = 'toto'
