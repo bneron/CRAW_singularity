@@ -186,26 +186,26 @@ def new_entry_type(name, fields, ref_col,
         fields_idx['ref'] = Idx(ref_col, fields.index(ref_col))
     except ValueError:
         raise RuntimeError("The ref_col '{}' does not match any fields: '{}'\n"
-                           "You must specify the '--ref-col' option".format(ref_col, ' '.join(fields))) from None
+                           "You must specify the '--ref-col' option".format(ref_col, ', '.join(fields))) from None
     try:
         fields_idx['strand'] = Idx(strand_col, fields.index(strand_col))
     except ValueError:
-        raise RuntimeError("The strand_col '{}' does not match any fields: '{}'".format(strand_col, ' '.join(fields))) from None
+        raise RuntimeError("The strand_col '{}' does not match any fields: '{}'".format(strand_col, ', '.join(fields))) from None
     try:
         fields_idx['chr'] = Idx(chr_col, fields.index(chr_col))
     except ValueError:
         raise RuntimeError("The chr_col '{}' does not match any fields: '{}'\n"
-                           "You must specify the '--chr-col' option".format(chr_col, ' '.join(fields))) from None
+                           "You must specify the '--chr-col' option".format(chr_col, ', '.join(fields))) from None
 
     if start_col:
         try:
             fields_idx['start'] = Idx(start_col, fields.index(start_col))
         except ValueError:
-            raise RuntimeError("The start_col '{}' does not match any fields: '{}'".format(start_col, ' '.join(fields))) from None
+            raise RuntimeError("The start_col '{}' does not match any fields: '{}'".format(start_col, ', '.join(fields))) from None
         try:
             fields_idx['stop'] = Idx(stop_col, fields.index(stop_col))
         except ValueError:
-            raise RuntimeError("The stop_col '{}' does not match any fields: '{}'".format(stop_col, ' '.join(fields))) from None
+            raise RuntimeError("The stop_col '{}' does not match any fields: '{}'".format(stop_col, ', '.join(fields))) from None
     return type(name, (Entry,), {'_fields_idx': fields_idx, '_fields': fields})
 
 
@@ -239,7 +239,7 @@ class AnnotationParser:
         self.start_col = start_col
         self.stop_col = stop_col
         with open(self.path, 'r') as annot_file:
-            self.header = annot_file.readline().split()
+            self.header = annot_file.readline().rstrip('\n').split('\t')
 
     def get_annotations(self):
         """

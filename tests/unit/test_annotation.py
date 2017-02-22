@@ -73,7 +73,7 @@ class TestEntry(CRAWTest):
         with self.assertRaises(RuntimeError) as ctx:
             ne_class = new_entry_type(name, fields, ref_col)
         self.assertEqual(str(ctx.exception),
-                         "The ref_col 'foo' does not match any fields: 'beg end name gene chromosome strand Position'\n"
+                         "The ref_col 'foo' does not match any fields: 'beg, end, name, gene, chromosome, strand, Position'\n"
                          "You must specify the '--ref-col' option")
 
         ref_col = 'Position'
@@ -81,7 +81,7 @@ class TestEntry(CRAWTest):
         with self.assertRaises(RuntimeError) as ctx:
             ne_class = new_entry_type(name, fields, ref_col, chr_col=chr_col)
         self.assertEqual(str(ctx.exception),
-                         "The chr_col 'foo' does not match any fields: 'beg end name gene chromosome strand Position'\n"
+                         "The chr_col 'foo' does not match any fields: 'beg, end, name, gene, chromosome, strand, Position'\n"
                          "You must specify the '--chr-col' option")
 
         with self.assertRaises(RuntimeError) as ctx:
@@ -97,12 +97,12 @@ class TestEntry(CRAWTest):
         with self.assertRaises(RuntimeError) as ctx:
             ne_class = new_entry_type(name, fields, ref_col, start_col='foo', stop_col='end')
         self.assertEqual(str(ctx.exception),
-                         "The start_col 'foo' does not match any fields: 'beg end name gene chromosome strand Position'")
+                         "The start_col 'foo' does not match any fields: 'beg, end, name, gene, chromosome, strand, Position'")
 
         with self.assertRaises(RuntimeError) as ctx:
             ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='foo')
         self.assertEqual(str(ctx.exception),
-                         "The stop_col 'foo' does not match any fields: 'beg end name gene chromosome strand Position'")
+                         "The stop_col 'foo' does not match any fields: 'beg, end, name, gene, chromosome, strand, Position'")
 
     def test_entry(self):
         name = 'toto'
@@ -145,7 +145,6 @@ class TestEntry(CRAWTest):
         self.assertEqual(str(ctx.exception),
                         "error in line '14405\t14000\tYEL072W\tRMD6\tchrV\t+\t14415': Position 14415 is not between beg: 14405 and end: 14000"
         )
-
 
     def test_chromosome(self):
         name = 'toto'
@@ -218,7 +217,7 @@ class TestAnnotationParser(CRAWTest):
         self.assertEqual(ap.max(), (10, 10))
 
 
-    def test_get_annotations(self):
+    def test_get_annotations_header_with_start(self):
         ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_w_start.txt'),
                               'Position',
                               start_col='beg',
@@ -238,6 +237,29 @@ class TestAnnotationParser(CRAWTest):
         for i, e in enumerate(it):
             self.assertEqual(entries[i], e, "\n{}\n{}".format(entries[i], e))
 
+
+    def test_get_annotations_header_w_spaces(self):
+        ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_fields_with_spaces.txt'),
+                              'Position',
+                              start_col='gene start',
+                              stop_col='gene end')
+        ne_class = new_entry_type('toto',
+                                  ['name', 'gene', 'chromosome', 'strand', 'Position', 'gene start', 'gene end'],
+                                  'Position',
+                                  start_col='gene start',
+                                  stop_col='gene end')
+        entries = [ne_class(['YEL072W', 'RMD6', 'chrV', '+', '14415', '14405', '14425']),
+                   ne_class(['YEL071W', 'DLD3', 'chrV', '+', '17848', '17839', '17853']),
+                   ne_class(['snR67', 'SNR67', 'chrV', '+', '61433', '61425', '61439']),
+                   ne_class(['YEL043W', 'YEL043W', 'chrV', '+', '73348', '73345', '73350']),
+                   ne_class(['YPR036W', 'VMA13', 'chrXVI', '+', '645272', '645270', '645272']),
+                   ]
+        it = ap.get_annotations()
+        for i, e in enumerate(it):
+            self.assertEqual(entries[i], e, "\n{}\n{}".format(entries[i], e))
+
+
+    def test_annotation_parser_wo_start(self):
         ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_wo_start.txt'), 'Position')
 
         ne_class = new_entry_type('toto',
