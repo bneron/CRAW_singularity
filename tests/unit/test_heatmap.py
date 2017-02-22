@@ -171,7 +171,7 @@ class TestHeatmap(CRAWTest):
         data = htmp.get_data(os.path.join(self._data_dir, 'data.cov'))
         received_data = htmp.remove_metadata(data)
         assert_frame_equal(expected_data, received_data)
-
+        self.assertIsNone(htmp.remove_metadata(None))
 
     def test_crop_matrix(self):
         expected_data = pd.DataFrame([

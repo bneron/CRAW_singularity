@@ -1,4 +1,4 @@
-name	gene	chromosome	strand	Position	beg	end
+name	gene	chromosome	strand	Position	gene start	gene end
 YEL072W	RMD6	chrV	+	14415	14405	14425
 YEL071W	DLD3	chrV	+	17848	17839	17853
 snR67	SNR67	chrV	+	61433	61425	61439
