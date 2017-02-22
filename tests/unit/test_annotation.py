@@ -172,6 +172,10 @@ class TestEntry(CRAWTest):
         values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
         ne = ne_class([str(v) for v in values])
         self.assertEqual(ne.start, 14000)
+        ne_class = new_entry_type(name, fields, ref_col)
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertIsNone(ne.start)
 
     def test_stop(self):
         name = 'toto'
@@ -181,6 +185,11 @@ class TestEntry(CRAWTest):
         values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
         ne = ne_class([str(v) for v in values])
         self.assertEqual(ne.stop, 15000)
+        ne_class = new_entry_type(name, fields, ref_col)
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertIsNone(ne.stop)
+
 
     def test_strand(self):
         name = 'toto'
@@ -191,11 +200,47 @@ class TestEntry(CRAWTest):
         ne = ne_class([str(v) for v in values])
         self.assertEqual(ne.strand, '+')
 
+        name = 'toto'
+        ref_col = 'pos_ref'
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='end')
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '1', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.strand, '+')
+
+        name = 'toto'
+        ref_col = 'pos_ref'
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='end')
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', 'for', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.strand, '+')
+
+
+        fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='end')
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '-', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.strand, '-')
+
+        ields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='end')
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', 'rev', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.strand, '-')
+
+        ields = ['beg', 'end', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='end')
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '-1', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.strand, '-')
+
         fields = ['beg', 'end', 'name', 'gene', 'chromosome', 'brin', 'pos_ref']
         ne_class = new_entry_type(name, fields, ref_col, start_col='beg', stop_col='end', strand_col='brin')
         values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
         ne = ne_class([str(v) for v in values])
         self.assertEqual(ne.strand, '+')
+
 
     def test_str(self):
         name = 'toto'
@@ -206,6 +251,28 @@ class TestEntry(CRAWTest):
         ne = ne_class([str(v) for v in values])
         self.assertEqual(str(ne), '\t'.join([str(v) for v in values]))
 
+    def test_header(self):
+        name = 'toto'
+        ref_col = 'pos_ref'
+        fields = ['transcription start', 'end of gene', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, fields, ref_col)
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertEqual(ne.header, '\t'.join(fields))
+
+    def test_eq(self):
+        name = 'toto'
+        ref_col = 'pos_ref'
+        fields = ['transcription start', 'end of gene', 'name', 'gene', 'chromosome', 'strand', 'pos_ref']
+        ne_class = new_entry_type(name, fields, ref_col)
+        values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne_1 = ne_class([str(v) for v in values])
+        ne_2 = ne_class([str(v) for v in values])
+        self.assertEqual(ne_1, ne_2)
+        values = [15000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        ne_3 = ne_class([str(v) for v in values])
+        self.assertNotEqual(ne_1, ne_3)
+
 
 class TestAnnotationParser(CRAWTest):
 
@@ -215,6 +282,9 @@ class TestAnnotationParser(CRAWTest):
                               start_col='beg',
                               stop_col='end')
         self.assertEqual(ap.max(), (10, 10))
+
+        ap = AnnotationParser(os.path.join(self._data_dir, 'annotation_w_start.txt'), 'Position')
+        self.assertEqual(ap.max(), (0, 0))
 
 
     def test_get_annotations_header_with_start(self):
