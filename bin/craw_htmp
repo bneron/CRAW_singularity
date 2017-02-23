@@ -336,9 +336,6 @@ please specify an output file (--out).
 import matplotlib.pyplot as plt
 from craw import heatmap
 
-if args.version:
-    print(get_version_message(), file=sys.stderr)
-    sys.exit(0)
 
 try:
     color_map = plt.cm.get_cmap(args.cmap)
