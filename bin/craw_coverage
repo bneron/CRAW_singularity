@@ -89,6 +89,7 @@ def get_version_message():
     version_text += "\nUsing: pysam {} (samtools {})".format(pysam.__version__, pysam.__samtools_version__)
     return version_text
 
+
 def get_result_header(annot_parser, cmdline_args):
     """
 
