@@ -27,6 +27,7 @@ import tempfile
 import os
 from subprocess import Popen, PIPE
 import hashlib
+from PIL import Image
 
 from tests import CRAWTest, which
 
@@ -166,6 +167,7 @@ class Test(CRAWTest):
             result_md5.update(open(result_path,'rb').read())
             self.assertEqual(expected_md5.hexdigest(), result_md5.hexdigest())
 
+
     def test_raw_log(self):
         """
         | test if returncode of coverage is 0 and
@@ -217,11 +219,13 @@ class Test(CRAWTest):
             expected_result_path = os.path.join(self._data_dir, filename)
             expected_md5 = hashlib.md5()
             expected_md5.update(open(expected_result_path,'rb').read())
+            expected_im = Image.open(expected_result_path)
 
             result_path, suffix = os.path.splitext(test_result_path)
             result_path = "{}.{}{}".format(result_path, sense, suffix)
             result_md5 = hashlib.md5()
             result_md5.update(open(result_path,'rb').read())
+            result_im = Image.open(result_path)
             self.assertEqual(expected_md5.hexdigest(), result_md5.hexdigest())
 
 
@@ -283,59 +287,4 @@ class Test(CRAWTest):
             result_md5.update(open(result_path,'rb').read())
             self.assertEqual(expected_md5.hexdigest(), result_md5.hexdigest())
 
-
-    def test_mtp_log_row(self):
-        """
-        | test if returncode of coverage is 0 and
-        | then test if the generated file is the same as a reference file
-        """
-        self.out_dir = os.path.join(self.tmp_dir, 'craw_test')
-        os.makedirs(self.out_dir)
-        output_filename = 'htmp_mtp_log+row.png'
-        test_result_path = os.path.join(self.out_dir, output_filename)
-        command = "{bin} " \
-                  "--size {size} " \
-                  "--norm {norm} " \
-                  "--sense-on-left " \
-                  "--out={out_file} " \
-                  "{cov_file}".format(
-                              bin=self.bin,
-                              size='5x3',
-                              norm='log+row',
-                              out_file=test_result_path,
-                              cov_file=os.path.join(self._data_dir, '4_htmp.cov')
-                             )
-        # print("\n@@@", command)
-        if not self.bin:
-            raise RuntimeError('coverage not found, CRAW_HOME must be either in your path or CRAW_HOME must be defined '
-                               'command launch: \n{}'.format(command))
-
-        try:
-            cov_process = Popen(command,
-                                shell=True,
-                                stdin=None,
-                                stderr=PIPE,
-                                close_fds=False
-                                )
-        except Exception as err:
-            msg = "craw_htmp execution failed: command = {0} : {1}".format(command, err)
-            print()
-            print(msg)
-            raise err from None
-
-        cov_process.wait()
-        self.assertEqual(cov_process.returncode, 0,
-                         "craw_htmp finished with non zero exit code: {0} command launched=\n{1}\n{2}".format(
-                            cov_process.returncode,
-                            command,
-                            ''.join([l.decode('utf-8') for l in cov_process.stderr.readlines()]),
-                            ))
-
-        expected_result_path = os.path.join(self._data_dir, output_filename)
-        expected_md5 = hashlib.md5()
-        expected_md5.update(open(expected_result_path,'rb').read())
-
-        result_md5 = hashlib.md5()
-        result_md5.update(open(test_result_path,'rb').read())
-        self.assertEqual(expected_md5.hexdigest(), result_md5.hexdigest())
 
