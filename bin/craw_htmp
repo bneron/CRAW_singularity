@@ -139,7 +139,21 @@ def _size_fig_parser(value):
         return wide, height
 
 def get_version_message():
-    return "TOTO"
+    """
+
+    :return: a human readable of craw_htmp version and it's main dependencies.
+    """
+    # pyplot must be import after the argument parsing
+    # because in function of the environment ($DYSPLAY and options) the craw_htmp behavior
+    # is not the same
+    # so heatmap cannot be import before argument parsing
+    # so I import the dependencies in get_version_message.
+    # it's not very important as get_version_message is called only when --version is set
+    # so the program quit after displaying this message.
+    import numpy as np
+    import pandas as pd
+    import matplotlib as mtp
+    import PIL
     version_text = craw._get_version_message()
     version_text += """
 Using:
@@ -147,10 +161,10 @@ Using:
    - pandas {pd_ver}
    - matplotlib {mtp_ver}
    - pillow {pil_ver}
-""".format(np_ver=heatmap.np.__version__,
-           pd_ver=heatmap.pd.__version__,
+""".format(np_ver=np.__version__,
+           pd_ver=pd.__version__,
            mtp_ver=mtp.__version__,
-           pil_ver=heatmap.Image.PILLOW_VERSION
+           pil_ver=PIL.PILLOW_VERSION
            )
     return version_text
 
@@ -278,10 +292,13 @@ parser.add_argument("-v", "--verbosity",
                     action='count',
                     help="Increase output verbosity.")
 parser.add_argument("--version",
-                    action=argparse_util.VersionAction,
-                    version=get_version_message())
-
-args = parser.parse_args()
+                    action='version',
+                    version=get_version_message(),
+                    help="display the version information and quit.")
+try:
+    args = parser.parse_args()
+except Exception as err:
+    print(err)
 
 if args.verbosity is None:
     args.verbosity = 0
@@ -318,6 +335,10 @@ please specify an output file (--out).
 # the import of pyplot must be done after setting the backend
 import matplotlib.pyplot as plt
 from craw import heatmap
+
+if args.version:
+    print(get_version_message(), file=sys.stderr)
+    sys.exit(0)
 
 try:
     color_map = plt.cm.get_cmap(args.cmap)
