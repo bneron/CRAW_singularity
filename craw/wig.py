@@ -152,6 +152,15 @@ class Strand:
     def __init__(self):
         self.coverage = []
 
+    def __len__(self):
+        return len(self.coverage)
+
+    def __eq__(self, other):
+        return self.coverage == other.coverage
+
+    def extend(self, strand):
+        self.coverage.extend(strand.coverage)
+
     def get_coverage(self, start, stop):
         cov_len = len(self.coverage)
         if 0 <= start <= cov_len:
@@ -182,22 +191,25 @@ class Chromosome:
 
     @property
     def forward(self):
-        return self.forward
+        return self._forward
 
     @property
     def reverse(self):
-        return self.reverse
+        return self._reverse
 
     def __iadd__(self, chunk):
         if not isinstance(chunk, Chunk):
             raise TypeError("can add only Chunk objects, provide: {}".chunk.__class__.__name__)
         forward, reverse = chunk.expand()
         for sense in ('forward', 'reverse'):
-            strand = getattr(self, sense)
+            my_strand = getattr(self, sense)
+            strand_2_add = locals()[sense]
             # we switch from real position to zero based position
-            fill = [0] * (locals()[sense].start - 1 - len(strand))
-            strand.expand(fill)
-            strand.expand(forward)
+            # and we stop the fill at the position before the fragt start so => -2
+            fill = ExpandedStrand(len(my_strand), strand_2_add.start -2, 1)
+            my_strand.extend(fill)
+            my_strand.extend(strand_2_add)
+        return self
 
 
 class Wig:
@@ -210,7 +222,6 @@ class Wig:
 
     def get_chromosome(self, name, default):
         return self._chromosomes.get(name, default)
-
 
     def __getitem__(self, name):
         return self._chromosomes[name]

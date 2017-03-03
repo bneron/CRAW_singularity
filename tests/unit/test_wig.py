@@ -38,6 +38,8 @@ class TestExpandedStrand(CRAWTest):
     def test_coverage(self):
         es = ExpandedStrand(1, 5, 3)
         self.assertListEqual(es.coverage, [0, 0, 0, 0, 0, 0, 0])
+        es = ExpandedStrand(1, 5, 1)
+        self.assertListEqual(es.coverage, [0, 0, 0, 0, 0])
 
     def test_len(self):
         es = ExpandedStrand(1, 5, 3)
@@ -208,6 +210,28 @@ class TestStrand(CRAWTest):
         self.assertListEqual(st.get_coverage(5, 12), [5, 6, 7, 8, 9, 0, 0])
         self.assertListEqual(st.get_coverage(-2, 12), [0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0])
 
+    def test_eq(self):
+        st1 = Strand()
+        st2 = Strand()
+        self.assertEqual(st1, st2)
+        st1.coverage = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        st2.coverage = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        self.assertEqual(st1, st2)
+        st2.coverage = [0, 0]
+        self.assertNotEqual(st1, st2)
+
+    def test_len(self):
+        st1 = Strand()
+        self.assertEqual(len(st1), 0)
+        st1.coverage = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        self.assertEqual(len(st1), 10)
+
+    def extend(self):
+        st1 = Strand()
+        ext_strand = ExpandedStrand(0, 4, 1)
+        st1.extend(ext_strand)
+        self.assertListEqual(st1.coverage, ext_strand.coverage)
+
 
 class TestChromosome(CRAWTest):
 
@@ -220,9 +244,27 @@ class TestChromosome(CRAWTest):
         ch_name = 'ChrII'
         ch = Chromosome(ch_name)
 
-        # kwargs = {"chrom": ch_name, "start": "10"}
-        # fx_ck = FixedChunk(**kwargs)
-        # lines = ("11", "22", "-30", "-50")
-        # for l in lines:
-        #     fx_ck.parse_data_line(l)
-        # ch += fx_ck
+        kwargs = {"chrom": ch_name, "start": "10", "step": "10"}
+        fx_ck = FixedChunk(**kwargs)
+        lines = ("11", "22")
+        for l in lines:
+            fx_ck.parse_data_line(l)
+        ch += fx_ck
+        expected_forward = Strand()
+        expected_forward.coverage = ([0] * 9) + [11.] + ([0] * 9) + [22.]
+        self.assertEqual(ch.forward, expected_forward)
+
+        ch_name = 'ChrIII'
+        span = 2
+        ch = Chromosome(ch_name)
+        lines = ("10 11", "20 22", "20 -30", "30 -50")
+        kwargs = {"chrom": ch_name, "span": str(span)}
+        var_ch = VariableChunk(**kwargs)
+        for l in lines:
+            var_ch.parse_data_line(l)
+        ch += var_ch
+        expected_forward = Strand()
+        expected_forward.coverage = ([0] * 9) + ([11.] * span) + ([0] * 8) + ([22.] * span)
+        expected_reverse = Strand()
+        expected_reverse.coverage = ([0] * 19) + ([30.] * span) + ([0] * 8) + ([40.] * span)
+        self.assertEqual(ch.forward, expected_forward)
