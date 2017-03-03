@@ -212,39 +212,39 @@ class Chromosome:
         return self
 
 
-class Wig:
+class Genome:
 
     def __init__(self):
-        self._chromosomes = None
-        self.type = None
+        self._chromosomes = {}
         self.infos = {}
-
-
-    def get_chromosome(self, name, default):
-        return self._chromosomes.get(name, default)
 
     def __getitem__(self, name):
         return self._chromosomes[name]
 
-    def __setitem__(self, name, chrom):
-        self._chromosomes[name] = chrom
+    def __contains__(self, chrom):
+        if not isinstance(chrom, Chromosome):
+            raise TypeError("Genome can contains only Chromosome objects")
+        return chrom.name in self._chromosomes
 
-    def __contains__(self, name):
-        return name in self._chromosomes
+    def add(self, chrom):
+        if not isinstance(chrom, Chromosome):
+            raise TypeError("Genome can contains only Chromosome objects")
+        self._chromosomes[chrom.name] = chrom
 
 
 class WigParser:
 
     def __init__(self, path):
         self.declaration_type_pattern = re.compile('fixedStep|variableStep')
-        self.path = path
-        self.wig = Wig()
+        self._path = path
+        self._genome = None
         self._current_chunk = None
         self._current_chrom = None
 
 
     def parse(self):
         with open(self.path, 'r') as wig_file:
+            self._genome = Genome()
             for line in wig_file:
                 line = line.strip()
                 if not line or self.is_comment_line(line):
@@ -258,6 +258,7 @@ class WigParser:
             # we are at the end of the file
             # so add the last chunk to the others
             self._current_chrom += self._current_chunk
+        return self._genome
 
 
     def parse_track_line(self, line):
@@ -268,9 +269,7 @@ class WigParser:
         if 'type' not in attrs:
             raise WigException('wiggle type is not present.')
         else:
-            self.wig.type = attrs['type']
-            del attrs['type']
-            self.wig.infos = attrs
+            self._genome.infos = attrs
 
 
     def parse_declaration_line(self, line):
@@ -289,15 +288,17 @@ class WigParser:
             self._current_chunk = VariableChunk(kwargs)
 
         chrom_name = self._current_chunk.chrom
-        if chrom_name in self.wig:
-            chrom = self.wig[chrom_name]
+        if chrom in self._genome:
+            chrom = self._genome[chrom_name]
         else:
-            self.wig[chrom_name] = Chromosome(chrom_name)
+            self.genome.add(Chromosome(chrom_name))
 
         self._current_chrom = chrom
 
 
     def parse_data_line(self, line):
+        if self._current_chunk is None:
+            raise WigException("this data line is not preceded by declaration" )
         self._current_chunk.parse_data_line(line)
 
 

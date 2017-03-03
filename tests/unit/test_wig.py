@@ -30,7 +30,7 @@ except ImportError as err:
     msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
     raise ImportError("Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err))
 
-from craw.wig import WigException, ExpandedStrand, FixedChunk, VariableChunk, Strand, Chromosome
+from craw.wig import WigException, ExpandedStrand, FixedChunk, VariableChunk, Strand, Chromosome, Genome, WigParser
 
 
 class TestExpandedStrand(CRAWTest):
@@ -146,10 +146,10 @@ class TestVariableChunk(CRAWTest):
         self.assertEqual(var_ch.chrom, kwargs["chrom"])
         self.assertEqual(var_ch.step, int(kwargs["step"]))
         self.assertEqual(var_ch.span, 1)
-        kwargs = {"chrom": "chr3", "step": "100", "span": "5"}
+
+        kwargs = {"chrom": "chr3", "span": "5"}
         var_ch = VariableChunk(**kwargs)
         self.assertEqual(var_ch.chrom, kwargs["chrom"])
-        self.assertEqual(var_ch.step, int(kwargs["step"]))
         self.assertEqual(var_ch.span, int(kwargs["span"]))
 
         kwargs = {"span": "5"}
@@ -268,3 +268,27 @@ class TestChromosome(CRAWTest):
         expected_reverse = Strand()
         expected_reverse.coverage = ([0] * 19) + ([30.] * span) + ([0] * 8) + ([40.] * span)
         self.assertEqual(ch.forward, expected_forward)
+
+
+class TestGenome(CRAWTest):
+
+    def test_add_and_get(self):
+        genome = Genome()
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
+        genome.add(ch)
+        self.assertEqual(ch, genome[ch_name])
+        ch2 = Chromosome(ch_name)
+        genome.add(ch2)
+        self.assertNotEqual(ch, genome[ch_name])
+        self.assertEqual(ch2, genome[ch_name])
+
+    def test_membership(self):
+        genome = Genome()
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
+        self.assertFalse(ch in genome)
+        genome.add(ch)
+        self.assertTrue(ch in genome)
+
+
