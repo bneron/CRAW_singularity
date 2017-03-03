@@ -61,9 +61,7 @@ class ExpandedStrand:
         return self._start == other._start and self.coverage == other.coverage
 
     def __setitem__(self, idx, value):
-        print("\n@@@@@@@@@ idx",idx)
-        print("@@@@@@@@ len coverage", len(self.coverage))
-        self.coverage[idx] = value
+        self.coverage[idx - self.start] = value
 
 
 class Chunk(metaclass=ABCMeta):
@@ -98,11 +96,14 @@ class Chunk(metaclass=ABCMeta):
         expanded_strands = {}
         for sense in ('forward', 'reverse'):
             chunk_strand = getattr(self, sense)
-            print('\n@@@@@@@@@@@@', sense, "start=", chunk_strand[0][0], "stop=", chunk_strand[-1][0], "span=",self.span)
-            expanded_strands[sense] = ExpandedStrand(chunk_strand[0][0], chunk_strand[-1][0], self.span)
-            for position, cov in chunk_strand:
-                for i in range(position, position + self.span + 1):
-                    expanded_strands[sense][i] = cov
+            if chunk_strand:
+                expanded_strands[sense] = ExpandedStrand(chunk_strand[0][0], chunk_strand[-1][0], self.span)
+                for position, cov in chunk_strand:
+                    for i in range(position, position + self.span):
+                        expanded_strands[sense][i] = cov
+            else:
+                # there is no data for this strand
+                expanded_strands[sense] = ExpandedStrand(0, 0, 0)
         return expanded_strands['forward'], expanded_strands['reverse']
 
 

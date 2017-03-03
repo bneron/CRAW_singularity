@@ -101,16 +101,16 @@ class TestFixedChunk(CRAWTest):
         self.assertTrue(fx_ch.is_fixed_step())
 
     def test_parse_data_line(self):
-        lines = ("11", "22", "-30", "-50")
+        lines = ("11", "22", "30", "50")
         kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
         fx_ch = FixedChunk(**kwargs)
         for l in lines:
             fx_ch.parse_data_line(l)
-        self.assertListEqual(fx_ch.forward, [(10, float(11)), (20, float(22))])
-        self.assertListEqual(fx_ch.reverse, [(30, float(30)), (40, float(50))])
+        self.assertListEqual(fx_ch.forward, [(10, float(11)), (20, float(22)), (30, float(30)), (40, float(50))])
+        self.assertListEqual(fx_ch.reverse, [])
 
     def test_expand(self):
-        lines = ("11", "22", "-30", "-50")
+        lines = ("11", "22", "30", "50")
         kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
         fx_ch = FixedChunk(**kwargs)
         for l in lines:
@@ -122,13 +122,11 @@ class TestFixedChunk(CRAWTest):
         expected_for[11] = 11.0
         expected_for[20] = 22.0
         expected_for[21] = 22.0
-
-        expected_rev = ExpandedStrand(10, 40, 2)
-        expected_rev[30] = 30.0
-        expected_rev[31] = 30.0
-        expected_rev[40] = 50.0
-        expected_rev[41] = 50.0
-
+        expected_for[30] = 30.0
+        expected_for[31] = 30.0
+        expected_for[40] = 50.0
+        expected_for[41] = 50.0
+        expected_rev = ExpandedStrand(0, 0, 0)
         self.assertEqual(forward, expected_for)
         self.assertEqual(reverse, expected_rev)
 
@@ -177,6 +175,28 @@ class TestVariableChunk(CRAWTest):
         self.assertListEqual(var_ch.forward, [(10, float(11)), (20, float(22))])
         self.assertListEqual(var_ch.reverse, [(30, float(30)), (40, float(50))])
 
+    def test_expand(self):
+        lines = ("10 11", "20 22", "20 -30", "40 -50")
+        kwargs = {"chrom": "chr3", "span": "2"}
+        var_ch = VariableChunk(**kwargs)
+        for l in lines:
+            var_ch.parse_data_line(l)
+
+        forward, reverse = var_ch.expand()
+        expected_for = ExpandedStrand(10, 20, 2)
+        expected_for[10] = 11.0
+        expected_for[11] = 11.0
+        expected_for[20] = 22.0
+        expected_for[21] = 22.0
+
+        expected_rev = ExpandedStrand(20, 40, 2)
+        expected_rev[20] = 30.0
+        expected_rev[21] = 30.0
+        expected_rev[40] = 50.0
+        expected_rev[41] = 50.0
+        self.assertEqual(forward, expected_for)
+        self.assertEqual(reverse, expected_rev)
+
 
 class TestStrand(CRAWTest):
 
@@ -187,6 +207,7 @@ class TestStrand(CRAWTest):
         self.assertListEqual(st.get_coverage(-1, 4), [0, 0, 1, 2, 3, 4])
         self.assertListEqual(st.get_coverage(5, 12), [5, 6, 7, 8, 9, 0, 0])
         self.assertListEqual(st.get_coverage(-2, 12), [0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0])
+
 
 class TestChromosome(CRAWTest):
 
