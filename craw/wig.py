@@ -222,9 +222,12 @@ class Genome:
         return self._chromosomes[name]
 
     def __contains__(self, chrom):
-        if not isinstance(chrom, Chromosome):
-            raise TypeError("Genome can contains only Chromosome objects")
-        return chrom.name in self._chromosomes
+        if isinstance(chrom, str):
+            return chrom in self._chromosomes
+        elif not isinstance(chrom, Chromosome):
+            raise TypeError("'in <Genome>' requires string or Chromosome as left operand, not {}".format(type(chrom)))
+        else:
+            return chrom.name in self._chromosomes
 
     def add(self, chrom):
         if not isinstance(chrom, Chromosome):
@@ -283,23 +286,23 @@ class WigParser:
         kwargs = {attr: val for attr, val in [f.split('=') for f in fields[1:]]}
 
         if type == 'fixedStep':
-            self._current_chunk = FixedChunk(kwargs)
+            self._current_chunk = FixedChunk(**kwargs)
         else:
-            self._current_chunk = VariableChunk(kwargs)
+            self._current_chunk = VariableChunk(**kwargs)
 
         chrom_name = self._current_chunk.chrom
-        if chrom in self._genome:
+        if chrom_name in self._genome:
             chrom = self._genome[chrom_name]
         else:
-            self.genome.add(Chromosome(chrom_name))
-
+            chrom = Chromosome(chrom_name)
+            self._genome.add(chrom)
         self._current_chrom = chrom
 
 
     def parse_data_line(self, line):
         if self._current_chunk is None:
-            raise WigException("this data line is not preceded by declaration" )
-        self._current_chunk.parse_data_line(line)
+            raise WigException("this data line '{}' is not preceded by declaration".format(line))
+        return self._current_chunk.parse_data_line(line)
 
 
     @staticmethod
