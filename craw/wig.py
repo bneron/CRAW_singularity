@@ -248,7 +248,7 @@ class WigParser:
 
 
     def parse(self):
-        with open(self.path, 'r') as wig_file:
+        with open(self._path, 'r') as wig_file:
             self._genome = Genome()
             for line in wig_file:
                 line = line.strip()
@@ -256,10 +256,10 @@ class WigParser:
                     continue
                 elif self.is_track_line(line):
                     self.parse_track_line(line)
-                elif self.is_declaration_line():
-                    self.parse_track_line(line)
+                elif self.is_declaration_line(line):
+                    self.parse_declaration_line(line)
                 else:
-                    self._current_chunk['parse_data_line'](line)
+                    self._current_chunk.parse_data_line(line)
             # we are at the end of the file
             # so add the last chunk to the others
             self._current_chrom += self._current_chunk
@@ -267,9 +267,9 @@ class WigParser:
 
 
     def parse_track_line(self, line):
-        fields = line.re.findall('(\w+=\S+|".*"|\'.*\')', line)
+        fields = re.findall("""(\w+)=(".+?"|'.+?'|\S+)""", line)
         attrs = {}
-        for attr, val in fields.split('='):
+        for attr, val in fields:
             attrs[attr] = val
         if 'type' not in attrs:
             raise WigException('wiggle type is not present.')

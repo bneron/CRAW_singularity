@@ -23,7 +23,7 @@
 ###########################################################################
 
 
-
+import os
 try:
     from tests import CRAWTest
 except ImportError as err:
@@ -368,15 +368,54 @@ class TestWigParser(CRAWTest):
         self.assertTrue(wip_p._current_chrom is wip_p._genome['chrI'])
 
 
-    def test_parse(self):
-        cov = [0] * 205
+    def test_parse_fixed_wig(self):
+        expected_forward = [0] * 204
         span = 5
-        cov[0: 5] = [1] * span
+        expected_forward[0: 5] = [1.] * span
         for i in range(1, 5):
-            pos = (i * 10) - 1
-            cov[pos: pos + span] = [i + 1] * span
-        for i in range(99, 140, 10):
-            cov[i] = i
-        for i in range(199, 205):
-            cov[i] = i
-        print("\n",cov[0:51])
+            pos = (i * 10)
+            expected_forward[pos: pos + span] = [float(i + 1)] * span
+        for i, pos in enumerate(range(99, 140, 10), 1):
+            expected_forward[pos] = float(i)
+        for i , pos in enumerate(range(199, 204), 1):
+            expected_forward[pos] = float(i)
+
+        wig_parser = WigParser(os.path.join(self._data_dir, 'wig_fixed.wig'))
+        genome = wig_parser.parse()
+
+        self.assertTrue('chrI' in genome)
+        chrI = genome['chrI']
+        recieved_forward = chrI.forward
+        self.assertListEqual(recieved_forward.coverage, expected_forward)
+        self.assertListEqual(chrI.reverse.coverage, [])
+
+
+    def test_parse_variable_wig(self):
+        expec_chrI_forward = [0, 0, 0, 6., 7., 8., 10., 11.]
+        expec_chrI_reverse = [1., 2., 3., 4., 5.]
+
+        expec_chrII_forward = [0] * 69
+        expec_chrII_forward += [1., 1., 0, 0, 0, 0, 0, 0, 0, 0]
+        expec_chrII_forward += [2., 2., 0, 0, 0, 0, 0, 0, 0, 0]
+        expec_chrII_forward += [3., 3.]
+
+        expec_chrII_reverse = [0] * 9
+        expec_chrII_reverse += [1., 1., 0, 0, 0, 0, 0, 0, 0, 0]
+        expec_chrII_reverse += [2., 2., 0, 0, 0, 0, 0, 0, 0, 0]
+        expec_chrII_reverse += [3., 3., 0, 0, 0, 0, 0, 0, 0, 0]
+        expec_chrII_reverse += [4., 4., 0, 0, 0, 0, 0, 0, 0, 0]
+        expec_chrII_reverse += [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        expec_chrII_reverse += [5., 5.]
+
+        wig_parser = WigParser(os.path.join(self._data_dir, 'wig_variable.wig'))
+        genome = wig_parser.parse()
+
+        self.assertTrue('chrI' in genome)
+        chrI = genome['chrI']
+        self.assertListEqual(chrI.forward.coverage, expec_chrI_forward)
+        self.assertListEqual(chrI.reverse.coverage, expec_chrI_reverse)
+
+        self.assertTrue('chrII' in genome)
+        chrII = genome['chrII']
+        self.assertListEqual(chrII.forward.coverage, expec_chrII_forward)
+        self.assertListEqual(chrII.reverse.coverage, expec_chrII_reverse)
