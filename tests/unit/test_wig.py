@@ -96,6 +96,10 @@ class TestFixedChunk(CRAWTest):
             FixedChunk(**kwargs)
         self.assertEqual(str(ctx.exception), "'start' must be defined for 'fixedStep'.")
 
+        kwargs = {"start": "400601", "step": "1", "span": "5"}
+        with self.assertRaises(WigException) as ctx:
+            FixedChunk(**kwargs)
+        self.assertEqual(str(ctx.exception), "'span' cannot be greater than 'step'.")
 
     def test_is_fixed_step(self):
         kwargs = {"chrom": "chr3", "start": "400601", "step": "100", "span": "5"}

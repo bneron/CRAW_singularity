@@ -118,6 +118,8 @@ class FixedChunk(Chunk):
             self.start
         except AttributeError:
             raise WigException("'start' must be defined for 'fixedStep'.")
+        if self.span > self.step:
+            raise WigException("'span' cannot be greater than 'step'.")
         self._current_pos = self.start
 
     def is_fixed_step(self):
