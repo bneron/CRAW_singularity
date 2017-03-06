@@ -292,3 +292,87 @@ class TestGenome(CRAWTest):
         self.assertTrue(ch in genome)
 
 
+class TestWigParser(CRAWTest):
+
+    def test_is_track_line(self):
+        wip_p = WigParser('toto')
+        line = 'track type=wiggle_0 name=BCMSolidWeCoca48PatientCoverageclean viewLimits=0:1'
+        self.assertTrue(wip_p.is_track_line(line))
+        line = 'type=wiggle_0 name=BCMSolidWeCoca48PatientCoverageclean viewLimits=0:1'
+        self.assertFalse(wip_p.is_track_line(line))
+
+
+    def test_is_declaration_line(self):
+        wip_p = WigParser('toto')
+        line = 'fixedStep chrom=chr1 start=58951 step=1'
+        self.assertTrue(wip_p.is_declaration_line(line))
+        line = 'variableStep chrom=chrI span=1'
+        self.assertTrue(wip_p.is_declaration_line(line))
+        line = 'undefineStep chrom=chrI span=1'
+        self.assertFalse(wip_p.is_declaration_line(line))
+
+
+    def test_is_comment_line(self):
+        wip_p = WigParser('toto')
+        line = '#fixedStep chrom=chr1 start=58951 step=1'
+        self.assertTrue(wip_p.is_comment_line(line))
+        line = 'fixedStep chrom=chr1 start=58951 step=1'
+        self.assertFalse(wip_p.is_comment_line(line))
+
+
+    def test_parse_data_line(self):
+        wip_p = WigParser('toto')
+        kwargs = {"chrom": "chr3", "start": "10", "step": "100", "span": "5"}
+        wip_p._current_chunk = FixedChunk(**kwargs)
+        wip_p.parse_data_line("3")
+        self.assertEqual(wip_p._current_chunk.forward[-1],  (10, 3.0))
+        wip_p.parse_data_line("5")
+        self.assertEqual(wip_p._current_chunk.forward[-1],  (110, 5.0))
+
+        kwargs = {"chrom": "chr3", "span": "5"}
+        wip_p._current_chunk = VariableChunk(**kwargs)
+        wip_p.parse_data_line("10 3")
+        self.assertEqual(wip_p._current_chunk.forward[-1],  (10, 3.0))
+        wip_p.parse_data_line("10 -5")
+        self.assertEqual(wip_p._current_chunk.reverse[-1],  (10, 5.0))
+
+        wip_p = WigParser('toto')
+        with self.assertRaises(WigException) as ctx:
+            wip_p.parse_data_line("3")
+        self.assertEqual(str(ctx.exception), "this data line '3' is not preceded by declaration")
+
+
+    def test_parse_declaration_line(self):
+        wip_p = WigParser('toto')
+        wip_p._genome = Genome()
+        line = 'fixedStep chrom=chr1 start=10 step=1'
+        wip_p.parse_declaration_line(line)
+        self.assertTrue(isinstance(wip_p._current_chunk, FixedChunk))
+        self.assertTrue('chr1' in wip_p._genome)
+        self.assertTrue(wip_p._current_chunk.start, 10)
+        self.assertTrue(wip_p._current_chunk.step, 1)
+        self.assertTrue(wip_p._current_chunk.span, 1)
+        self.assertTrue(wip_p._current_chrom is wip_p._genome['chr1'])
+
+        wip_p = WigParser('toto')
+        wip_p._genome = Genome()
+        line = 'variableStep chrom=chrI span=2'
+        wip_p.parse_declaration_line(line)
+        self.assertTrue(isinstance(wip_p._current_chunk, VariableChunk))
+        self.assertTrue('chrI' in wip_p._genome)
+        self.assertTrue(wip_p._current_chunk.span, 2)
+        self.assertTrue(wip_p._current_chrom is wip_p._genome['chrI'])
+
+
+    def test_parse(self):
+        cov = [0] * 205
+        span = 5
+        cov[0: 5] = [1] * span
+        for i in range(1, 5):
+            pos = (i * 10) - 1
+            cov[pos: pos + span] = [i + 1] * span
+        for i in range(99, 140, 10):
+            cov[i] = i
+        for i in range(199, 205):
+            cov[i] = i
+        print("\n",cov[0:51])
