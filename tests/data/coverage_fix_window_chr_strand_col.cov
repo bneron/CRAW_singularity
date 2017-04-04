@@ -13,6 +13,7 @@
 # --quiet=False
 # --ref-col=Position
 # --sense=mixed
+# --sep=	
 # --strand-col=brin
 # --suffix=cov
 sense	name	gene	chr	brin	Position	-5	-4	-3	-2	-1	0	1	2	3
