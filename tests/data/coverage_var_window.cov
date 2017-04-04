@@ -11,7 +11,7 @@
 # --quiet=False
 # --ref-col=Position
 # --sense=mixed
-# --sep=\t
+# --sep=	
 # --start-col=beg
 # --stop-col=end
 # --strand-col=strand
