@@ -9,6 +9,7 @@
 # --qual-thr=0
 # --ref-col=Position
 # --sense=mixed
+# --sep=\t
 # --suffix=cov
 sense	name	gene	chromosome	strand	Position	0	1	2	3	4
 S	name_d	RMD6	chrV	+	14415	0	1	10	100	1000
