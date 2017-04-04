@@ -24,13 +24,26 @@
 
 import re
 from abc import ABCMeta, abstractmethod
+import logging
+_log = logging.getLogger(__name__)
+
+root_logger = logging.getLogger()
+handler = logging.StreamHandler()
+formatter = logging.Formatter(fmt='{levelname} : {name} : {message}', style='{')
+handler.setFormatter(formatter)
+root_logger.addHandler(handler)
+root_logger.setLevel(logging.DEBUG)
+#level = logging.WARNING - (10 * args.verbosity)
+root_logger.setLevel(logging.DEBUG)
+#log = logging.getLogger('craw_htmp')
+#log.setLevel(logging.NOTSET)
 
 
 class WigException(Exception):
     pass
 
 
-class ExpandedStrand:
+class Coverage:
 
     def __init__(self, start, stop, span):
         """
@@ -41,7 +54,8 @@ class ExpandedStrand:
         """
         self._start = start
         # be careful the last position count in the span
-        self.coverage = [0] * (stop + span - start)
+        self._coverage = [0] * (stop + span - start)
+        self._stop = len(self.coverage) + self._start - 1
 
     def __getattr__(self, item):
         return getattr(self.coverage, item)
@@ -51,17 +65,31 @@ class ExpandedStrand:
 
     @property
     def stop(self):
-        return len(self.coverage) + self._start - 1
+        return self._stop
 
     @property
     def start(self):
         return self._start
 
+    @property
+    def coverage(self):
+        return self._coverage[:]
+
     def __eq__(self, other):
         return self._start == other._start and self.coverage == other.coverage
 
-    def __setitem__(self, idx, value):
-        self.coverage[idx - self.start] = value
+    def _translate_pos(self, pos):
+        if isinstance(pos, int):
+            idx = pos - self._start
+        elif isinstance(pos, slice):
+            idx = slice(pos.start - self._start, pos.stop - self._start, None)
+        return pos
+
+    def __setitem__(self, pos, value):
+        self.coverage[self._translate_pos(pos)] = value
+
+    def __getitem__(self, pos):
+        return self.coverage[self._translate_pos(pos)]
 
 
 class Chunk(metaclass=ABCMeta):
@@ -93,18 +121,18 @@ class Chunk(metaclass=ABCMeta):
         pass
 
     def expand(self):
-        expanded_strands = {}
+        coverages = {}
         for sense in ('forward', 'reverse'):
             chunk_strand = getattr(self, sense)
             if chunk_strand:
-                expanded_strands[sense] = ExpandedStrand(chunk_strand[0][0], chunk_strand[-1][0], self.span)
+                coverages[sense] = Coverage(chunk_strand[0][0], chunk_strand[-1][0], self.span)
                 for position, cov in chunk_strand:
                     for i in range(position, position + self.span):
-                        expanded_strands[sense][i] = cov
+                        coverages[sense][i] = cov
             else:
                 # there is no data for this strand
-                expanded_strands[sense] = ExpandedStrand(0, 0, 0)
-        return expanded_strands['forward'], expanded_strands['reverse']
+                coverages[sense] = Coverage(0, 0, 0)
+        return coverages['forward'], coverages['reverse']
 
 
 class FixedChunk(Chunk):
@@ -160,36 +188,62 @@ class Strand:
     def __eq__(self, other):
         return self.coverage == other.coverage
 
-    def extend(self, strand):
-        self.coverage.extend(strand.coverage)
 
     def get_coverage(self, start, stop):
         cov_len = len(self.coverage)
-        if 0 <= start <= cov_len:
-            if stop < cov_len:
-                return self.coverage[start: stop + 1]
-            else:
-                cov = self.coverage[start:]
-                right_fill = [0] * (stop - start - len(cov))
-                return cov + right_fill
-        elif start < 0:
-            left_fill = [0] * abs(start)
-            if stop < cov_len:
-                return left_fill + self.coverage[: stop + 1]
-            else:
-                cov = self.coverage
-                right_fill = [0] * (stop - cov_len)
-                return left_fill + cov + right_fill
-        elif start > cov_len:
-            return [0] * (stop - start)
+        right_fill = []
+        left_fille = []
+        first_chunk_start = self.coverage[0][0]
+        last_chunk_stop = self.coverage[-1][1]
 
+        #start < first_chunk_start
+        #   right_fill = [0] * (first_chunk_start - start)
+        #   start = first_chunk_start
+        #start > last_chunk_stop
+
+        #stop < fisrt_chunk_start
+        #stop > last_chunk_stop
+        #   left_fill = [0] * (stop - last_chunk_stop)
+        #   stop = last_chunk_stop
+
+        # recherche de l'inteval contenant le start
+        # rechecher de l'interval contenant le stop
+        # generer la list des interval
+        # expandre la liste
+        # ajouter r_fill + left_fill
+        # retourner le resultat
+        first_chunk = None
+        previous_idx = None
+        coverage_walker = enumerate(self.coverage)
+        for idx, chunk in coverage_walker:
+            if start < chunk.start:
+                continue
+            elif chunk.start <= start <= chunk.stop:
+                first_chunk = idx
+            elif start < chunk.start:
+                first_chunk = previous_idx
+            previous_idx = idx
+
+        # le stop est forcement apres le start
+        # pas la peine de reparcourir la liste depuis le debut
+        # par contre il peut etre dans le meme chunk que le start
+        # il faut donc le tester
+
+        for dx, chunk in coverage_walker:
+            if stop > chunk.stop:
+                continue
+            elif chunk.start <= stop <= chunk.stop:
+                last_chunk = idx
+            elif stop > chunk.stop:
+                last_chunk = previous_idx
+            previous_idx = idx
 
 class Chromosome:
 
     def __init__(self, name):
         self.name = name
-        self._forward = Strand()
-        self._reverse = Strand()
+        self._forward = []
+        self._reverse = []
 
     @property
     def forward(self):
@@ -199,19 +253,81 @@ class Chromosome:
     def reverse(self):
         return self._reverse
 
-    def __iadd__(self, chunk):
+    def add_chunk(self, chunk):
         if not isinstance(chunk, Chunk):
             raise TypeError("can add only Chunk objects, provide: {}".chunk.__class__.__name__)
         forward, reverse = chunk.expand()
         for sense in ('forward', 'reverse'):
             my_strand = getattr(self, sense)
-            strand_2_add = locals()[sense]
-            # we switch from real position to zero based position
-            # and we stop the fill at the position before the fragt start so => -2
-            fill = ExpandedStrand(len(my_strand), strand_2_add.start -2, 1)
-            my_strand.extend(fill)
-            my_strand.extend(strand_2_add)
+            one_strand_cov = locals()[sense]
+            my_strand.append(one_strand_cov)
         return self
+
+
+    @staticmethod
+    def _find_start_chunk(start, strand):
+        first_chunk_start = strand[0][0]
+        last_chunk_stop = strand[-1][1]
+        if start < first_chunk_start:
+            return 0
+        if start > last_chunk_stop:
+            return None
+        else:
+            previous_idx = None
+            for idx, cov in enumerate(strand):
+                if start < cov.start and previous_idx is None:
+                    continue
+                elif cov.start <= start <= cov.stop:
+                    return idx
+                elif start < cov.start:
+                    return previous_idx
+                else:
+                    # start > cov.start => test next chunk
+                    previous_idx = idx
+            # we are sure to find a chunk
+            # because we first test that start <= last_chunk_stop
+
+
+    @staticmethod
+    def _find_stop_chunk(stop, start_idx, strand):
+        first_chunk_start = strand[0][0]
+        last_chunk_stop = strand[-1][1]
+        if stop > last_chunk_stop:
+            return 0
+        if stop < first_chunk_start:
+            return None
+        else:
+            previous_idx = None
+            for idx in range(start_idx, len(strand) - start_idx):
+                # stop is necessarily greater than start
+                # so don't search stop search from the beginning
+                cov = strand[idx]
+                if stop > cov.stop and previous_idx is None:
+                    continue
+                elif cov.start <= stop <= cov.stop:
+                    return idx
+                elif stop < cov.stop:
+                    return previous_idx
+                else:
+                    # stop < cov.stop
+                    previous_idx = idx
+
+
+    @staticmethod
+    def _expand_cov(start, stop, strand):
+        chunks = strand[start, stop + 1]
+        cov = [0] * (stop - start)
+        for chunk in chunks:
+            cov[chunk.start - start: chunk.stop - start] = chunk.covergae
+        return cov
+
+    def get_coverage(self, start, stop, sense=None):
+        covs = []
+        for sense in (self._forward, self._reverse):
+            first_chunk_idx = self._find_start_chunk(start, sense)
+            last_chunk_idx = self._find_stop_chunk(stop, start, sense)
+            covs.append(self._expand_cov(first_chunk_idx, last_chunk_idx, sense))
+        return covs
 
 
 class Genome:
@@ -267,6 +383,7 @@ class WigParser:
 
 
     def parse_track_line(self, line):
+        _log.info('parsing : {}'.format(line))
         fields = re.findall("""(\w+)=(".+?"|'.+?'|\S+)""", line)
         attrs = {}
         for attr, val in fields:
@@ -278,8 +395,9 @@ class WigParser:
 
 
     def parse_declaration_line(self, line):
+        _log.info("paring : {}".format(line))
         if self._current_chunk:
-            self._current_chrom += self._current_chunk
+            self._current_chrom.add_chunk(self._current_chunk)
             self._current_chunk = None
 
         fields = line.split()
