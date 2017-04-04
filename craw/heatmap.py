@@ -108,7 +108,7 @@ def _sort_by_gene_size(data, start_col=None, stop_col=None, ascending=True):
     return sorted_data
 
 
-def _sort_using_col(data, col=None):
+def _sort_using_col(data, col=None, ascending=True):
     """
     Sort the matrix in function of the column col
 
@@ -120,7 +120,9 @@ def _sort_using_col(data, col=None):
     :rtype: a :class:`pandas.DataFrame` object.
     """
     _log.info("Sorting data using col {}".format(col))
-    data = data.sort_values(col, axis='index')
+    if col is None:
+        raise RuntimeError("You must specify the column used to sort.")
+    data = data.sort_values(col, axis='index', ascending=ascending)
     return data
 
 
