@@ -156,6 +156,9 @@ parser.add_argument("-s", "--suffix",
 parser.add_argument('-o', '--output',
                     dest='output',
                     help="The path of the output (default= base name of annotation file with --suffix)")
+parser.add_argument('--sep',
+                    default='\t',
+                    help="the separator use to delimit the annotation fields")
 region_grp = parser.add_argument_group(title="region of interest",
                                        description="""Parameters which define regions to compute.
 
@@ -264,7 +267,8 @@ annot_parser = annotation.AnnotationParser(args.annot, args.ref_col,
                                            chr_col=args.chr_col,
                                            strand_col=args.strand_col,
                                            start_col=args.start_col,
-                                           stop_col=args.stop_col)
+                                           stop_col=args.stop_col,
+                                           sep=args.sep)
 
 sam_file = pysam.AlignmentFile(args.bam, "rb")
 annotations = annot_parser.get_annotations()
@@ -285,6 +289,7 @@ with sense_file, antisense_file:
     header = get_result_header(annot_parser, args)
     max_left, max_right = annot_parser.max()
     if args.sense in ('S', 'split', 'mixed'):
+        # if args.sense is mixed the sense_file and antisense_file are the same object
         print(header, file=sense_file)
     if args.sense in ('AS', 'split'):
         print(header, file=antisense_file)

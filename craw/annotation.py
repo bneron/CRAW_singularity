@@ -216,7 +216,8 @@ class AnnotationParser:
          - create one Entry object for each line of the file
     """
 
-    def __init__(self, path, ref_col, strand_col='strand', chr_col='chromosome', start_col=None, stop_col=None):
+    def __init__(self, path, ref_col, strand_col='strand', chr_col='chromosome',
+                 start_col=None, stop_col=None, sep='\t'):
         """
 
         :param path: the path to the annotation file to parse.
@@ -231,6 +232,8 @@ class AnnotationParser:
         :type start_col: string
         :param stop_col: the name of the column for the stop position
         :type stop_col: string
+        :param sep: The separator tu use to split fields
+        :type sep: string
         """
         self.path = path
         self.ref_col = ref_col
@@ -238,8 +241,9 @@ class AnnotationParser:
         self.strand_col = strand_col
         self.start_col = start_col
         self.stop_col = stop_col
+        self._sep = sep
         with open(self.path, 'r') as annot_file:
-            self.header = annot_file.readline().rstrip('\n').split('\t')
+            self.header = annot_file.readline().rstrip('\n').split(self._sep)
 
     def get_annotations(self):
         """
@@ -255,7 +259,7 @@ class AnnotationParser:
                                           start_col=self.start_col,
                                           stop_col=self.stop_col)
             for line in annot_file:
-                yield MyEntryClass(line.rstrip('\n').split('\t'))
+                yield MyEntryClass(line.rstrip('\n').split(self._sep))
 
     def max(self):
         """
