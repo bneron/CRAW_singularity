@@ -1,10 +1,11 @@
-# Run tests on gitlab.pasteur.fr after new push
-image: docker:latest
+stages:
+  - test
+  - release
   
 variables:
   CRAW_HOME: ${CI_PROJECT_DIR}
 
-build:
+test:
     image: registry-gitlab.pasteur.fr/bneron/craw:centos-dep-0.6
     stage: test
     script:
@@ -13,3 +14,18 @@ build:
         - /^feat.*$/
         - /^fix.*$/
 
+release:
+  image: registry-gitlab.pasteur.fr/bneron/craw:release
+  script:
+    - cd ${CI_PROJECT_DIR}/doc/
+    - export CRAW_VERSION=${CI_COMMIT_REF_NAME}
+    - make html
+    - make latexpdf
+    - cd ${CI_PROJECT_DIR}
+    - python3 sdist
+  artifacts:
+    name: craw-"$CI_COMMIT_REF_NAME".tar.gz
+    paths:
+    - dist/craw*.tar.gz
+  only:
+    - tags
