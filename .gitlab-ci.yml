@@ -1,21 +1,31 @@
 stages:
   - test
+  - coverage
   - release
   
 variables:
   CRAW_HOME: ${CI_PROJECT_DIR}
   CRAW_VERSION: ${CI_COMMIT_REF_NAME}
 
-test:
-    image: registry-gitlab.pasteur.fr/bneron/craw:centos-dep-0.6
-    stage: test
-    script:
-        - python3 ${CI_PROJECT_DIR}/tests/run_tests.py -vvv
-    except:
-        - /^feat.*$/
-        - /^fix.*$/
+testing:
+  stage: test
+  image: registry-gitlab.pasteur.fr/bneron/craw:centos-dep-0.6
+  script:
+      - python3 ${CI_PROJECT_DIR}/tests/run_tests.py -vvv
+  except:
+      - /^feat.*$/
+      - /^fix.*$/
 
-release:
+coverage:
+  stage: coverage
+  image: registry-gitlab.pasteur.fr/bneron/craw:coverage
+  script:
+    - cd ${CI_PROJECT_DIR}
+    - coverage run --source=craw tests/run_tests.py --unit
+    - coverage html
+
+releasing:
+  stage: release
   image: registry-gitlab.pasteur.fr/bneron/craw:release-0.6
   script:
     - cd ${CI_PROJECT_DIR}/doc/
