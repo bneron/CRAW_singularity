@@ -11,10 +11,10 @@ testing:
   stage: test
   image: registry-gitlab.pasteur.fr/bneron/craw:centos-dep-0.6
   script:
-      - python3 ${CI_PROJECT_DIR}/tests/run_tests.py -vvv
+    - python3 ${CI_PROJECT_DIR}/tests/run_tests.py -vvv
   except:
-      - /^feat.*$/
-      - /^fix.*$/
+    - /^feat.*$/
+    - /^fix.*$/
 
 coverage:
   stage: coverage
@@ -23,6 +23,9 @@ coverage:
     - cd ${CI_PROJECT_DIR}
     - coverage run --source=craw tests/run_tests.py --unit
     - coverage html
+  except:
+    - /^feat.*$/
+    - /^fix.*$/
 
 releasing:
   stage: release
