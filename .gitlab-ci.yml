@@ -42,3 +42,4 @@ releasing:
     - dist/craw*.tar.gz
   only:
     - tags
+    - master
