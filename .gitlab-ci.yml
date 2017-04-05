@@ -4,6 +4,7 @@ stages:
   
 variables:
   CRAW_HOME: ${CI_PROJECT_DIR}
+  CRAW_VERSION: ${CI_COMMIT_REF_NAME}
 
 test:
     image: registry-gitlab.pasteur.fr/bneron/craw:centos-dep-0.6
@@ -18,7 +19,6 @@ release:
   image: registry-gitlab.pasteur.fr/bneron/craw:release
   script:
     - cd ${CI_PROJECT_DIR}/doc/
-    - export CRAW_VERSION=${CI_COMMIT_REF_NAME}
     - make html
     - make latexpdf
     - cd ${CI_PROJECT_DIR}
