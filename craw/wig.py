@@ -25,7 +25,7 @@
 import re
 from abc import ABCMeta, abstractmethod
 import logging
-_log = logging.getLogger(__name__)
+
 
 root_logger = logging.getLogger()
 handler = logging.StreamHandler()
@@ -33,9 +33,9 @@ formatter = logging.Formatter(fmt='{levelname} : {name} : {message}', style='{')
 handler.setFormatter(formatter)
 root_logger.addHandler(handler)
 root_logger.setLevel(logging.DEBUG)
+
+_log = logging.getLogger(__name__)
 #level = logging.WARNING - (10 * args.verbosity)
-root_logger.setLevel(logging.DEBUG)
-#log = logging.getLogger('craw_htmp')
 #log.setLevel(logging.NOTSET)
 
 
@@ -239,6 +239,9 @@ class Strand:
             previous_idx = idx
 
 class Chromosome:
+    """
+    Handle chromosomes. a chromosome as a name and contains chunks (forward and reverse)
+    """
 
     def __init__(self, name):
         self.name = name
@@ -331,6 +334,9 @@ class Chromosome:
 
 
 class Genome:
+    """
+    A genome is made of chromosomes and some metadata, called infos
+    """
 
     def __init__(self):
         self._chromosomes = {}
@@ -354,8 +360,16 @@ class Genome:
 
 
 class WigParser:
+    """
+    class to parse file in wig format.
+    at the end of parsing it returns a :class:`Genome` object.
+    """
 
     def __init__(self, path):
+        """
+        :param path: the path of the wig file to parse.
+        :type path: string
+        """
         self.declaration_type_pattern = re.compile('fixedStep|variableStep')
         self._path = path
         self._genome = None
@@ -364,6 +378,25 @@ class WigParser:
 
 
     def parse(self):
+        """
+        Open a wig file and parse it.
+        read wig file line by line check the type of line
+        and call the corresponding method accordingly the type of the line:
+        - comment
+        - track
+        - declaration
+        - data
+        see
+        - https://wiki.nci.nih.gov/display/tcga/wiggle+format+specification
+        - http://genome.ucsc.edu/goldenPath/help/wiggle.html
+        for wig specifications.
+        This parser does not fully follow these specification. When a score is negative,
+        it means that the coverage is on the reverse strand. So some positions can apear twice
+        in one block of declaration (what I call a chunk).
+
+        :return: a Genome coverage corresponding to te wig file
+        :rtype: :class:`Genome` object
+        """
         with open(self._path, 'r') as wig_file:
             self._genome = Genome()
             for line in wig_file:
@@ -383,6 +416,11 @@ class WigParser:
 
 
     def parse_track_line(self, line):
+        """
+        fill the genome infos with the information found on the track.
+
+        :param line: line to parse. The method :meth:`is_track_line` must return True with this line.
+        """
         _log.info('parsing : {}'.format(line))
         fields = re.findall("""(\w+)=(".+?"|'.+?'|\S+)""", line)
         attrs = {}
@@ -395,7 +433,12 @@ class WigParser:
 
 
     def parse_declaration_line(self, line):
-        _log.info("paring : {}".format(line))
+        """
+        Create a new chunk, and set the current_chunk and current_chromosome (create a new one if necessary).
+
+        :param line: line to parse. The method :meth:`is_declaration_line` must return True with this line.
+        """
+        _log.info("parsing : {}".format(line))
         if self._current_chunk:
             self._current_chrom.add_chunk(self._current_chunk)
             self._current_chunk = None
@@ -420,6 +463,12 @@ class WigParser:
 
 
     def parse_data_line(self, line):
+        """
+        :param line: line to parse. It must not a comment_line, neither a track line nor a declaration line.
+        :type line: string
+        :return:
+        :rtype: 
+        """
         if self._current_chunk is None:
             raise WigException("this data line '{}' is not preceded by declaration".format(line))
         return self._current_chunk.parse_data_line(line)
@@ -427,14 +476,32 @@ class WigParser:
 
     @staticmethod
     def is_track_line(line):
+        """
+        :param line: line to parse.
+        :type line: string
+        :return: True if line is a track line. False otherwise.
+        :rtype: boolean
+        """
         return line.startswith('track')
 
 
     def is_declaration_line(self, line):
+        """
+        :param line: line to parse.
+        :type line: string
+        :return: True if line is a decalration line. False otherwise.
+        :rtype: boolean
+        """
         return bool(re.match(self.declaration_type_pattern, line))
 
 
     def is_comment_line(self, line):
+        """
+        :param line: line to parse.
+        :type line: string
+        :return: True if line is a comment line. False otherwise.
+        :rtype: boolean
+        """
         return line.startswith('#')
 
 
