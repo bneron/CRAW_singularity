@@ -16,7 +16,7 @@ test:
         - /^fix.*$/
 
 release:
-  image: registry-gitlab.pasteur.fr/bneron/craw:release
+  image: registry-gitlab.pasteur.fr/bneron/craw:release-0.6
   script:
     - cd ${CI_PROJECT_DIR}/doc/
     - make html
