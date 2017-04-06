@@ -273,67 +273,6 @@ class VariableChunk(Chunk):
             self.reverse.append((pos, abs(cov)))
 
 
-class Strand:
-
-    def __init__(self):
-        self.coverage = []
-
-    def __len__(self):
-        return len(self.coverage)
-
-    def __eq__(self, other):
-        return self.coverage == other.coverage
-
-
-    def get_coverage(self, start, stop):
-        cov_len = len(self.coverage)
-        right_fill = []
-        left_fille = []
-        first_chunk_start = self.coverage[0][0]
-        last_chunk_stop = self.coverage[-1][1]
-
-        #start < first_chunk_start
-        #   right_fill = [0] * (first_chunk_start - start)
-        #   start = first_chunk_start
-        #start > last_chunk_stop
-
-        #stop < fisrt_chunk_start
-        #stop > last_chunk_stop
-        #   left_fill = [0] * (stop - last_chunk_stop)
-        #   stop = last_chunk_stop
-
-        # recherche de l'inteval contenant le start
-        # rechecher de l'interval contenant le stop
-        # generer la list des interval
-        # expandre la liste
-        # ajouter r_fill + left_fill
-        # retourner le resultat
-        first_chunk = None
-        previous_idx = None
-        coverage_walker = enumerate(self.coverage)
-        for idx, chunk in coverage_walker:
-            if start < chunk.start:
-                continue
-            elif chunk.start <= start <= chunk.stop:
-                first_chunk = idx
-            elif start < chunk.start:
-                first_chunk = previous_idx
-            previous_idx = idx
-
-        # le stop est forcement apres le start
-        # pas la peine de reparcourir la liste depuis le debut
-        # par contre il peut etre dans le meme chunk que le start
-        # il faut donc le tester
-
-        for dx, chunk in coverage_walker:
-            if stop > chunk.stop:
-                continue
-            elif chunk.start <= stop <= chunk.stop:
-                last_chunk = idx
-            elif stop > chunk.stop:
-                last_chunk = previous_idx
-            previous_idx = idx
-
 class Chromosome:
     """
     Handle chromosomes. a chromosome as a name and contains chunks (forward and reverse)
