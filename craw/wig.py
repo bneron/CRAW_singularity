@@ -112,15 +112,29 @@ class Chunk(metaclass=ABCMeta):
         self.forward = []
         self.reverse = []
 
+
     @abstractmethod
     def is_fixed_step(self):
+        """
+        This is an abstract methods, must be implemented in inherited class
+        :return: True if i's a fixed chunk of data, False otheweise
+        :rtype: boolean
+        """
         pass
 
     @abstractmethod
     def parse_data_line(self):
+        """
+        parse a line of data and append the results in the corresponding strand
+        This is an abstract methods, must be implemented in inherited class.
+        """
         pass
 
     def expand(self):
+        """
+        :return: The coverage for the forward and reverse (in this order) for this chunk.
+        :rtype: tuple (:class:`Coverage`, :class:`Coverage`)
+        """
         coverages = {}
         for sense in ('forward', 'reverse'):
             chunk_strand = getattr(self, sense)
@@ -151,9 +165,19 @@ class FixedChunk(Chunk):
         self._current_pos = self.start
 
     def is_fixed_step(self):
+        """
+        :return: True
+        :rtype: boolean
+        """
         return True
 
     def parse_data_line(self, line):
+        """
+        parse line of data following a fixedStep Declaration.
+        add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)
+        :param line: line of data to parse (the white spaces at the end must be strip)
+        :type line: string
+        """
         cov = float(line)
         if cov >= 0:
             self.forward.append((self._current_pos, cov))
@@ -165,9 +189,20 @@ class FixedChunk(Chunk):
 class VariableChunk(Chunk):
 
     def is_fixed_step(self):
+        """
+        :return: False
+        :rtype: boolean
+        """
         return False
 
+
     def parse_data_line(self, line):
+        """
+        parse line of data following a variableStep Declaration.
+        add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)
+        :param line: line of data to parse (the white spaces at the end must be strip)
+        :type line: string
+        """
         pos, cov = line.split()
         pos = int(pos)
         cov = float(cov)
@@ -318,13 +353,34 @@ class Chromosome:
 
     @staticmethod
     def _expand_cov(start, stop, strand):
+        """
+
+        :param start: the start of the region (included)
+        :type start: int
+        :param stop: the end of the region (included)
+        :type stop: int
+        :param strand: the strand on which to compute coverage
+        :type strand: a :class:`Strand` object
+        :return:
+        :rtype: list of float
+        """
         chunks = strand[start, stop + 1]
         cov = [0] * (stop - start)
         for chunk in chunks:
             cov[chunk.start - start: chunk.stop - start] = chunk.covergae
         return cov
 
+
     def get_coverage(self, start, stop, sense=None):
+        """
+        :param start: the start of the region (included)
+        :type start: int
+        :param stop: the end of the region (included)
+        :type stop: int
+        :param sense: TODO
+        :return: the coverage corresponding to this region on the both strands.
+        :rtype: list of 2 lists the first element is the coverage for the forward stand the second for the reverse)
+        """
         covs = []
         for sense in (self._forward, self._reverse):
             first_chunk_idx = self._find_start_chunk(start, sense)
@@ -343,6 +399,12 @@ class Genome:
         self.infos = {}
 
     def __getitem__(self, name):
+        """
+        :param name: the name of the chromosome to retrieve
+        :type name: string
+        :return: the chromosome corresponding to the name.
+        :rtype: :class:`Chromosome` object.
+        """
         return self._chromosomes[name]
 
     def __contains__(self, chrom):
@@ -354,6 +416,14 @@ class Genome:
             return chrom.name in self._chromosomes
 
     def add(self, chrom):
+        """
+        add a chromosome in to a genome.
+        if a chromosome with the same name already exist the previous one is replaced silently by this one.
+
+        :param chrom: a chromosome to ad to this genome
+        :type chrom: :class:`Chromosome` object.
+        :raise: TypeError if chrom is not a :class:`Chromosome` object.
+        """
         if not isinstance(chrom, Chromosome):
             raise TypeError("Genome can contains only Chromosome objects")
         self._chromosomes[chrom.name] = chrom
