@@ -204,39 +204,6 @@ class TestVariableChunk(CRAWTest):
         self.assertEqual(reverse, expected_rev)
 
 
-# class TestStrand(CRAWTest):
-#
-#     def test_get_coverage(self):
-#         st = Strand()
-#         st.coverage = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-#         self.assertListEqual(st.get_coverage(1, 4), [1, 2, 3, 4])
-#         self.assertListEqual(st.get_coverage(-1, 4), [0, 0, 1, 2, 3, 4])
-#         self.assertListEqual(st.get_coverage(5, 12), [5, 6, 7, 8, 9, 0, 0])
-#         self.assertListEqual(st.get_coverage(-2, 12), [0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0])
-#
-#     def test_eq(self):
-#         st1 = Strand()
-#         st2 = Strand()
-#         self.assertEqual(st1, st2)
-#         st1.coverage = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-#         st2.coverage = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-#         self.assertEqual(st1, st2)
-#         st2.coverage = [0, 0]
-#         self.assertNotEqual(st1, st2)
-#
-#     def test_len(self):
-#         st1 = Strand()
-#         self.assertEqual(len(st1), 0)
-#         st1.coverage = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-#         self.assertEqual(len(st1), 10)
-#
-#     def extend(self):
-#         st1 = Strand()
-#         ext_strand = ExpandedStrand(0, 4, 1)
-#         st1.extend(ext_strand)
-#         self.assertListEqual(st1.coverage, ext_strand.coverage)
-
-
 class TestChromosome(CRAWTest):
 
     def test_Chromosome(self):
