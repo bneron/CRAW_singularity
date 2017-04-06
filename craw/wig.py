@@ -23,6 +23,7 @@
 ###########################################################################
 
 import re
+import collections
 from abc import ABCMeta, abstractmethod
 import logging
 
@@ -65,36 +66,96 @@ class Coverage:
 
     @property
     def stop(self):
+        """
+        :return: the stop position on the chromosome.
+        :rtype: float
+        """
         return self._stop
 
     @property
     def start(self):
+        """
+        :return: the start position on the chromosome.
+        :rtype: float
+        """
         return self._start
 
     @property
     def coverage(self):
+        """
+        :return: a copy of the coverage values in a list
+        :rtype: list of float
+        """
         return self._coverage[:]
 
     def __eq__(self, other):
         return self._start == other._start and self.coverage == other.coverage
 
+
     def _translate_pos(self, pos):
+        """
+        translate the position on chromosome on index in the list of float
+        :param pos: the postion to set value
+        :type pos: int or :class:`slice` object
+        :return: the index or slice in the list of float
+        :rtype: int or slice
+        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
+        """
         if isinstance(pos, int):
+            if not (self._start <= pos <= self._stop):
+                raise IndexError('Coverage {} position out of range')
             idx = pos - self._start
         elif isinstance(pos, slice):
-            idx = slice(pos.start - self._start, pos.stop - self._start, None)
-        return pos
+            if not (self._start <= pos.start <= self._stop and self._start <= pos.stop <= self._stop):
+                raise IndexError('Coverage {} position out of range')
+            idx = slice(pos.start - self._start, pos.stop - self._start, pos.step)
+        return idx
+
 
     def __setitem__(self, pos, value):
-        self.coverage[self._translate_pos(pos)] = value
+        """
+
+        :param pos: the postion to set value
+        :type pos: int or :class:`slice` object
+        :param value: value to assign
+        :type value: float or iterable of float
+        :raise ValueError: when pos is a slice and value have not the same length of the slice
+        :raise TypeError: when pos is a slice and value is not iterable
+        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
+        """
+        if isinstance(pos, slice):
+            if isinstance(value, collections.Iterable):
+                if pos.start - pos.stop != len(value):
+                    raise ValueError("can assign only iterable of same length of the slice")
+            else:
+                raise TypeError('can only assign an iterable')
+        try:
+            self._coverage[self._translate_pos(pos)] = value
+        except IndexError as err:
+            raise IndexError(str(err).format('assignment')) from None
+
 
     def __getitem__(self, pos):
-        return self.coverage[self._translate_pos(pos)]
+        """
+
+        :param pos: a position or a slice
+        :return: the coverage at this position or corresponding to this slice.
+        :rtype: a float o list of float
+        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
+        """
+        try:
+            return self._coverage[self._translate_pos(pos)]
+        except IndexError as err:
+            raise IndexError(str(err). format('')) from None
 
 
 class Chunk(metaclass=ABCMeta):
 
     def __init__(self, **kwargs):
+        """
+        :param kwargs: the key,values pairs found on a Declaration line
+        :type kwargs: dictionary
+        """
         self.span = 1
         for k, v in kwargs.items():
             if k in ('span', 'start', 'step'):
