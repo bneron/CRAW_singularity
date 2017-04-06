@@ -54,7 +54,7 @@ class Coverage:
         """
         self._start = start
         # be careful the last position count in the span
-        self._coverage = [0] * (stop + span - start)
+        self._coverage = [0.] * (stop + span - start)
         self._stop = len(self.coverage) + self._start - 1
 
     def __getattr__(self, item):
