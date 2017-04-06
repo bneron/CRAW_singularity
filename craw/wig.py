@@ -214,7 +214,7 @@ class FixedChunk(Chunk):
 
     def __init__(self, **kwargs):
         self.step = 1
-        super(FixedChunk, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         if self.step == 0:
             raise WigException
         try:
