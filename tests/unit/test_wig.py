@@ -22,46 +22,77 @@
 #                                                                         #
 ###########################################################################
 
-
-import os
 try:
     from tests import CRAWTest
 except ImportError as err:
     msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
     raise ImportError("Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err))
 
-from craw.wig import WigException, Coverage, FixedChunk, VariableChunk, Strand, Chromosome, Genome, WigParser
+from craw.wig import WigException, Coverage, FixedChunk, VariableChunk, Chromosome, Genome, WigParser
 
 
 class TestCoverage(CRAWTest):
 
-    def test_coverage(self):
-        es = Coverage(1, 5, 3)
-        self.assertListEqual(es.coverage, [0, 0, 0, 0, 0, 0, 0])
-        es = Coverage(1, 5, 1)
-        self.assertListEqual(es.coverage, [0, 0, 0, 0, 0])
+    def test_coverage_init(self):
+        cov = Coverage(1, 5, 3)
+        self.assertListEqual(cov.coverage, [0.] * 7)
+        cov = Coverage(1, 5, 1)
+        self.assertListEqual(cov.coverage, [0.] * 5)
 
     def test_len(self):
-        es = Coverage(1, 5, 3)
-        self.assertEqual(len(es), 7)
+        cov = Coverage(1, 5, 3)
+        self.assertEqual(len(cov), 7)
 
     def test_stop(self):
-        es = Coverage(1, 5, 3)
-        self.assertEqual(es.stop, 7)
+        cov = Coverage(1, 5, 3)
+        self.assertEqual(cov.stop, 7)
 
     def test_start(self):
-        es = Coverage(1, 5, 3)
-        self.assertEqual(es.start, 1)
+        cov = Coverage(1, 5, 3)
+        self.assertEqual(cov.start, 1)
 
     def test_eq(self):
-        es1 = Coverage(1, 5, 3)
-        es2 = Coverage(1, 5, 3)
-        self.assertEqual(es1, es2)
+        cov1 = Coverage(1, 5, 3)
+        cov2 = Coverage(1, 5, 3)
+        self.assertEqual(cov1, cov2)
+
+    def test_setitem(self):
+        cov = Coverage(1, 5, 3)
+        pos = 2
+        value = 3.0
+        cov[pos] = value
+        expect_cov = [0.] * 7
+        expect_cov[pos - 1] = 3.0
+        self.assertEqual(cov.coverage, expect_cov)
+        with self.assertRaises(TypeError) as ctx:
+            cov[cov.start:cov.stop] = 3.0
+        self.assertEqual(str(ctx.exception), 'can only assign an iterable')
+
+        with self.assertRaises(ValueError) as ctx:
+            cov[cov.start:cov.stop] = (3.0, 2.0)
+        self.assertEqual(str(ctx.exception), 'can assign only iterable of same length of the slice')
+        with self.assertRaises(IndexError) as ctx:
+            cov[cov.stop + 1] = 3.0
+        self.assertEqual(str(ctx.exception), 'Coverage assignment position out of range')
+
+    def test_getitem(self):
+        cov = Coverage(1, 5, 3)
+        pos = 2
+        value = 3.0
+        cov[pos] = value
+        self.assertEqual(cov[pos], value)
+        self.assertEqual(cov[pos - 1:pos + 2], [0.0, value, 0.0])
+        with self.assertRaises(IndexError) as ctx:
+            _ = cov[cov.stop + 1]
+        self.assertEqual(str(ctx.exception), 'Coverage  position out of range')
+        with self.assertRaises(IndexError) as ctx:
+            _ = cov[cov.start:cov.stop + 1]
+        self.assertEqual(str(ctx.exception), 'Coverage  position out of range')
 
 
 class TestFixedChunk(CRAWTest):
 
-    def test_is_fixed_step(self):
+    def test_fixed_step(self):
         kwargs = {"chrom": "chr3", "start": "400601"}
         fx_ch = FixedChunk(**kwargs)
         self.assertEqual(fx_ch.chrom, kwargs["chrom"])
@@ -96,7 +127,7 @@ class TestFixedChunk(CRAWTest):
             FixedChunk(**kwargs)
         self.assertEqual(str(ctx.exception), "'start' must be defined for 'fixedStep'.")
 
-        kwargs = {"start": "400601", "step": "1", "span": "5"}
+        kwargs = {"chrom": "chr3", "start": "400601", "step": "1", "span": "5"}
         with self.assertRaises(WigException) as ctx:
             FixedChunk(**kwargs)
         self.assertEqual(str(ctx.exception), "'span' cannot be greater than 'step'.")
@@ -139,16 +170,14 @@ class TestFixedChunk(CRAWTest):
 
 class TestVariableChunk(CRAWTest):
 
-    def test_is_fixed_step(self):
+    def test_variable_step(self):
         kwargs = {"chrom": "chr3"}
         var_ch = VariableChunk(**kwargs)
         self.assertEqual(var_ch.chrom, kwargs["chrom"])
-        self.assertEqual(var_ch.step, 1)
         self.assertEqual(var_ch.span, 1)
         kwargs = {"chrom": "chr3", "step": "100"}
         var_ch = VariableChunk(**kwargs)
         self.assertEqual(var_ch.chrom, kwargs["chrom"])
-        self.assertEqual(var_ch.step, int(kwargs["step"]))
         self.assertEqual(var_ch.span, 1)
 
         kwargs = {"chrom": "chr3", "span": "5"}
@@ -211,7 +240,7 @@ class TestChromosome(CRAWTest):
         ch = Chromosome(ch_name)
         self.assertEqual(ch.name, ch_name)
 
-    def test_iadd(self):
+    def test_add_chunk(self):
         ch_name = 'ChrII'
         ch = Chromosome(ch_name)
 
