@@ -40,13 +40,17 @@ _log = logging.getLogger(__name__)
 #log.setLevel(logging.NOTSET)
 
 
-class WigException(Exception):
+class WigError(Exception):
     pass
 
 
 class Coverage:
+    """
+    Represent the coverage for a piece of genome (only one strand).
+    There is one coverage value for each nucleotide of this genome part.
+    """
 
-    def __init__(self, start, stop, span):
+    def __init__(self, start, stop, span, default_cov=0.0):
         """
 
         :param start: start position of the chunk (1 based position)
@@ -55,14 +59,78 @@ class Coverage:
         """
         self._start = start
         # be careful the last position count in the span
-        self._coverage = [0.] * (stop + span - start)
-        self._stop = len(self.coverage) + self._start - 1
-
-    def __getattr__(self, item):
-        return getattr(self.coverage, item)
+        self._coverage = [default_cov] * (stop + span - start)
+        self._stop = stop + span - 1
 
     def __len__(self):
         return len(self.coverage)
+
+    def __eq__(self, other):
+        return self._start == other.start and \
+               self._stop == other.stop and \
+               self.coverage == other.coverage
+
+    def __str__(self):
+        s = "start= {}; stop= {}\n{}".format(self.start, self.stop, self._coverage)
+        return s
+
+    def _translate_pos(self, pos):
+        """
+        translate the position on chromosome on index in the list of float
+        :param pos: the postion to set value
+        :type pos: int or :class:`slice` object
+        :return: the index or slice in the list of float
+        :rtype: int or slice
+        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
+        """
+        if isinstance(pos, int):
+            if not (self._start <= pos <= self._stop):
+                raise IndexError('Coverage {{}} position {} out of range[{}:{}]'.format(pos, self._start, self._stop))
+            idx = pos - self._start
+        elif isinstance(pos, slice):
+            if not (self._start <= pos.start <= self._stop and self._start <= pos.stop <= self._stop + 1):
+                raise IndexError('Coverage {{}} position [{}:{}] out of range [{}:{}]'.format(pos.start, pos.stop,
+                                                                                              self._start, self._stop))
+            idx = slice(pos.start - self._start, pos.stop - self._start, pos.step)
+        return idx
+
+
+    def __setitem__(self, pos, value):
+        """
+
+        :param pos: the postion to set value
+        :type pos: int or :class:`slice` object
+        :param value: value to assign
+        :type value: float or iterable of float
+        :raise ValueError: when pos is a slice and value have not the same length of the slice
+        :raise TypeError: when pos is a slice and value is not iterable
+        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
+        """
+        if isinstance(pos, slice):
+            if isinstance(value, collections.Iterable):
+                if (pos.stop - pos.start) != len(value):
+                    raise ValueError("can assign only iterable of same length of the slice")
+            else:
+                raise TypeError('can only assign an iterable')
+        try:
+            self._coverage[self._translate_pos(pos)] = value
+        except IndexError as err:
+            raise IndexError(str(err).format('assignment')) from None
+
+
+    def __getitem__(self, pos):
+        """
+
+        :param pos: a position or a slice
+        :return: the coverage at this position or corresponding to this slice.
+        :rtype: a float o list of float
+        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
+        """
+        try:
+            return self._coverage[self._translate_pos(pos)]
+        except IndexError as err:
+            raise IndexError(str(err). format('')) from None
+
 
     @property
     def stop(self):
@@ -88,68 +156,35 @@ class Coverage:
         """
         return self._coverage[:]
 
-    def __eq__(self, other):
-        return self._start == other._start and self.coverage == other.coverage
-
-
-    def _translate_pos(self, pos):
+    @staticmethod
+    def join(coverages, glue=0.0):
         """
-        translate the position on chromosome on index in the list of float
-        :param pos: the postion to set value
-        :type pos: int or :class:`slice` object
-        :return: the index or slice in the list of float
-        :rtype: int or slice
-        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
+        
+        :param coverages:
+        :type coverages: list or tuple of :class:`Coverage`
+        :param glue:
+        :type glue: float
+        :return: the coverage corresponding to all coverage in coverages, 
+                 the gaps between coverages are filled with glue.
+        :rtype: :class:`Coverage` object.
+        :raise ValueError: if coverages is empty.
         """
-        if isinstance(pos, int):
-            if not (self._start <= pos <= self._stop):
-                raise IndexError('Coverage {} position out of range')
-            idx = pos - self._start
-        elif isinstance(pos, slice):
-            if not (self._start <= pos.start <= self._stop and self._start <= pos.stop <= self._stop):
-                raise IndexError('Coverage {} position out of range')
-            idx = slice(pos.start - self._start, pos.stop - self._start, pos.step)
-        return idx
-
-
-    def __setitem__(self, pos, value):
-        """
-
-        :param pos: the postion to set value
-        :type pos: int or :class:`slice` object
-        :param value: value to assign
-        :type value: float or iterable of float
-        :raise ValueError: when pos is a slice and value have not the same length of the slice
-        :raise TypeError: when pos is a slice and value is not iterable
-        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
-        """
-        if isinstance(pos, slice):
-            if isinstance(value, collections.Iterable):
-                if pos.start - pos.stop != len(value):
-                    raise ValueError("can assign only iterable of same length of the slice")
-            else:
-                raise TypeError('can only assign an iterable')
-        try:
-            self._coverage[self._translate_pos(pos)] = value
-        except IndexError as err:
-            raise IndexError(str(err).format('assignment')) from None
-
-
-    def __getitem__(self, pos):
-        """
-
-        :param pos: a position or a slice
-        :return: the coverage at this position or corresponding to this slice.
-        :rtype: a float o list of float
-        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
-        """
-        try:
-            return self._coverage[self._translate_pos(pos)]
-        except IndexError as err:
-            raise IndexError(str(err). format('')) from None
+        if not coverages:
+            raise ValueError("No coverage object to join")
+        start = min([c.start for c in coverages])
+        stop = max([c.stop for c in coverages])
+        joined_cov = Coverage(start, stop, 1, default_cov=glue)
+        for cov in coverages:
+            joined_cov[cov.start:cov.stop + 1] = cov.coverage
+        return joined_cov
 
 
 class Chunk(metaclass=ABCMeta):
+    """
+    Represent the data following a declaration line.
+    The a Chunk contains sparse data on coverage 
+    on a region of one chromosomes on both strand plus data contains on the declaration line.
+    """
 
     def __init__(self, **kwargs):
         """
@@ -157,22 +192,27 @@ class Chunk(metaclass=ABCMeta):
         :type kwargs: dictionary
         """
         self.span = 1
+        self.start = None
         for k, v in kwargs.items():
             if k in ('span', 'start', 'step'):
                 v = int(v)
             setattr(self, k, v)
         try:
             if not self.chrom:
-                raise WigException("'chrom' field  is not present.")
+                raise WigError("'chrom' field  is not present.")
         except AttributeError:
-            raise WigException("'chrom' field  is not present.")
+            raise WigError("'chrom' field  is not present.")
 
         if self.span <= 0:
-            raise WigException("'{}' is not allowed as span value.".format(self.span))
+            raise WigError("'{}' is not allowed as span value.".format(self.span))
 
         self.forward = []
         self.reverse = []
 
+    @property
+    @abstractmethod
+    def stop(self):
+        return NotImplemented
 
     @abstractmethod
     def is_fixed_step(self):
@@ -181,7 +221,7 @@ class Chunk(metaclass=ABCMeta):
         :return: True if i's a fixed chunk of data, False otheweise
         :rtype: boolean
         """
-        pass
+        return NotImplemented
 
     @abstractmethod
     def parse_data_line(self):
@@ -189,41 +229,44 @@ class Chunk(metaclass=ABCMeta):
         parse a line of data and append the results in the corresponding strand
         This is an abstract methods, must be implemented in inherited class.
         """
-        pass
+        return NotImplemented
 
-    def expand(self):
+    def to_coverages(self):
         """
         :return: The coverage for the forward and reverse (in this order) for this chunk.
         :rtype: tuple (:class:`Coverage`, :class:`Coverage`)
         """
         coverages = {}
         for sense in ('forward', 'reverse'):
+            # the chunk stop take already the span in account
+            coverages[sense] = Coverage(self.start, self.stop - self.span + 1, self.span)
             chunk_strand = getattr(self, sense)
             if chunk_strand:
-                coverages[sense] = Coverage(chunk_strand[0][0], chunk_strand[-1][0], self.span)
                 for position, cov in chunk_strand:
-                    for i in range(position, position + self.span):
-                        coverages[sense][i] = cov
-            else:
-                # there is no data for this strand
-                coverages[sense] = Coverage(0, 0, 0)
+                    coverages[sense][position:position + self.span] = [cov] * self.span
         return coverages['forward'], coverages['reverse']
 
 
 class FixedChunk(Chunk):
+    """
+    The FixedChunk objects handle data of 'fixedStep' declaration line and it's coverage data 
+    """
 
     def __init__(self, **kwargs):
         self.step = 1
         super().__init__(**kwargs)
-        if self.step == 0:
-            raise WigException
-        try:
-            self.start
-        except AttributeError:
-            raise WigException("'start' must be defined for 'fixedStep'.")
+        if self.step <= 0:
+            raise WigError("'step' must be strictly positive.")
+        if self.start is None:
+            raise WigError("'start' must be defined for 'fixedStep'.")
         if self.span > self.step:
-            raise WigException("'span' cannot be greater than 'step'.")
+            raise WigError("'span' cannot be greater than 'step'.")
         self._current_pos = self.start
+
+    @property
+    def stop(self):
+        return ((len(self.forward) + len(self.reverse) - 1) * self.step) + (self.span - 1) + self.start
+
 
     def is_fixed_step(self):
         """
@@ -248,6 +291,31 @@ class FixedChunk(Chunk):
 
 
 class VariableChunk(Chunk):
+    """
+    The Variable Chunk objects handle data of 'variableStep' declaration line and it's coverage data 
+    
+    If in data there is negative values this indicate that the coverage match on the reverse strand.
+    the chunk start with the smallest position and end to the higest position whatever on wich strand are
+    these position. This mean that when the chunk will be convert in Coverage,
+    the lacking positions will be filled with 0.0.
+    
+    for instance: 
+      
+      variableStep chrom=chr3 span=2
+      10 11
+      20 22
+      20 -30
+      25 -50
+      
+    will give coverages starting at position 10 and ending at 26 for both strands and with 
+    the following coverages values
+    for = [11.0, 11.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 22.0, 22.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    rev = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 30.0, 0.0, 0.0, 0.0, 50.0, 50.0]
+    """
+
+    @property
+    def stop(self):
+        return max(self.forward[-1][0], self.reverse[-1][0]) + self.span - 1
 
     def is_fixed_step(self):
         """
@@ -259,14 +327,16 @@ class VariableChunk(Chunk):
 
     def parse_data_line(self, line):
         """
-        parse line of data following a variableStep Declaration.
-        add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)
+        Parse line of data following a variableStep Declaration.
+        Add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)
         :param line: line of data to parse (the white spaces at the end must be strip)
         :type line: string
         """
         pos, cov = line.split()
         pos = int(pos)
         cov = float(cov)
+        if self.start is None:
+            self.start = pos
         if cov >= 0:
             self.forward.append((pos, cov))
         else:
@@ -275,118 +345,130 @@ class VariableChunk(Chunk):
 
 class Chromosome:
     """
-    Handle chromosomes. a chromosome as a name and contains chunks (forward and reverse)
+    Handle chromosomes. A chromosome as a name and contains :class:`Chunk` objects 
+    (forward and reverse)
     """
 
     def __init__(self, name):
         self.name = name
-        self._forward = []
-        self._reverse = []
+        self._chunks = []
 
-    @property
-    def forward(self):
-        return self._forward
-
-    @property
-    def reverse(self):
-        return self._reverse
 
     def add_chunk(self, chunk):
-        if not isinstance(chunk, Chunk):
-            raise TypeError("can add only Chunk objects, provide: {}".chunk.__class__.__name__)
-        forward, reverse = chunk.expand()
-        for sense in ('forward', 'reverse'):
-            my_strand = getattr(self, sense)
-            one_strand_cov = locals()[sense]
-            my_strand.append(one_strand_cov)
-        return self
+        """
+        
+        :param chunk: 
+        :return: 
+        """
+        self._chunks.append(chunk)
 
 
-    @staticmethod
-    def _find_start_chunk(start, strand):
-        first_chunk_start = strand[0][0]
-        last_chunk_stop = strand[-1][1]
+    def _find_start_chunk(self, start):
+        first_chunk_start = self._chunks[0].start
+        last_chunk_stop = self._chunks[-1].stop
+
         if start < first_chunk_start:
             return 0
         if start > last_chunk_stop:
             return None
         else:
             previous_idx = None
-            for idx, cov in enumerate(strand):
-                if start < cov.start and previous_idx is None:
-                    continue
-                elif cov.start <= start <= cov.stop:
+            for idx, chk in enumerate(self._chunks):
+                if chk.start <= start <= chk.stop:
                     return idx
-                elif start < cov.start:
+                elif start < chk.start:
+                    # this case cannot happen at the first loop
+                    # because I test tart < first_chunk_start
+                    # at the beginning of the method
+                    # the previous_dx is defined
                     return previous_idx
                 else:
-                    # start > cov.start => test next chunk
+                    # start > chunk.start => test next chunk
                     previous_idx = idx
             # we are sure to find a chunk
             # because we first test that start <= last_chunk_stop
 
 
-    @staticmethod
-    def _find_stop_chunk(stop, start_idx, strand):
-        first_chunk_start = strand[0][0]
-        last_chunk_stop = strand[-1][1]
+    def _find_stop_chunk(self, stop, start_idx):
+        first_chunk_start = self._chunks[start_idx].start
+        last_chunk_stop = self._chunks[-1].stop
+
         if stop > last_chunk_stop:
-            return 0
+            return len(self._chunks) - 1
         if stop < first_chunk_start:
-            return None
+            return start_idx
         else:
             previous_idx = None
-            for idx in range(start_idx, len(strand) - start_idx):
+            for idx, chk in enumerate(self._chunks[start_idx:], start_idx):
                 # stop is necessarily greater than start
                 # so don't search stop search from the beginning
-                cov = strand[idx]
-                if stop > cov.stop and previous_idx is None:
-                    continue
-                elif cov.start <= stop <= cov.stop:
+                if chk.start <= stop <= chk.stop:
                     return idx
-                elif stop < cov.stop:
+                elif stop < chk.stop:
                     return previous_idx
                 else:
                     # stop < cov.stop
                     previous_idx = idx
 
 
-    @staticmethod
-    def _expand_cov(start, stop, strand):
-        """
-
-        :param start: the start of the region (included)
-        :type start: int
-        :param stop: the end of the region (included)
-        :type stop: int
-        :param strand: the strand on which to compute coverage
-        :type strand: a :class:`Strand` object
-        :return:
-        :rtype: list of float
-        """
-        chunks = strand[start, stop + 1]
-        cov = [0] * (stop - start)
-        for chunk in chunks:
-            cov[chunk.start - start: chunk.stop - start] = chunk.covergae
-        return cov
-
-
-    def get_coverage(self, start, stop, sense=None):
+    def get_coverage(self, start, stop):
         """
         :param start: the start of the region (included)
         :type start: int
         :param stop: the end of the region (included)
         :type stop: int
-        :param sense: TODO
         :return: the coverage corresponding to this region on the both strands.
-        :rtype: list of 2 lists the first element is the coverage for the forward stand the second for the reverse)
+        :rtype: tuple of 2 lists of floats)
         """
-        covs = []
-        for sense in (self._forward, self._reverse):
-            first_chunk_idx = self._find_start_chunk(start, sense)
-            last_chunk_idx = self._find_stop_chunk(stop, start, sense)
-            covs.append(self._expand_cov(first_chunk_idx, last_chunk_idx, sense))
-        return covs
+        covs_forward = []
+        covs_reverse = []
+        first_chunk_start = self._chunks[0].start
+        last_chunk_stop = self._chunks[-1].stop
+        if start < first_chunk_start and stop < first_chunk_start:
+            cov = [0.] * (stop - start + 1)
+            return cov, cov[:]
+        elif start > last_chunk_stop:
+            # then stop also
+            cov = [0.] * (stop - start + 1)
+            return cov, cov[:]
+
+        # at least start or stop are in in chunks
+        first_chunk_idx = self._find_start_chunk(start)
+        last_chunk_idx = self._find_stop_chunk(stop, first_chunk_idx)
+
+        chunks = self._chunks[first_chunk_idx:last_chunk_idx + 1]
+        for chunk in chunks:
+            fwd, rev = chunk.to_coverages()
+            covs_forward.append(fwd)
+            covs_reverse.append(rev)
+        forward = Coverage.join(covs_forward, 0.0)
+        reverse = Coverage.join(covs_reverse, 0.0)
+        # we have to fill with 0.0 if start lesser than the first chunk
+        # or stop is greater than last chunk stop
+        left_fill_fwd = []
+        right_fill_fwd = []
+        fwd_start = start
+        fwd_stop = stop
+        if start < forward.start:
+            left_fill_fwd = [0.0] * (forward.start - start)
+            fwd_start = forward.start
+        if stop > forward.stop:
+            right_fill_fwd = [0.0] * (stop - forward.stop)
+            fwd_stop = forward.stop
+        fwd = left_fill_fwd + forward[fwd_start:fwd_stop + 1] + right_fill_fwd
+
+        left_fill_rev = []
+        right_fill_rev = []
+        rev_start = start
+        rev_stop = stop
+        if start < reverse.start:
+            left_fill_rev = [0.0] * (reverse.start - start)
+            rev_start = reverse.start
+        if stop > reverse.stop:
+            right_fill_rev = [0.0] * (stop - reverse.stop)
+            rev_stop = reverse.stop
+        rev = left_fill_rev + reverse[rev_start:rev_stop + 1] + right_fill_rev
+        return fwd, rev
 
 
 class Genome:
@@ -411,7 +493,8 @@ class Genome:
         if isinstance(chrom, str):
             return chrom in self._chromosomes
         elif not isinstance(chrom, Chromosome):
-            raise TypeError("'in <Genome>' requires string or Chromosome as left operand, not {}".format(type(chrom)))
+            raise TypeError("'in <Genome>' requires string or Chromosome as left operand, not '{}'".format(
+                chrom.__class__.__name__))
         else:
             return chrom.name in self._chromosomes
 
@@ -481,7 +564,7 @@ class WigParser:
                     self._current_chunk.parse_data_line(line)
             # we are at the end of the file
             # so add the last chunk to the others
-            self._current_chrom += self._current_chunk
+            self._current_chrom.add_chunk(self._current_chunk)
         return self._genome
 
 
@@ -497,7 +580,7 @@ class WigParser:
         for attr, val in fields:
             attrs[attr] = val
         if 'type' not in attrs:
-            raise WigException('wiggle type is not present.')
+            raise WigError('wiggle type is not present.')
         else:
             self._genome.infos = attrs
 
@@ -540,7 +623,7 @@ class WigParser:
         :rtype: 
         """
         if self._current_chunk is None:
-            raise WigException("this data line '{}' is not preceded by declaration".format(line))
+            raise WigError("this data line '{}' is not preceded by declaration".format(line))
         return self._current_chunk.parse_data_line(line)
 
 
