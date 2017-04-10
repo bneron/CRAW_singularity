@@ -22,23 +22,20 @@
 #                                                                         #
 ###########################################################################
 
+try:
+    from tests import CRAWTest
+except ImportError as err:
+    msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
+    raise ImportError("Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err))
 
-import sys
+import craw
 
-__version__ = '$VERSION'
+class MyTestCase(CRAWTest):
 
-def get_version_message():
-    """
 
-    :return: A human readable version of the craw package version
-    :rtype: string
-    """
-    # if I keep '$ VERSION' (without space) as is
-    # the setup.py will replace it by the value set in setup
-    # so the test become True even if craw is installed using setup.py
-    if __version__ == '$' + 'VERSION':
-        version = "NOT packaged, it should be a development version"
-    else:
-        version = __version__
-    version_text = "craw {0} | Python {1}.{2}".format(version, sys.version_info.major, sys.version_info.minor)
-    return version_text
+    def test_get_version_message(self):
+        self.assertTrue(craw.get_version_message().startswith(
+            "craw NOT packaged, it should be a development version | Python 3."))
+        craw.__version__ = 1.0
+        self.assertTrue(craw.get_version_message().startswith("craw 1.0 | Python 3."))
+
