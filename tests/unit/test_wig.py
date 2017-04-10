@@ -107,7 +107,7 @@ class TestCoverage(CRAWTest):
         cov1 = Coverage(1, 5, 3)
         cov1[2:4] = [2., 3.]
         cov2 = Coverage(10, 15, 3)
-        cov2[12:14] = [12.,13.]
+        cov2[12:14] = [12., 13.]
         cov = Coverage.join((cov1, cov2))
         expec_cov = [0.] * 17
         expec_cov[1:3] = [2., 3.]
@@ -116,6 +116,7 @@ class TestCoverage(CRAWTest):
         with self.assertRaises(ValueError) as ctx:
             _ = Coverage.join([])
         self.assertEqual(str(ctx.exception), 'No coverage object to join')
+
 
 class TestFixedChunk(CRAWTest):
 
@@ -457,6 +458,23 @@ class TestWigParser(CRAWTest):
         line = 'fixedStep chrom=chr1 start=58951 step=1'
         self.assertFalse(wip_p.is_comment_line(line))
 
+    def test_parse_track_line(self):
+        wip_p = WigParser('toto')
+        line = 'track type=wiggle_0 name=BCMSolidWeCoca48PatientCoverageclean viewLimits=0:1'
+        kwargs = {"chrom": "chr3", "start": "10", "step": "100", "span": "5"}
+        wip_p._genome = Genome()
+        wip_p._current_chunk = FixedChunk(**kwargs)
+        infos = {'type': 'wiggle_0',
+                 'name': 'BCMSolidWeCoca48PatientCoverageclean',
+                 'viewLimits': '0:1'}
+        wip_p.parse_track_line(line)
+        self.assertDictEqual(wip_p._genome.infos, infos)
+
+        wip_p._current_chunk = FixedChunk(**kwargs)
+        line = 'track name=BCMSolidWeCoca48PatientCoverageclean viewLimits=0:1'
+        with self.assertRaises(WigError) as ctx:
+            wip_p.parse_track_line(line)
+        self.assertEqual(str(ctx.exception), 'wiggle type is not present: {}.'.format(line))
 
     def test_parse_data_line(self):
         wip_p = WigParser('toto')
@@ -503,53 +521,98 @@ class TestWigParser(CRAWTest):
 
 
     def test_parse_fixed_wig(self):
-        expected_forward = [0] * 204
+        expected_forward = [0.] * 260
+        expected_reverse = [0.] * 260
         span = 5
-        expected_forward[0: 5] = [1.] * span
-        for i in range(1, 5):
-            pos = (i * 10)
-            expected_forward[pos: pos + span] = [float(i + 1)] * span
+        for i, pos in enumerate(range(0, 50, 10), 1):
+            expected_forward[pos: pos + span] = [float(i)] * span
         for i, pos in enumerate(range(99, 140, 10), 1):
             expected_forward[pos] = float(i)
-        for i , pos in enumerate(range(199, 204), 1):
-            expected_forward[pos] = float(i)
+        for i, pos in enumerate(range(199, 204), 1):
+            expected_reverse[pos] = float(i)
 
         wig_parser = WigParser(os.path.join(self._data_dir, 'wig_fixed.wig'))
         genome = wig_parser.parse()
 
         self.assertTrue('chrI' in genome)
         chrI = genome['chrI']
-        recieved_forward = chrI.forward
-        self.assertListEqual(recieved_forward.coverage, expected_forward)
-        self.assertListEqual(chrI.reverse.get_coverage, [])
+        received_forward, received_reverse = chrI.get_coverage(1, 52)
+        self.assertListEqual(received_forward, expected_forward[0:52])
+        self.assertListEqual(received_reverse, [0.] * 52)
 
+        received_forward, received_reverse = chrI.get_coverage(190, 252)
+        self.assertListEqual(received_forward, expected_forward[189:252])
+        self.assertListEqual(received_reverse, expected_reverse[189:252])
 
     def test_parse_variable_wig(self):
-        expec_chrI_forward = [0, 0, 0, 6., 7., 8., 10., 11.]
-        expec_chrI_reverse = [1., 2., 3., 4., 5.]
+        # chrI position 1->5 on rev 4->8 on fwd
+        expec_chrI_forward = [0., 0., 0., 6., 7., 8., 10., 11., 0., 0.]
+        expec_chrI_reverse = [1., 2., 3., 4., 5., 0., 0., 0., 0., 0.]
 
-        expec_chrII_forward = [0] * 69
-        expec_chrII_forward += [1., 1., 0, 0, 0, 0, 0, 0, 0, 0]
-        expec_chrII_forward += [2., 2., 0, 0, 0, 0, 0, 0, 0, 0]
-        expec_chrII_forward += [3., 3.]
+        expec_chrII_forward = [0.] * 100
+        expec_chrII_reverse = [0.] * 100
+        span = 2
+        expec_chrII_forward[69:11] = [1.] * span
+        expec_chrII_forward[79:21] = [2.] * span
+        expec_chrII_forward[89:91] = [3.] * span
 
-        expec_chrII_reverse = [0] * 9
-        expec_chrII_reverse += [1., 1., 0, 0, 0, 0, 0, 0, 0, 0]
-        expec_chrII_reverse += [2., 2., 0, 0, 0, 0, 0, 0, 0, 0]
-        expec_chrII_reverse += [3., 3., 0, 0, 0, 0, 0, 0, 0, 0]
-        expec_chrII_reverse += [4., 4., 0, 0, 0, 0, 0, 0, 0, 0]
-        expec_chrII_reverse += [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        expec_chrII_reverse += [5., 5.]
+        expec_chrII_reverse[9:11] = [1.] * span
+        expec_chrII_reverse[19:21] = [2.] * span
+        expec_chrII_reverse[29:31] = [3.] * span
+        expec_chrII_reverse[39:41] = [4.] * span
+        expec_chrII_reverse[59:61] = [5.] * span
 
         wig_parser = WigParser(os.path.join(self._data_dir, 'wig_variable.wig'))
         genome = wig_parser.parse()
 
         self.assertTrue('chrI' in genome)
         chrI = genome['chrI']
-        self.assertListEqual(chrI.forward.get_coverage, expec_chrI_forward)
-        self.assertListEqual(chrI.reverse.get_coverage, expec_chrI_reverse)
+        recv_chrI_forward, recv_chrI_reverse = chrI.get_coverage(1, 10)
+        self.assertListEqual(recv_chrI_forward, expec_chrI_forward)
+        self.assertListEqual(recv_chrI_reverse, expec_chrI_reverse)
 
         self.assertTrue('chrII' in genome)
         chrII = genome['chrII']
-        self.assertListEqual(chrII.forward.get_coverage, expec_chrII_forward)
-        self.assertListEqual(chrII.reverse.get_coverage, expec_chrII_reverse)
+        recv_chrII_forward, recv_chrII_reverse = chrII.get_coverage(1, 82)
+        # get coverage start and stop are included, and numbered from 1
+        self.assertListEqual(recv_chrII_forward, expec_chrII_forward[:82])
+        self.assertListEqual(recv_chrII_reverse, expec_chrII_reverse[:82])
+
+    def test_parse(self):
+        wig_p = WigParser(os.path.join(self._data_dir, 'wig_fixed_w_comment.wig'))
+        genome = wig_p.parse()
+        infos = {'type': 'wiggle_0',
+                 'name': "wig de test comment line",
+                 'color': '96,144,246',
+                 'altColor': '96,144,246',
+                 'autoScale': 'on',
+                 'graphType': 'bar'}
+        self.assertDictEqual(genome.infos, infos)
+        ch_name = 'chrI'
+        ch = Chromosome(ch_name)
+        genome.add(ch)
+        kwargs = {"chrom": ch_name, "start": "1", "step": "10", "span": "5"}
+        fx_ck1 = FixedChunk(**kwargs)
+        lines = ("1", "2", "3", "4", "5")
+        for l in lines:
+            fx_ck1.parse_data_line(l)
+        ch.add_chunk(fx_ck1)
+        kwargs = {"chrom": ch_name, "start": "100", "step": "10"}
+        fx_ck2 = FixedChunk(**kwargs)
+        lines = ("1", "2", "3", "4", "5")
+        for l in lines:
+            fx_ck2.parse_data_line(l)
+        ch.add_chunk(fx_ck2)
+        kwargs = {"chrom": ch_name, "start": "200"}
+        fx_ck3 = FixedChunk(**kwargs)
+        lines = ("-1", "-2", "-3", "-4", "-5")
+        for l in lines:
+            fx_ck3.parse_data_line(l)
+        ch.add_chunk(fx_ck3)
+
+        self.assertTrue('chrI' in genome)
+        chrI = genome['chrI']
+        self.assertEqual(len(chrI._chunks), 3)
+        self.assertEqual(chrI._chunks[0], fx_ck1)
+        self.assertEqual(chrI._chunks[1], fx_ck2)
+        self.assertEqual(chrI._chunks[2], fx_ck3)

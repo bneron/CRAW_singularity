@@ -456,7 +456,6 @@ class Chromosome:
             right_fill_fwd = [0.0] * (stop - forward.stop)
             fwd_stop = forward.stop
         fwd = left_fill_fwd + forward[fwd_start:fwd_stop + 1] + right_fill_fwd
-
         left_fill_rev = []
         right_fill_rev = []
         rev_start = start
@@ -578,9 +577,9 @@ class WigParser:
         fields = re.findall("""(\w+)=(".+?"|'.+?'|\S+)""", line)
         attrs = {}
         for attr, val in fields:
-            attrs[attr] = val
+            attrs[attr] = val.strip("'").strip('"')
         if 'type' not in attrs:
-            raise WigError('wiggle type is not present.')
+            raise WigError('wiggle type is not present: {}.'.format(line))
         else:
             self._genome.infos = attrs
 
