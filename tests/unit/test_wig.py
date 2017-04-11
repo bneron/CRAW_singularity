@@ -418,6 +418,16 @@ class TestGenome(CRAWTest):
         self.assertEqual(str(ctx.exception), "Genome can contains only Chromosome objects")
 
 
+    def test_del(self):
+        genome = Genome()
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
+        genome.add(ch)
+        self.assertEqual(ch, genome[ch_name])
+        del genome[ch_name]
+        self.assertFalse(ch_name in genome)
+
+
     def test_membership(self):
         genome = Genome()
         ch_name = 'ChrII'
@@ -429,6 +439,13 @@ class TestGenome(CRAWTest):
         with self.assertRaises(TypeError) as ctx:
             3 in genome
         self.assertEqual(str(ctx.exception), "'in <Genome>' requires string or Chromosome as left operand, not 'int'")
+
+    def test_chromosomes(self):
+        genome = Genome()
+        chromosomes = [Chromosome('chrI'), Chromosome('chrII')]
+        for ch in chromosomes:
+            genome.add(ch)
+        self.assertSetEqual(set(chromosomes), set(genome.chromosomes))
 
 
 class TestWigParser(CRAWTest):

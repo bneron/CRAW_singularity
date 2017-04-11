@@ -497,6 +497,27 @@ class Genome:
         else:
             return chrom.name in self._chromosomes
 
+
+    def __delitem__(self, name):
+        """
+        remove a chromosome from this genome
+        
+        :param name: the name of the chromosome to remove 
+        :type name: string
+        :return: None
+        
+        """
+        if name in self._chromosomes:
+            del self._chromosomes[name]
+        else:
+            raise KeyError("The chromosome '{}' is not in this genome.".format(name))
+
+
+    @property
+    def chromosomes(self):
+        return list(self._chromosomes.values())
+
+
     def add(self, chrom):
         """
         add a chromosome in to a genome.
