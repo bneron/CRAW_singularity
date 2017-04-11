@@ -440,6 +440,7 @@ class TestGenome(CRAWTest):
             3 in genome
         self.assertEqual(str(ctx.exception), "'in <Genome>' requires string or Chromosome as left operand, not 'int'")
 
+
     def test_chromosomes(self):
         genome = Genome()
         chromosomes = [Chromosome('chrI'), Chromosome('chrII')]
