@@ -411,31 +411,38 @@ class Chromosome:
                     previous_idx = idx
 
 
-    def get_coverage(self, start, stop):
+    def get_coverage(self, start_0_based, stop_0_based):
         """
-        :param start: the start of the region (included)
+        To mimic the api of :meth:`pysam.calignmentfile.AlignmentFile.count_coverage`
+        The position are 0-based and the stop position is excluded
+        Which is different from other wig object which are 1-based position.
+        
+        :param start: the start of the region (0 based position, included)
         :type start: int
-        :param stop: the end of the region (included)
+        :param stop: the end of the region (0 based position, excluded)
         :type stop: int
         :return: the coverage corresponding to this region on the both strands.
         :rtype: tuple of 2 lists of floats)
         """
         covs_forward = []
         covs_reverse = []
+        # get_coverage is 0 based position like pysam
+        # but wig file and Chunks are 1 based position
+        start_1_based = start_0_based + 1
+        stop_1_based = stop_0_based + 1
         first_chunk_start = self._chunks[0].start
         last_chunk_stop = self._chunks[-1].stop
-        if start < first_chunk_start and stop < first_chunk_start:
-            cov = [0.] * (stop - start + 1)
+        if start_1_based < first_chunk_start and stop_1_based < first_chunk_start:
+            cov = [0.] * (stop_1_based - start_1_based)
             return cov, cov[:]
-        elif start > last_chunk_stop:
+        elif start_1_based > last_chunk_stop:
             # then stop also
-            cov = [0.] * (stop - start + 1)
+            cov = [0.] * (stop_1_based - start_1_based)
             return cov, cov[:]
 
         # at least start or stop are in in chunks
-        first_chunk_idx = self._find_start_chunk(start)
-        last_chunk_idx = self._find_stop_chunk(stop, first_chunk_idx)
-
+        first_chunk_idx = self._find_start_chunk(start_1_based)
+        last_chunk_idx = self._find_stop_chunk(stop_1_based, first_chunk_idx)
         chunks = self._chunks[first_chunk_idx:last_chunk_idx + 1]
         for chunk in chunks:
             fwd, rev = chunk.to_coverages()
@@ -447,26 +454,28 @@ class Chromosome:
         # or stop is greater than last chunk stop
         left_fill_fwd = []
         right_fill_fwd = []
-        fwd_start = start
-        fwd_stop = stop
-        if start < forward.start:
-            left_fill_fwd = [0.0] * (forward.start - start)
+        fwd_start = start_1_based
+        fwd_stop = stop_1_based
+        if start_1_based < forward.start:
+            left_fill_fwd = [0.0] * (forward.start - start_1_based)
             fwd_start = forward.start
-        if stop > forward.stop:
-            right_fill_fwd = [0.0] * (stop - forward.stop)
-            fwd_stop = forward.stop
-        fwd = left_fill_fwd + forward[fwd_start:fwd_stop + 1] + right_fill_fwd
+        if stop_1_based > forward.stop:
+            # the stop is beyond last position coverage so we need to included the chunk last position.
+            right_fill_fwd = [0.0] * (stop_1_based - forward.stop - 1)
+            fwd_stop = forward.stop + 1
+        fwd = left_fill_fwd + forward[fwd_start:fwd_stop] + right_fill_fwd
         left_fill_rev = []
         right_fill_rev = []
-        rev_start = start
-        rev_stop = stop
-        if start < reverse.start:
-            left_fill_rev = [0.0] * (reverse.start - start)
+        rev_start = start_1_based
+        rev_stop = stop_1_based
+        if start_1_based < reverse.start:
+            left_fill_rev = [0.0] * (reverse.start - start_1_based)
             rev_start = reverse.start
-        if stop > reverse.stop:
-            right_fill_rev = [0.0] * (stop - reverse.stop)
-            rev_stop = reverse.stop
-        rev = left_fill_rev + reverse[rev_start:rev_stop + 1] + right_fill_rev
+        if stop_1_based > reverse.stop:
+            # the stop is beyond last position coverage so we need to included the chunk last position.
+            right_fill_rev = [0.0] * (stop_1_based - reverse.stop - 1)
+            rev_stop = reverse.stop + 1
+        rev = left_fill_rev + reverse[rev_start:rev_stop] + right_fill_rev
         return fwd, rev
 
 
