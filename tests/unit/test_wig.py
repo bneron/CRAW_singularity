@@ -344,58 +344,58 @@ class TestChromosome(CRAWTest):
         ch.add_chunk(var_ck)
 
         fwd = [0.] * 50
-        fwd[10:10 + 3] = [11.] * 3
-        fwd[20:20 + 3] = [22.] * 3
-        fwd[30:30 + 3] = [33.] * 3
-        fwd[40:40 + 2] = [11.] * 2
-        fwd[42:42 + 2] = [22.] * 2
+        fwd[9:9 + 3] = [11.] * 3
+        fwd[19:19 + 3] = [22.] * 3
+        fwd[29:29 + 3] = [33.] * 3
+        fwd[39:39 + 2] = [11.] * 2
+        fwd[41:41 + 2] = [22.] * 2
 
         rev = [0.] * 50
-        rev[40:40 + 2] = [30.] * 2
-        rev[42:42 + 2] = [50.] * 2
+        rev[39:39 + 2] = [30.] * 2
+        rev[41:41 + 2] = [50.] * 2
 
         # start and stop are in first chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(10, 20)
-        self.assertEqual(recv_fwd_cov, fwd[10:21])
-        self.assertEqual(recv_rev_cov, rev[10:21])
+        recv_fwd_cov, recv_rev_cov = ch.get_coverage(9, 20)
+        self.assertEqual(recv_fwd_cov, fwd[9:20])
+        self.assertEqual(recv_rev_cov, rev[9:20])
 
         # start is before chunk start stop in first chunk
         recv_fwd_cov, recv_rev_cov = ch.get_coverage(1, 20)
-        self.assertEqual(recv_fwd_cov, fwd[1:21])
-        self.assertEqual(recv_rev_cov, rev[1:21])
+        self.assertEqual(recv_fwd_cov, fwd[1:20])
+        self.assertEqual(recv_rev_cov, rev[1:20])
 
         # start and stop are in 2nd chunk
         recv_fwd_cov, recv_rev_cov = ch.get_coverage(40, 42)
-        self.assertEqual(recv_fwd_cov, fwd[40:43])
-        self.assertEqual(recv_rev_cov, rev[40:43])
+        self.assertEqual(recv_fwd_cov, fwd[40:42])
+        self.assertEqual(recv_rev_cov, rev[40:42])
 
-        # stop is beyond in 2nd chunk stop
+        # stop is beyond the 2nd chunk stop
         recv_fwd_cov, recv_rev_cov = ch.get_coverage(40, 45)
-        self.assertEqual(recv_fwd_cov, fwd[40:46])
-        self.assertEqual(recv_rev_cov, rev[40:46])
+        self.assertEqual(recv_fwd_cov, fwd[40:45])
+        self.assertEqual(recv_rev_cov, rev[40:45])
 
-        # start is in first chunk stop is in 2nd chunk
+        # start is in first chunk, stop is in 2nd chunk
         recv_fwd_cov, recv_rev_cov = ch.get_coverage(11, 42)
-        self.assertEqual(recv_fwd_cov, fwd[11:43])
-        self.assertEqual(recv_rev_cov, rev[11:43])
+        self.assertEqual(recv_fwd_cov, fwd[11:42])
+        self.assertEqual(recv_rev_cov, rev[11:42])
 
         # start is before first chunk stop is beyond 2nd chunk
         recv_fwd_cov, recv_rev_cov = ch.get_coverage(1, 45)
-        self.assertEqual(recv_fwd_cov, fwd[1:46])
-        self.assertEqual(recv_rev_cov, rev[1:46])
+        self.assertEqual(recv_fwd_cov, fwd[1:45])
+        self.assertEqual(recv_rev_cov, rev[1:45])
 
-        # start is between first chunk stop is in 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(35, 42)
-        self.assertEqual(recv_fwd_cov, fwd[35:43])
-        self.assertEqual(recv_rev_cov, rev[35:43])
+        # start is between first and 2nd chunk, stop is in 2nd chunk
+        recv_fwd_cov, recv_rev_cov = ch.get_coverage(34, 42)
+        self.assertEqual(recv_fwd_cov, fwd[34:42])
+        self.assertEqual(recv_rev_cov, rev[34:42])
 
         # start and stop are beyond last chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(50, 52)
+        recv_fwd_cov, recv_rev_cov = ch.get_coverage(50, 53)
         self.assertEqual(recv_fwd_cov, [0.] * 3)
         self.assertEqual(recv_rev_cov, [0.] * 3)
 
         # start and stop are before first chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(1, 3)
+        recv_fwd_cov, recv_rev_cov = ch.get_coverage(0, 3)
         self.assertEqual(recv_fwd_cov, [0.] * 3)
         self.assertEqual(recv_rev_cov, [0.] * 3)
 
@@ -553,13 +553,13 @@ class TestWigParser(CRAWTest):
 
         self.assertTrue('chrI' in genome)
         chrI = genome['chrI']
-        received_forward, received_reverse = chrI.get_coverage(1, 52)
+        received_forward, received_reverse = chrI.get_coverage(0, 52)
         self.assertListEqual(received_forward, expected_forward[0:52])
         self.assertListEqual(received_reverse, [0.] * 52)
 
         received_forward, received_reverse = chrI.get_coverage(190, 252)
-        self.assertListEqual(received_forward, expected_forward[189:252])
-        self.assertListEqual(received_reverse, expected_reverse[189:252])
+        self.assertListEqual(received_forward, expected_forward[190:252])
+        self.assertListEqual(received_reverse, expected_reverse[190:252])
 
     def test_parse_variable_wig(self):
         # chrI position 1->5 on rev 4->8 on fwd
@@ -584,13 +584,13 @@ class TestWigParser(CRAWTest):
 
         self.assertTrue('chrI' in genome)
         chrI = genome['chrI']
-        recv_chrI_forward, recv_chrI_reverse = chrI.get_coverage(1, 10)
+        recv_chrI_forward, recv_chrI_reverse = chrI.get_coverage(0, 10)
         self.assertListEqual(recv_chrI_forward, expec_chrI_forward)
         self.assertListEqual(recv_chrI_reverse, expec_chrI_reverse)
 
         self.assertTrue('chrII' in genome)
         chrII = genome['chrII']
-        recv_chrII_forward, recv_chrII_reverse = chrII.get_coverage(1, 82)
+        recv_chrII_forward, recv_chrII_reverse = chrII.get_coverage(0, 82)
         # get coverage start and stop are included, and numbered from 1
         self.assertListEqual(recv_chrII_forward, expec_chrII_forward[:82])
         self.assertListEqual(recv_chrII_reverse, expec_chrII_reverse[:82])
