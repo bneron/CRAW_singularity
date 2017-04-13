@@ -27,6 +27,8 @@ import collections
 from abc import ABCMeta, abstractmethod
 import logging
 
+import numpy as np
+
 
 root_logger = logging.getLogger()
 handler = logging.StreamHandler()
@@ -57,13 +59,15 @@ class Coverage:
         :param stop: stop position of the chunk (1 based position)
         :param span: length of span
         """
+
+        print("Coverage creating coverage of {} len".format(stop + span - start))
         self._start = start
         # be careful the last position count in the span
-        self._coverage = [default_cov] * (stop + span - start)
+        self._coverage = np.array([default_cov] * (stop + span - start))
         self._stop = stop + span - 1
 
     def __len__(self):
-        return len(self.coverage)
+        return len(self._coverage)
 
     def __eq__(self, other):
         return self._start == other.start and \
@@ -154,7 +158,7 @@ class Coverage:
         :return: a copy of the coverage values in a list
         :rtype: list of float
         """
-        return self._coverage[:]
+        return self._coverage.copy()
 
     @staticmethod
     def join(coverages, glue=0.0):
@@ -169,8 +173,11 @@ class Coverage:
         :rtype: :class:`Coverage` object.
         :raise ValueError: if coverages is empty.
         """
+        print("Coverage join", coverages)
         if not coverages:
             raise ValueError("No coverage object to join")
+        elif len(coverages) == 1:
+            return coverages[0]
         start = min([c.start for c in coverages])
         stop = max([c.stop for c in coverages])
         joined_cov = Coverage(start, stop, 1, default_cov=glue)
@@ -236,6 +243,7 @@ class Chunk(metaclass=ABCMeta):
         :return: The coverage for the forward and reverse (in this order) for this chunk.
         :rtype: tuple (:class:`Coverage`, :class:`Coverage`)
         """
+        print("Chunk.to_coverages")
         coverages = {}
         for sense in ('forward', 'reverse'):
             # the chunk stop take already the span in account
@@ -315,7 +323,7 @@ class VariableChunk(Chunk):
 
     @property
     def stop(self):
-        return max(self.forward[-1][0], self.reverse[-1][0]) + self.span - 1
+        return self.forward[-1][0] + self.span - 1
 
     def is_fixed_step(self):
         """
@@ -351,64 +359,7 @@ class Chromosome:
 
     def __init__(self, name):
         self.name = name
-        self._chunks = []
-
-
-    def add_chunk(self, chunk):
-        """
-        
-        :param chunk: 
-        :return: 
-        """
-        self._chunks.append(chunk)
-
-
-    def _find_start_chunk(self, start):
-        first_chunk_start = self._chunks[0].start
-        last_chunk_stop = self._chunks[-1].stop
-
-        if start < first_chunk_start:
-            return 0
-        if start > last_chunk_stop:
-            return None
-        else:
-            previous_idx = None
-            for idx, chk in enumerate(self._chunks):
-                if chk.start <= start <= chk.stop:
-                    return idx
-                elif start < chk.start:
-                    # this case cannot happen at the first loop
-                    # because I test tart < first_chunk_start
-                    # at the beginning of the method
-                    # the previous_dx is defined
-                    return previous_idx
-                else:
-                    # start > chunk.start => test next chunk
-                    previous_idx = idx
-            # we are sure to find a chunk
-            # because we first test that start <= last_chunk_stop
-
-
-    def _find_stop_chunk(self, stop, start_idx):
-        first_chunk_start = self._chunks[start_idx].start
-        last_chunk_stop = self._chunks[-1].stop
-
-        if stop > last_chunk_stop:
-            return len(self._chunks) - 1
-        if stop < first_chunk_start:
-            return start_idx
-        else:
-            previous_idx = None
-            for idx, chk in enumerate(self._chunks[start_idx:], start_idx):
-                # stop is necessarily greater than start
-                # so don't search stop search from the beginning
-                if chk.start <= stop <= chk.stop:
-                    return idx
-                elif stop < chk.stop:
-                    return previous_idx
-                else:
-                    # stop < cov.stop
-                    previous_idx = idx
+        self._coverage = np.full((2, 1000000), np.nan)
 
 
     def get_coverage(self, start_0_based, stop_0_based):
@@ -424,59 +375,51 @@ class Chromosome:
         :return: the coverage corresponding to this region on the both strands.
         :rtype: tuple of 2 lists of floats)
         """
-        covs_forward = []
-        covs_reverse = []
-        # get_coverage is 0 based position like pysam
-        # but wig file and Chunks are 1 based position
-        start_1_based = start_0_based + 1
-        stop_1_based = stop_0_based + 1
-        first_chunk_start = self._chunks[0].start
-        last_chunk_stop = self._chunks[-1].stop
-        if start_1_based < first_chunk_start and stop_1_based < first_chunk_start:
-            cov = [0.] * (stop_1_based - start_1_based)
-            return cov, cov[:]
-        elif start_1_based > last_chunk_stop:
-            # then stop also
-            cov = [0.] * (stop_1_based - start_1_based)
-            return cov, cov[:]
+        return
 
-        # at least start or stop are in in chunks
-        first_chunk_idx = self._find_start_chunk(start_1_based)
-        last_chunk_idx = self._find_stop_chunk(stop_1_based, first_chunk_idx)
-        chunks = self._chunks[first_chunk_idx:last_chunk_idx + 1]
-        for chunk in chunks:
-            fwd, rev = chunk.to_coverages()
-            covs_forward.append(fwd)
-            covs_reverse.append(rev)
-        forward = Coverage.join(covs_forward, 0.0)
-        reverse = Coverage.join(covs_reverse, 0.0)
-        # we have to fill with 0.0 if start lesser than the first chunk
-        # or stop is greater than last chunk stop
-        left_fill_fwd = []
-        right_fill_fwd = []
-        fwd_start = start_1_based
-        fwd_stop = stop_1_based
-        if start_1_based < forward.start:
-            left_fill_fwd = [0.0] * (forward.start - start_1_based)
-            fwd_start = forward.start
-        if stop_1_based > forward.stop:
-            # the stop is beyond last position coverage so we need to included the chunk last position.
-            right_fill_fwd = [0.0] * (stop_1_based - forward.stop - 1)
-            fwd_stop = forward.stop + 1
-        fwd = left_fill_fwd + forward[fwd_start:fwd_stop] + right_fill_fwd
-        left_fill_rev = []
-        right_fill_rev = []
-        rev_start = start_1_based
-        rev_stop = stop_1_based
-        if start_1_based < reverse.start:
-            left_fill_rev = [0.0] * (reverse.start - start_1_based)
-            rev_start = reverse.start
-        if stop_1_based > reverse.stop:
-            # the stop is beyond last position coverage so we need to included the chunk last position.
-            right_fill_rev = [0.0] * (stop_1_based - reverse.stop - 1)
-            rev_stop = reverse.stop + 1
-        rev = left_fill_rev + reverse[rev_start:rev_stop] + right_fill_rev
-        return fwd, rev
+
+    def __setitem__(self, pos, value):
+        """
+
+        :param pos: the postion (0-based) to set value
+        :type pos: int or :class:`slice` object
+        :param value: value to assign
+        :type value: float or iterable of float
+        :raise ValueError: when pos is a slice and value have not the same length of the slice
+        :raise TypeError: when pos is a slice and value is not iterable
+        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
+        """
+        strand = 0 if value <= 0 else 1
+
+        if isinstance(pos, slice):
+            if isinstance(value, collections.Iterable):
+                if (pos.stop - pos.start) != len(value):
+                    raise ValueError("can assign only iterable of same length of the slice")
+            else:
+                raise TypeError('can only assign an iterable')
+
+        while pos > self.coverage.shape[1]:
+            self._extend()
+        self._coverage[strand, pos] = value
+
+
+    def __getitem__(self, pos):
+        """
+
+        :param pos: a position (0-based) or a slice
+        if pos is a slice the left indice is excluded
+        :return: the coverage at this position or corresponding to this slice.
+        :rtype: a float o list of float
+        :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
+        """
+        return self._coverage[0:pos], self._coverage[1:pos]
+
+
+    def _extend(self, size=1000000, fill=np.nan):
+        chunk = np.full((2, size), fill_value=fill)
+        np.hstack(self._coverage, chunk)
+
+
 
 
 class Genome:
@@ -541,6 +484,8 @@ class Genome:
         self._chromosomes[chrom.name] = chrom
 
 
+
+
 class WigParser:
     """
     class to parse file in wig format.
@@ -594,6 +539,8 @@ class WigParser:
             # we are at the end of the file
             # so add the last chunk to the others
             self._current_chrom.add_chunk(self._current_chunk)
+        print("start compute coverage")
+        self._genome.compute_coverage()
         return self._genome
 
 
