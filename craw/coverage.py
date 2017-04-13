@@ -22,8 +22,62 @@
 #                                                                         #
 ###########################################################################
 
+import logging
 
-def get_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, max_left=0, max_right=0):
+from pysam.calignmentfile import AlignmentFile
+from .wig import Genome
+
+_log = logging.getLogger(__name__)
+_log.setLevel(logging.NOTSET)
+
+
+def get_coverage_function(input):
+    """
+
+    :param input: the input either a samfile (see pysam library) or a genome build from a wig file (see wig module)
+    :type input: :class:`wig.Genome` or :class:`pysam.calignmentfile.AlignmentFile` object
+    :return: get_wig_coverage or get_bam_coverage according the type of input
+    :rtype: function
+    :raise RuntimeError: when input is not instance of :class:`pysam.calignmentfile.AlignmentFile` or :class:`wig.Genome`
+    """
+    if isinstance(input, AlignmentFile):
+        return get_bam_coverage
+    elif isinstance(input, Genome):
+        return get_wig_coverage
+    else:
+        raise RuntimeError("get_coverage support only 'wig.Genome' or "
+                           "'pysam.calignmentfile.AlignmentFile' as Input, not {}".format(input.__class__.__name__))
+
+
+
+def get_wig_coverage(genome, annot_entry, start=None, stop=None, max_left=0, max_right=0, qual_thr=None):
+    """
+    
+    :param annot_entry: an entry of the annotation file
+    :type annot_entry: :class:`annotation.Entry` object
+    :param start: The position to start to compute the coverage(coordinates are 0-based, start position is included).
+    :type start: int
+    :param stop: The position to start to compute the coverage (coordinates are 0-based, stop position is excluded).
+    :type stop: int
+    :param max_left: The highest number of base before the reference position to take in account.
+    :type max_left: int
+    :param max_right: The highest number of base after  the reference position to take in account.
+    :type max_right: int
+    :param qual_thr: this parameter is not used, It's here to have the same api as get_bam_coverage. 
+    :type qual_thr: None
+    :return: the coverage (all bases)
+    :rtype: tuple of 2 list containing int
+    """
+    chromosome = genome[annot_entry.chromosome]
+    forward_cov, reverse_cov = chromosome.get_coverage(start, stop)
+    pad_left = [None] * (max_left - (annot_entry.ref - start))
+    pad_right = [None] * (max_right - (stop - annot_entry.ref))
+    forward_cov = pad_left + forward_cov + pad_right
+    reverse_cov = pad_left + reverse_cov + pad_right
+    return forward_cov, reverse_cov
+
+
+def get_bam_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, max_left=0, max_right=0):
     """
     Compute the coverage for a region position by position on each strand
 
