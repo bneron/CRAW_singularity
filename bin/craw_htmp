@@ -154,7 +154,7 @@ def get_version_message():
     import pandas as pd
     import matplotlib as mtp
     import PIL
-    version_text = craw._get_version_message()
+    version_text = craw.get_version_message()
     version_text += """
 Using:
    - numpy {np_ver}

@@ -85,7 +85,7 @@ def quality_checker(value):
 
 
 def get_version_message():
-    version_text = craw._get_version_message()
+    version_text = craw.get_version_message()
     version_text += "\nUsing: pysam {} (samtools {})".format(pysam.__version__, pysam.__samtools_version__)
     return version_text
 

@@ -42,6 +42,7 @@ reference API
 
    craw
    annotation
+   wig
    coverage
    heatmap
    argparse_util

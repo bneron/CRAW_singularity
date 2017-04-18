@@ -23,6 +23,7 @@ coverage:
     - cd ${CI_PROJECT_DIR}
     - coverage run --source=craw tests/run_tests.py --unit
     - coverage html
+    - coverage report
   except:
     - /^feat.*$/
     - /^fix.*$/

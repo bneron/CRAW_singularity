@@ -1,0 +1,21 @@
+track type=wiggle_0 name="WT Expo  normalized" color=96,144,246 altColor=96,144,246 autoScale=on  graphType=bar
+variableStep chrom=chrI span=1
+1      -1.0000
+2      -2.0000
+3      -3.0000
+4      -4.0000
+5      -5.0000
+4       6
+5       7
+6       8
+7       10
+8       11
+variableStep chrom=chrII span=2
+10     -1
+20     -2
+30     -3
+40     -4
+60     -5
+70      1
+80      2
+90      3

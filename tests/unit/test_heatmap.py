@@ -24,6 +24,7 @@
 
 
 import os
+import logging
 import pandas as pd
 
 from pandas.util.testing import assert_frame_equal
@@ -38,6 +39,10 @@ import craw.heatmap as htmp
 
 
 class TestHeatmap(CRAWTest):
+
+    @classmethod
+    def setUpClass(cls):
+        htmp._log.setLevel(logging.ERROR)
 
 
     def test_get_data(self):

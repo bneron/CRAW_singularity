@@ -77,6 +77,13 @@ class TestEntry(CRAWTest):
                          "You must specify the '--ref-col' option")
 
         ref_col = 'Position'
+        strand_col = 'foo'
+        with self.assertRaises(RuntimeError) as ctx:
+            ne_class = new_entry_type(name, fields, ref_col, strand_col=strand_col)
+        self.assertEqual(str(ctx.exception),
+                         "The strand_col 'foo' does not match any fields: 'beg, end, name, gene, chromosome, strand, Position'")
+
+        ref_col = 'Position'
         chr_col = 'foo'
         with self.assertRaises(RuntimeError) as ctx:
             ne_class = new_entry_type(name, fields, ref_col, chr_col=chr_col)
@@ -126,6 +133,18 @@ class TestEntry(CRAWTest):
         values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
         ne = ne_class([str(v) for v in values])
         self.assertListEqual(values, ne._values)
+
+        # test stop > start on forward strand
+        values = [15000, 14000, 'YEL072W', 'RMD6', 'chrV', '+', 14415]
+        with self.assertRaises(RuntimeError) as ctx:
+            ne = ne_class([str(v) for v in values])
+        self.assertEqual(str(ctx.exception),
+                         "error in line '15000\t14000\tYEL072W\tRMD6\tchrV\t+\t14415': beg:15000 > end: 14000on forward strand")
+
+        # test switch of start, stop for reverse strand
+        values = [15000, 14000, 'YEL072W', 'RMD6', 'chrV', '-', 14415]
+        ne = ne_class([str(v) for v in values])
+        self.assertListEqual([14000, 15000, 'YEL072W', 'RMD6', 'chrV', '-', 14415], ne._values)
 
         with self.assertRaises(RuntimeError) as ctx:
             values = [14000, 15000, 'YEL072W', 'RMD6', 'chrV', '=', 14415]
