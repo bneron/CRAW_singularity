@@ -2,7 +2,7 @@ stages:
   - test
   - coverage
   - release
-  
+
 variables:
   CRAW_HOME: ${CI_PROJECT_DIR}
   CRAW_VERSION: ${CI_COMMIT_REF_NAME}
