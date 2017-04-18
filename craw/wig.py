@@ -223,8 +223,7 @@ class Chromosome:
             else:
                 strand = 0
             last_pos = pos
-
-        while last_pos > self._coverage.shape[1]:
+        while last_pos >= self._coverage.shape[1]:
             self._extend(size=self._coverage.shape[1])
         self._coverage[strand, pos] = value
 
