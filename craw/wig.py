@@ -323,7 +323,7 @@ class WigParser:
         """
         self.declaration_type_pattern = re.compile('fixedStep|variableStep')
         self.trackline_pattern = re.compile("""(\w+)=(".+?"|'.+?'|\S+)""")
-        self.data_line_pattern = re.compile('^\d+\s-?\d+(\.\d+)?$')
+        self.data_line_pattern = re.compile('^-?\d+(\s+-?\d+(\.\d+)?)?$')
         self._path = path
         self._genome = None
         self._current_chunk = None
