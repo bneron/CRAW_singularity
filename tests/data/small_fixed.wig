@@ -1,0 +1,8 @@
+track type=wiggle_0 name="wig de test fixedStep" color=96,144,246 altColor=96,144,246 autoScale=on  graphType=bar
+fixedStep chrom=chrV start=1 step=5 span=5
+0
+0
+150
+100
+5
+
