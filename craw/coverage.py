@@ -68,12 +68,22 @@ def get_wig_coverage(genome, annot_entry, start=None, stop=None, max_left=0, max
     :return: the coverage (all bases)
     :rtype: tuple of 2 list containing int
     """
+    real_start = start
+    pad_neg_start = []
+    if start < 0:
+        # if start is negative
+        # when start is compute from large window and reads map at the beginning of the reference
+        # pysam crash see issue #10
+        # so we ask coverage from 0 and pad with None value for negative positions
+        start = 0
+        pad_neg_start = [None] * abs(real_start)
+
     chromosome = genome[annot_entry.chromosome]
-    forward_cov, reverse_cov = chromosome.get_coverage(start, stop)
+    forward_cov, reverse_cov = chromosome[start:stop]
     pad_left = [None] * (max_left - (annot_entry.ref - start))
     pad_right = [None] * (max_right - (stop - annot_entry.ref))
-    forward_cov = pad_left + forward_cov + pad_right
-    reverse_cov = pad_left + reverse_cov + pad_right
+    forward_cov = pad_neg_start + pad_left + forward_cov + pad_right
+    reverse_cov = pad_neg_start + pad_left + reverse_cov + pad_right
     return forward_cov, reverse_cov
 
 
