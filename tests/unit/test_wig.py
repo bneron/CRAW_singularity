@@ -24,98 +24,17 @@
 import os
 import logging
 
+import numpy as np
+
 try:
     from tests import CRAWTest
 except ImportError as err:
     msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
     raise ImportError("Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err))
 
-from craw.wig import WigError, Coverage, FixedChunk, VariableChunk, Chromosome, Genome, WigParser, _log
+from craw.wig import WigError, FixedChunk, VariableChunk, Chromosome, Genome, WigParser, _log
 
 
-class TestCoverage(CRAWTest):
-
-    def test_coverage_init(self):
-        cov = Coverage(1, 5, 3)
-        self.assertListEqual(cov.coverage, [0.] * 7)
-        cov = Coverage(1, 5, 1)
-        self.assertListEqual(cov.coverage, [0.] * 5)
-
-    def test_len(self):
-        cov = Coverage(1, 5, 3)
-        self.assertEqual(len(cov), 7)
-
-    def test_stop(self):
-        cov = Coverage(1, 5, 3)
-        self.assertEqual(cov.stop, 7)
-
-    def test_start(self):
-        cov = Coverage(1, 5, 3)
-        self.assertEqual(cov.start, 1)
-
-    def test_eq(self):
-        cov1 = Coverage(1, 5, 3)
-        cov2 = Coverage(1, 5, 3)
-        self.assertEqual(cov1, cov2)
-
-    def test_setitem(self):
-        cov = Coverage(1, 5, 3)
-        pos = 2
-        value = 3.0
-        cov[pos] = value
-        expect_cov = [0.] * 7
-        expect_cov[pos - 1] = 3.0
-        self.assertEqual(cov.coverage, expect_cov)
-        cov = Coverage(1, 5, 3)
-        cov[pos:pos + 3] = [3.] * 3
-        expect_cov = [0.] * 7
-        expect_cov[pos - 1: pos + 2] = [3.0, 3.0, 3.0]
-        self.assertEqual(cov.coverage, expect_cov)
-
-        with self.assertRaises(TypeError) as ctx:
-            cov[cov.start:cov.stop] = 3.0
-        self.assertEqual(str(ctx.exception), 'can only assign an iterable')
-
-        with self.assertRaises(ValueError) as ctx:
-            cov[cov.start:cov.stop] = (3.0, 2.0)
-        self.assertEqual(str(ctx.exception), 'can assign only iterable of same length of the slice')
-        with self.assertRaises(IndexError) as ctx:
-            cov[cov.stop + 1] = 3.0
-        self.assertEqual(str(ctx.exception), 'Coverage assignment position 8 out of range[1:7]')
-
-    def test_getitem(self):
-        cov = Coverage(1, 5, 3)
-        pos = 2
-        value = 3.0
-        cov[pos] = value
-        self.assertEqual(cov[pos], value)
-        self.assertEqual(cov[pos - 1:pos + 2], [0.0, value, 0.0])
-        with self.assertRaises(IndexError) as ctx:
-            _ = cov[cov.stop + 2]
-        self.assertEqual(str(ctx.exception), 'Coverage  position 9 out of range[1:7]')
-        with self.assertRaises(IndexError) as ctx:
-            _ = cov[cov.start:cov.stop + 2]
-        self.assertEqual(str(ctx.exception), 'Coverage  position [1:9] out of range [1:7]')
-
-    def test_str(self):
-        cov = Coverage(1, 5, 3)
-        expec_str = """start= 1; stop= 7
-[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"""
-        self.assertEqual(str(cov), expec_str)
-
-    def test_join(self):
-        cov1 = Coverage(1, 5, 3)
-        cov1[2:4] = [2., 3.]
-        cov2 = Coverage(10, 15, 3)
-        cov2[12:14] = [12., 13.]
-        cov = Coverage.join((cov1, cov2))
-        expec_cov = [0.] * 17
-        expec_cov[1:3] = [2., 3.]
-        expec_cov[11:13] = [12., 13.]
-        self.assertEqual(cov.coverage, expec_cov)
-        with self.assertRaises(ValueError) as ctx:
-            _ = Coverage.join([])
-        self.assertEqual(str(ctx.exception), 'No coverage object to join')
 
 
 class TestFixedChunk(CRAWTest):
@@ -124,13 +43,6 @@ class TestFixedChunk(CRAWTest):
     def setUpClass(cls):
         _log.setLevel(logging.ERROR)
 
-    def test_stop(self):
-        lines = ("11", "22", "30", "50")
-        kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
-        fx_ch = FixedChunk(**kwargs)
-        for l in lines:
-            fx_ch.parse_data_line(l)
-        self.assertEqual(fx_ch.stop, 41)
 
     def test_fixed_step(self):
         kwargs = {"chrom": "chr3", "start": "400601"}
@@ -187,52 +99,40 @@ class TestFixedChunk(CRAWTest):
         lines = ("11", "22", "30", "50")
         kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
         fx_ch = FixedChunk(**kwargs)
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
+
         for l in lines:
-            fx_ch.parse_data_line(l)
-        self.assertListEqual(fx_ch.forward, [(10, float(11)), (20, float(22)), (30, float(30)), (40, float(50))])
-        self.assertListEqual(fx_ch.reverse, [])
+            fx_ch.parse_data_line(l, ch)
+        exp_cov = np.full((2, 50), 0.)
+        exp_cov[0, 9:11] = [11] * 2
+        exp_cov[0, 19:21] = [22] * 2
+        exp_cov[0, 29:31] = [30] * 2
+        exp_cov[0, 39:41] = [50] * 2
+        got_forward, got_reverse = ch[:50]
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
         lines = ("-11", "22", "-30", "50")
         kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
         fx_ch = FixedChunk(**kwargs)
         for l in lines:
-            fx_ch.parse_data_line(l)
-        self.assertListEqual(fx_ch.forward, [(20, float(22)), (40, float(50))])
-        self.assertListEqual(fx_ch.reverse, [(10, float(11)), (30, float(30))])
+            fx_ch.parse_data_line(l, ch)
+        exp_cov[1, 9:11] = [11] * 2
+        exp_cov[0, 19:21] = [22] * 2
+        exp_cov[1, 29:31] = [30] * 2
+        exp_cov[0, 39:41] = [50] * 2
+        got_forward, got_reverse = ch[:50]
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
-    def test_to_coverages(self):
-        lines = ("11", "22", "30", "50")
-        kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
-        fx_ch = FixedChunk(**kwargs)
-        for l in lines:
-            fx_ch.parse_data_line(l)
-
-        forward, reverse = fx_ch.to_coverages()
-        expected_for = Coverage(10, 40, 2)
-        expected_for[10] = 11.0
-        expected_for[11] = 11.0
-        expected_for[20] = 22.0
-        expected_for[21] = 22.0
-        expected_for[30] = 30.0
-        expected_for[31] = 30.0
-        expected_for[40] = 50.0
-        expected_for[41] = 50.0
-        expected_rev = Coverage(10, 40, 2)
-        self.assertEqual(forward, expected_for)
-        self.assertEqual(reverse, expected_rev)
 
 
 class TestVariableChunk(CRAWTest):
 
-    def test_stop(self):
-        lines = ("10 11", "20 22", "30 -30", "40 -50")
-        kwargs = {"chrom": "chr3", "span": "2"}
-        var_ch = VariableChunk(**kwargs)
-        for l in lines:
-            var_ch.parse_data_line(l)
-        self.assertEqual(var_ch.stop, 41)
 
     def test_variable_step(self):
+
         kwargs = {"chrom": "chr3"}
         var_ch = VariableChunk(**kwargs)
         self.assertEqual(var_ch.chrom, kwargs["chrom"])
@@ -252,6 +152,11 @@ class TestVariableChunk(CRAWTest):
             VariableChunk(**kwargs)
         self.assertEqual(str(ctx.exception), "'chrom' field  is not present.")
 
+        kwargs = {"chrom": '', "span": "5"}
+        with self.assertRaises(WigError) as ctx:
+            VariableChunk(**kwargs)
+        self.assertEqual(str(ctx.exception), "'chrom' field  is not present.")
+
         kwargs = {"chrom": "chr3", "span": "0"}
         with self.assertRaises(WigError) as ctx:
             VariableChunk(**kwargs)
@@ -263,36 +168,23 @@ class TestVariableChunk(CRAWTest):
         var_ch = VariableChunk(**kwargs)
         self.assertFalse(var_ch.is_fixed_step())
 
+
     def test_parse_data_line(self):
         lines = ("10 11", "20 22", "30 -30", "40 -50")
         kwargs = {"chrom": "chr3", "span": "2"}
         var_ch = VariableChunk(**kwargs)
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
         for l in lines:
-            var_ch.parse_data_line(l)
-        self.assertListEqual(var_ch.forward, [(10, float(11)), (20, float(22))])
-        self.assertListEqual(var_ch.reverse, [(30, float(30)), (40, float(50))])
-
-    def test_to_coverages(self):
-        lines = ("10 11", "20 22", "20 -30", "40 -50")
-        kwargs = {"chrom": "chr3", "span": "2"}
-        var_ch = VariableChunk(**kwargs)
-        for l in lines:
-            var_ch.parse_data_line(l)
-
-        forward, reverse = var_ch.to_coverages()
-        expected_for = Coverage(10, 40, 2)
-        expected_for[10] = 11.0
-        expected_for[11] = 11.0
-        expected_for[20] = 22.0
-        expected_for[21] = 22.0
-
-        expected_rev = Coverage(10, 40, 2)
-        expected_rev[20] = 30.0
-        expected_rev[21] = 30.0
-        expected_rev[40] = 50.0
-        expected_rev[41] = 50.0
-        self.assertEqual(forward, expected_for)
-        self.assertEqual(reverse, expected_rev)
+            var_ch.parse_data_line(l, ch)
+        exp_cov = np.full((2, 50), 0.)
+        exp_cov[0, 9:11] = [11] * 2
+        exp_cov[0, 19:21] = [22] * 2
+        exp_cov[1, 29:31] = [30] * 2
+        exp_cov[1, 39:41] = [50] * 2
+        got_forward, got_reverse = ch[:50]
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
 
 class TestChromosome(CRAWTest):
@@ -302,29 +194,8 @@ class TestChromosome(CRAWTest):
         ch = Chromosome(ch_name)
         self.assertEqual(ch.name, ch_name)
 
-    def test_add_chunk(self):
-        ch_name = 'ChrII'
-        ch = Chromosome(ch_name)
 
-        kwargs = {"chrom": ch_name, "start": "10", "step": "10"}
-        fx_ck = FixedChunk(**kwargs)
-        lines = ("11", "22")
-        for l in lines:
-            fx_ck.parse_data_line(l)
-        ch.add_chunk(fx_ck)
-        self.assertListEqual(ch._chunks, [fx_ck])
-
-        span = 2
-        lines = ("10 11", "20 22", "20 -30", "30 -50")
-        kwargs = {"chrom": ch_name, "span": str(span)}
-        var_ck = VariableChunk(**kwargs)
-        for l in lines:
-            var_ck.parse_data_line(l)
-        ch.add_chunk(var_ck)
-        self.assertListEqual(ch._chunks, [fx_ck, var_ck])
-
-
-    def test_get_coverage(self):
+    def test_get_item(self):
         ch_name = 'ChrII'
         ch = Chromosome(ch_name)
 
@@ -332,72 +203,57 @@ class TestChromosome(CRAWTest):
         fx_ck = FixedChunk(**kwargs)
         lines = ("11", "22", "33")
         for l in lines:
-            fx_ck.parse_data_line(l)
-        ch.add_chunk(fx_ck)
+            fx_ck.parse_data_line(l, ch)
 
         span = 2
         lines = ("40 11", "42 22", "40 -30", "42 -50")
         kwargs = {"chrom": ch_name, "span": str(span)}
         var_ck = VariableChunk(**kwargs)
         for l in lines:
-            var_ck.parse_data_line(l)
-        ch.add_chunk(var_ck)
+            var_ck.parse_data_line(l, ch)
 
-        fwd = [0.] * 50
-        fwd[10:10 + 3] = [11.] * 3
-        fwd[20:20 + 3] = [22.] * 3
-        fwd[30:30 + 3] = [33.] * 3
-        fwd[40:40 + 2] = [11.] * 2
-        fwd[42:42 + 2] = [22.] * 2
+        exp_cov = np.full((2, 50), 0.)
+        exp_cov[0, 9:9 + 3] = [11.] * 3
+        exp_cov[0, 19:19 + 3] = [22.] * 3
+        exp_cov[0, 29:29 + 3] = [33.] * 3
+        exp_cov[0, 39:39 + 2] = [11.] * 2
+        exp_cov[0, 41:41 + 2] = [22.] * 2
+        exp_cov[1, 39:39 + 2] = [30.] * 2
+        exp_cov[1, 41:41 + 2] = [50.] * 2
 
-        rev = [0.] * 50
-        rev[40:40 + 2] = [30.] * 2
-        rev[42:42 + 2] = [50.] * 2
+        got_forward, got_reverse = ch[:50]
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
-        # start and stop are in first chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(10, 20)
-        self.assertEqual(recv_fwd_cov, fwd[10:21])
-        self.assertEqual(recv_rev_cov, rev[10:21])
+    def test_setitem(self):
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
+        ch[0:5] = [10.] * 5
+        ch[2:10] = [-20.] * 8
+        ch[0] = -1
+        exp_cov = np.full((2, 50), 0.)
+        exp_cov[0, 0:5] = [10.] * 5
+        exp_cov[1, 2:10] = [20.] * 8
+        exp_cov[1, 0] = 1.
+        got_forward, got_reverse = ch[:50]
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
-        # start is before chunk start stop in first chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(1, 20)
-        self.assertEqual(recv_fwd_cov, fwd[1:21])
-        self.assertEqual(recv_rev_cov, rev[1:21])
+        with self.assertRaises(TypeError) as ctx:
+            ch[2:10] = 2
+        self.assertEqual(str(ctx.exception), 'can only assign an iterable')
 
-        # start and stop are in 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(40, 42)
-        self.assertEqual(recv_fwd_cov, fwd[40:43])
-        self.assertEqual(recv_rev_cov, rev[40:43])
+        with self.assertRaises(ValueError) as ctx:
+            ch[2:10] = [2] * 3
+        self.assertEqual(str(ctx.exception), 'can assign only iterable of same length of the slice')
 
-        # stop is beyond in 2nd chunk stop
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(40, 45)
-        self.assertEqual(recv_fwd_cov, fwd[40:46])
-        self.assertEqual(recv_rev_cov, rev[40:46])
 
-        # start is in first chunk stop is in 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(11, 42)
-        self.assertEqual(recv_fwd_cov, fwd[11:43])
-        self.assertEqual(recv_rev_cov, rev[11:43])
-
-        # start is before first chunk stop is beyond 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(1, 45)
-        self.assertEqual(recv_fwd_cov, fwd[1:46])
-        self.assertEqual(recv_rev_cov, rev[1:46])
-
-        # start is between first chunk stop is in 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(35, 42)
-        self.assertEqual(recv_fwd_cov, fwd[35:43])
-        self.assertEqual(recv_rev_cov, rev[35:43])
-
-        # start and stop are beyond last chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(50, 52)
-        self.assertEqual(recv_fwd_cov, [0.] * 3)
-        self.assertEqual(recv_rev_cov, [0.] * 3)
-
-        # start and stop are before first chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(1, 3)
-        self.assertEqual(recv_fwd_cov, [0.] * 3)
-        self.assertEqual(recv_rev_cov, [0.] * 3)
+    def test_extend(self):
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name, size=10)
+        self.assertEqual(ch._coverage.shape[1], 10)
+        ch[20] = 20
+        self.assertEqual(ch._coverage.shape[1], 40)
 
 
 class TestGenome(CRAWTest):
@@ -426,6 +282,9 @@ class TestGenome(CRAWTest):
         self.assertEqual(ch, genome[ch_name])
         del genome[ch_name]
         self.assertFalse(ch_name in genome)
+        with self.assertRaises(KeyError) as ctx:
+            del genome[ch_name]
+        self.assertEqual(str(ctx.exception), "\"The chromosome '{}' is not in this genome.\"".format(ch_name))
 
 
     def test_membership(self):
@@ -439,6 +298,7 @@ class TestGenome(CRAWTest):
         with self.assertRaises(TypeError) as ctx:
             3 in genome
         self.assertEqual(str(ctx.exception), "'in <Genome>' requires string or Chromosome as left operand, not 'int'")
+
 
     def test_chromosomes(self):
         genome = Genome()
@@ -475,6 +335,7 @@ class TestWigParser(CRAWTest):
         line = 'fixedStep chrom=chr1 start=58951 step=1'
         self.assertFalse(wip_p.is_comment_line(line))
 
+
     def test_parse_track_line(self):
         wip_p = WigParser('toto')
         line = 'track type=wiggle_0 name=BCMSolidWeCoca48PatientCoverageclean viewLimits=0:1'
@@ -493,21 +354,28 @@ class TestWigParser(CRAWTest):
             wip_p.parse_track_line(line)
         self.assertEqual(str(ctx.exception), 'wiggle type is not present: {}.'.format(line))
 
+
     def test_parse_data_line(self):
         wip_p = WigParser('toto')
         kwargs = {"chrom": "chr3", "start": "10", "step": "100", "span": "5"}
         wip_p._current_chunk = FixedChunk(**kwargs)
+        ch_name = 'chr3'
+        ch = Chromosome(ch_name, size=30)
+        wip_p._current_chrom = ch
         wip_p.parse_data_line("3")
-        self.assertEqual(wip_p._current_chunk.forward[-1],  (10, 3.0))
-        wip_p.parse_data_line("5")
-        self.assertEqual(wip_p._current_chunk.forward[-1],  (110, 5.0))
+        self.assertEqual(ch[9:14][0], [3.] * 5)
+        wip_p.parse_data_line("-5")
+        self.assertEqual(ch[109:114][1], [5.] * 5)
 
         kwargs = {"chrom": "chr3", "span": "5"}
         wip_p._current_chunk = VariableChunk(**kwargs)
+        ch_name = 'chr3'
+        ch = Chromosome(ch_name, size=150)
+        wip_p._current_chrom = ch
         wip_p.parse_data_line("10 3")
-        self.assertEqual(wip_p._current_chunk.forward[-1],  (10, 3.0))
+        self.assertEqual(ch[9:14][0], [3.0] * 5)
         wip_p.parse_data_line("10 -5")
-        self.assertEqual(wip_p._current_chunk.reverse[-1],  (10, 5.0))
+        self.assertEqual(ch[9:14][1], [5.] * 5)
 
         wip_p = WigParser('toto')
         with self.assertRaises(WigError) as ctx:
@@ -553,13 +421,14 @@ class TestWigParser(CRAWTest):
 
         self.assertTrue('chrI' in genome)
         chrI = genome['chrI']
-        received_forward, received_reverse = chrI.get_coverage(1, 52)
+        received_forward, received_reverse = chrI[0:52]
         self.assertListEqual(received_forward, expected_forward[0:52])
         self.assertListEqual(received_reverse, [0.] * 52)
 
-        received_forward, received_reverse = chrI.get_coverage(190, 252)
-        self.assertListEqual(received_forward, expected_forward[189:252])
-        self.assertListEqual(received_reverse, expected_reverse[189:252])
+        received_forward, received_reverse = chrI[190: 252]
+        self.assertListEqual(received_forward, expected_forward[190:252])
+        self.assertListEqual(received_reverse, expected_reverse[190:252])
+
 
     def test_parse_variable_wig(self):
         # chrI position 1->5 on rev 4->8 on fwd
@@ -584,20 +453,22 @@ class TestWigParser(CRAWTest):
 
         self.assertTrue('chrI' in genome)
         chrI = genome['chrI']
-        recv_chrI_forward, recv_chrI_reverse = chrI.get_coverage(1, 10)
+        recv_chrI_forward, recv_chrI_reverse = chrI[0:10]
         self.assertListEqual(recv_chrI_forward, expec_chrI_forward)
         self.assertListEqual(recv_chrI_reverse, expec_chrI_reverse)
 
         self.assertTrue('chrII' in genome)
         chrII = genome['chrII']
-        recv_chrII_forward, recv_chrII_reverse = chrII.get_coverage(1, 82)
+        recv_chrII_forward, recv_chrII_reverse = chrII[0:82]
         # get coverage start and stop are included, and numbered from 1
         self.assertListEqual(recv_chrII_forward, expec_chrII_forward[:82])
         self.assertListEqual(recv_chrII_reverse, expec_chrII_reverse[:82])
 
+
     def test_parse(self):
         wig_p = WigParser(os.path.join(self._data_dir, 'wig_fixed_w_comment.wig'))
         genome = wig_p.parse()
+
         infos = {'type': 'wiggle_0',
                  'name': "wig de test comment line",
                  'color': '96,144,246',
@@ -605,31 +476,36 @@ class TestWigParser(CRAWTest):
                  'autoScale': 'on',
                  'graphType': 'bar'}
         self.assertDictEqual(genome.infos, infos)
+        self.assertDictEqual(genome.infos, infos)
+        self.assertTrue('chrI' in genome)
+
         ch_name = 'chrI'
         ch = Chromosome(ch_name)
-        genome.add(ch)
         kwargs = {"chrom": ch_name, "start": "1", "step": "10", "span": "5"}
         fx_ck1 = FixedChunk(**kwargs)
         lines = ("1", "2", "3", "4", "5")
         for l in lines:
-            fx_ck1.parse_data_line(l)
-        ch.add_chunk(fx_ck1)
+            fx_ck1.parse_data_line(l, ch)
+
         kwargs = {"chrom": ch_name, "start": "100", "step": "10"}
         fx_ck2 = FixedChunk(**kwargs)
         lines = ("1", "2", "3", "4", "5")
         for l in lines:
-            fx_ck2.parse_data_line(l)
-        ch.add_chunk(fx_ck2)
+            fx_ck2.parse_data_line(l, ch)
+
         kwargs = {"chrom": ch_name, "start": "200"}
         fx_ck3 = FixedChunk(**kwargs)
         lines = ("-1", "-2", "-3", "-4", "-5")
         for l in lines:
-            fx_ck3.parse_data_line(l)
-        ch.add_chunk(fx_ck3)
+            fx_ck3.parse_data_line(l, ch)
 
-        self.assertTrue('chrI' in genome)
         chrI = genome['chrI']
-        self.assertEqual(len(chrI._chunks), 3)
-        self.assertEqual(chrI._chunks[0], fx_ck1)
-        self.assertEqual(chrI._chunks[1], fx_ck2)
-        self.assertEqual(chrI._chunks[2], fx_ck3)
+        chrI_for, chrI_rev = chrI[:250]
+        ch_for, ch_rev = ch[:250]
+        self.assertListEqual(chrI_for, ch_for)
+        self.assertListEqual(chrI_rev, ch_rev)
+
+        wig_p = WigParser(os.path.join(self._data_dir, 'wig_variable_malformed_line.wig'))
+        with self.assertRaises(WigError) as ctx:
+            genome = wig_p.parse()
+        self.assertEqual(str(ctx.exception), 'the line is malformed: 4       6   23')

@@ -40,8 +40,8 @@ except ImportError as err:
     msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
     sys.exit(msg)
 from craw import argparse_util
-
 from craw import annotation, coverage
+from craw.wig import WigParser
 
 
 def positive_int(value):
@@ -139,9 +139,11 @@ def get_results_file(sense_opt, basename, suffix):
 
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter)
-parser.add_argument("-b", "--bam",
-                    required=True,
-                    help="The path of the bam file to analyse (required).")
+input_grp = parser.add_mutually_exclusive_group(required=True)
+input_grp.add_argument("-b", "--bam",
+                    help="The path of the bam file to analyse. (-b and -w are required but mutually exclusive)")
+input_grp.add_argument("-w", "--wig",
+                    help="The path of the wig file to analyse. (-b and -w are required but mutually exclusive)")
 parser.add_argument("-a", "--annot",
                     required=True,
                     help="The path of the annotation file (required).")
@@ -270,7 +272,14 @@ annot_parser = annotation.AnnotationParser(args.annot, args.ref_col,
                                            stop_col=args.stop_col,
                                            sep=args.sep)
 
-sam_file = pysam.AlignmentFile(args.bam, "rb")
+if args.bam:
+    # input_data is a samfile
+    input_data = pysam.AlignmentFile(args.bam, "rb")
+elif args.wig:
+    # input_data is a wig.Genome object
+    wig_parser = WigParser(args.wig)
+    input_data = wig_parser.parse()
+
 annotations = annot_parser.get_annotations()
 
 if not args.output:
@@ -293,6 +302,15 @@ with sense_file, antisense_file:
         print(header, file=sense_file)
     if args.sense in ('AS', 'split'):
         print(header, file=antisense_file)
+
+
+    # get the appropriate function according to the input type
+    # the 2 functions
+    #  - get_wig_coverage
+    #  - get_bam_coverage
+    # have exactly the same api
+    get_coverage = coverage.get_coverage_function(input_data)
+
     for annot_num, annot_entry in enumerate(annotations, 1):
         if not args.quiet:
             if annot_num % 50 == 0:
@@ -306,11 +324,11 @@ with sense_file, antisense_file:
         else:
             start = annot_entry.ref - args.before - 1
             stop = annot_entry.ref + args.after
-        forward_cov, reverse_cov = coverage.get_coverage(sam_file,
-                                                         annot_entry,
-                                                         start=start, stop=stop,
-                                                         qual_thr=args.qual_thr,
-                                                         max_left=max_left, max_right=max_right)
+        forward_cov, reverse_cov = get_coverage(input_data,
+                                                annot_entry,
+                                                start=start, stop=stop,
+                                                qual_thr=args.qual_thr,
+                                                max_left=max_left, max_right=max_right)
         sens = 'S' if annot_entry.strand == '+' else 'AS'
         if sens == 'S':
             print(sens, annot_entry, *forward_cov, sep='\t', file=sense_file)
