@@ -110,12 +110,6 @@ class TestFixedChunk(CRAWTest):
         exp_cov[0, 29:31] = [30] * 2
         exp_cov[0, 39:41] = [50] * 2
         got_forward, got_reverse = ch[:50]
-        print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-        print("got_forward", got_forward)
-        print("exp_forward",exp_cov[0].tolist())
-        print("===================================")
-        print("got_reverse", got_reverse)
-        print("exp_reverse",exp_cov[1].tolist())
         self.assertListEqual(exp_cov[0].tolist(), got_forward)
         self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
@@ -128,6 +122,7 @@ class TestFixedChunk(CRAWTest):
         exp_cov[0, 19:21] = [22] * 2
         exp_cov[1, 29:31] = [30] * 2
         exp_cov[0, 39:41] = [50] * 2
+        got_forward, got_reverse = ch[:50]
         self.assertListEqual(exp_cov[0].tolist(), got_forward)
         self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
@@ -157,6 +152,11 @@ class TestVariableChunk(CRAWTest):
             VariableChunk(**kwargs)
         self.assertEqual(str(ctx.exception), "'chrom' field  is not present.")
 
+        kwargs = {"chrom": '', "span": "5"}
+        with self.assertRaises(WigError) as ctx:
+            VariableChunk(**kwargs)
+        self.assertEqual(str(ctx.exception), "'chrom' field  is not present.")
+
         kwargs = {"chrom": "chr3", "span": "0"}
         with self.assertRaises(WigError) as ctx:
             VariableChunk(**kwargs)
@@ -168,6 +168,7 @@ class TestVariableChunk(CRAWTest):
         var_ch = VariableChunk(**kwargs)
         self.assertFalse(var_ch.is_fixed_step())
 
+
     def test_parse_data_line(self):
         lines = ("10 11", "20 22", "30 -30", "40 -50")
         kwargs = {"chrom": "chr3", "span": "2"}
@@ -176,8 +177,14 @@ class TestVariableChunk(CRAWTest):
         ch = Chromosome(ch_name)
         for l in lines:
             var_ch.parse_data_line(l, ch)
-        self.assertListEqual(var_ch.forward, [(10, float(11)), (20, float(22))])
-        self.assertListEqual(var_ch.reverse, [(30, float(30)), (40, float(50))])
+        exp_cov = np.full((2, 50), 0.)
+        exp_cov[0, 9:11] = [11] * 2
+        exp_cov[0, 19:21] = [22] * 2
+        exp_cov[1, 29:31] = [30] * 2
+        exp_cov[1, 39:41] = [50] * 2
+        got_forward, got_reverse = ch[:50]
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
 
 class TestChromosome(CRAWTest):
@@ -205,61 +212,48 @@ class TestChromosome(CRAWTest):
         for l in lines:
             var_ck.parse_data_line(l, ch)
 
-        fwd = [0.] * 50
-        fwd[9:9 + 3] = [11.] * 3
-        fwd[19:19 + 3] = [22.] * 3
-        fwd[29:29 + 3] = [33.] * 3
-        fwd[39:39 + 2] = [11.] * 2
-        fwd[41:41 + 2] = [22.] * 2
+        exp_cov = np.full((2, 50), 0.)
+        exp_cov[0, 9:9 + 3] = [11.] * 3
+        exp_cov[0, 19:19 + 3] = [22.] * 3
+        exp_cov[0, 29:29 + 3] = [33.] * 3
+        exp_cov[0, 39:39 + 2] = [11.] * 2
+        exp_cov[0, 41:41 + 2] = [22.] * 2
+        exp_cov[1, 39:39 + 2] = [30.] * 2
+        exp_cov[1, 41:41 + 2] = [50.] * 2
 
-        rev = [0.] * 50
-        rev[39:39 + 2] = [30.] * 2
-        rev[41:41 + 2] = [50.] * 2
+        got_forward, got_reverse = ch[:50]
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
-        # start and stop are in first chunk
-        recv_fwd_cov, recv_rev_cov = ch[9:20]
-        self.assertEqual(recv_fwd_cov, fwd[9:20])
-        self.assertEqual(recv_rev_cov, rev[9:20])
+    def test_setitem(self):
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
+        ch[0:5] = [10.] * 5
+        ch[2:10] = [-20.] * 8
+        ch[0] = -1
+        exp_cov = np.full((2, 50), 0.)
+        exp_cov[0, 0:5] = [10.] * 5
+        exp_cov[1, 2:10] = [20.] * 8
+        exp_cov[1, 0] = 1.
+        got_forward, got_reverse = ch[:50]
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
-        # start is before chunk start stop in first chunk
-        recv_fwd_cov, recv_rev_cov = ch[1: 20]
-        self.assertEqual(recv_fwd_cov, fwd[1:20])
-        self.assertEqual(recv_rev_cov, rev[1:20])
+        with self.assertRaises(TypeError) as ctx:
+            ch[2:10] = 2
+        self.assertEqual(str(ctx.exception), 'can only assign an iterable')
 
-        # start and stop are in 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch[40: 42]
-        self.assertEqual(recv_fwd_cov, fwd[40:42])
-        self.assertEqual(recv_rev_cov, rev[40:42])
+        with self.assertRaises(ValueError) as ctx:
+            ch[2:10] = [2] * 3
+        self.assertEqual(str(ctx.exception), 'can assign only iterable of same length of the slice')
 
-        # stop is beyond the 2nd chunk stop
-        recv_fwd_cov, recv_rev_cov = ch[40:45]
-        self.assertEqual(recv_fwd_cov, fwd[40:45])
-        self.assertEqual(recv_rev_cov, rev[40:45])
 
-        # start is in first chunk, stop is in 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch[11:42]
-        self.assertEqual(recv_fwd_cov, fwd[11:42])
-        self.assertEqual(recv_rev_cov, rev[11:42])
-
-        # start is before first chunk stop is beyond 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch[1: 45]
-        self.assertEqual(recv_fwd_cov, fwd[1:45])
-        self.assertEqual(recv_rev_cov, rev[1:45])
-
-        # start is between first and 2nd chunk, stop is in 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch[34: 42]
-        self.assertEqual(recv_fwd_cov, fwd[34:42])
-        self.assertEqual(recv_rev_cov, rev[34:42])
-
-        # start and stop are beyond last chunk
-        recv_fwd_cov, recv_rev_cov = ch[50:53]
-        self.assertEqual(recv_fwd_cov, [0.] * 3)
-        self.assertEqual(recv_rev_cov, [0.] * 3)
-
-        # start and stop are before first chunk
-        recv_fwd_cov, recv_rev_cov = ch[0:3]
-        self.assertEqual(recv_fwd_cov, [0.] * 3)
-        self.assertEqual(recv_rev_cov, [0.] * 3)
+    def test_extend(self):
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name, size=10)
+        self.assertEqual(ch._coverage.shape[1], 10)
+        ch[20] = 20
+        self.assertEqual(ch._coverage.shape[1], 40)
 
 
 class TestGenome(CRAWTest):
@@ -288,6 +282,9 @@ class TestGenome(CRAWTest):
         self.assertEqual(ch, genome[ch_name])
         del genome[ch_name]
         self.assertFalse(ch_name in genome)
+        with self.assertRaises(KeyError) as ctx:
+            del genome[ch_name]
+        self.assertEqual(str(ctx.exception), "\"The chromosome '{}' is not in this genome.\"".format(ch_name))
 
 
     def test_membership(self):
@@ -338,6 +335,7 @@ class TestWigParser(CRAWTest):
         line = 'fixedStep chrom=chr1 start=58951 step=1'
         self.assertFalse(wip_p.is_comment_line(line))
 
+
     def test_parse_track_line(self):
         wip_p = WigParser('toto')
         line = 'track type=wiggle_0 name=BCMSolidWeCoca48PatientCoverageclean viewLimits=0:1'
@@ -356,21 +354,28 @@ class TestWigParser(CRAWTest):
             wip_p.parse_track_line(line)
         self.assertEqual(str(ctx.exception), 'wiggle type is not present: {}.'.format(line))
 
+
     def test_parse_data_line(self):
         wip_p = WigParser('toto')
         kwargs = {"chrom": "chr3", "start": "10", "step": "100", "span": "5"}
         wip_p._current_chunk = FixedChunk(**kwargs)
+        ch_name = 'chr3'
+        ch = Chromosome(ch_name, size=30)
+        wip_p._current_chrom = ch
         wip_p.parse_data_line("3")
-        self.assertEqual(wip_p._current_chunk.forward[-1],  (10, 3.0))
-        wip_p.parse_data_line("5")
-        self.assertEqual(wip_p._current_chunk.forward[-1],  (110, 5.0))
+        self.assertEqual(ch[9:14][0], [3.] * 5)
+        wip_p.parse_data_line("-5")
+        self.assertEqual(ch[109:114][1], [5.] * 5)
 
         kwargs = {"chrom": "chr3", "span": "5"}
         wip_p._current_chunk = VariableChunk(**kwargs)
+        ch_name = 'chr3'
+        ch = Chromosome(ch_name, size=150)
+        wip_p._current_chrom = ch
         wip_p.parse_data_line("10 3")
-        self.assertEqual(wip_p._current_chunk.forward[-1],  (10, 3.0))
+        self.assertEqual(ch[9:14][0], [3.0] * 5)
         wip_p.parse_data_line("10 -5")
-        self.assertEqual(wip_p._current_chunk.reverse[-1],  (10, 5.0))
+        self.assertEqual(ch[9:14][1], [5.] * 5)
 
         wip_p = WigParser('toto')
         with self.assertRaises(WigError) as ctx:
@@ -416,13 +421,14 @@ class TestWigParser(CRAWTest):
 
         self.assertTrue('chrI' in genome)
         chrI = genome['chrI']
-        received_forward, received_reverse = chrI.get_coverage(0, 52)
+        received_forward, received_reverse = chrI[0:52]
         self.assertListEqual(received_forward, expected_forward[0:52])
         self.assertListEqual(received_reverse, [0.] * 52)
 
-        received_forward, received_reverse = chrI.get_coverage(190, 252)
+        received_forward, received_reverse = chrI[190: 252]
         self.assertListEqual(received_forward, expected_forward[190:252])
         self.assertListEqual(received_reverse, expected_reverse[190:252])
+
 
     def test_parse_variable_wig(self):
         # chrI position 1->5 on rev 4->8 on fwd
@@ -447,20 +453,22 @@ class TestWigParser(CRAWTest):
 
         self.assertTrue('chrI' in genome)
         chrI = genome['chrI']
-        recv_chrI_forward, recv_chrI_reverse = chrI.get_coverage(0, 10)
+        recv_chrI_forward, recv_chrI_reverse = chrI[0:10]
         self.assertListEqual(recv_chrI_forward, expec_chrI_forward)
         self.assertListEqual(recv_chrI_reverse, expec_chrI_reverse)
 
         self.assertTrue('chrII' in genome)
         chrII = genome['chrII']
-        recv_chrII_forward, recv_chrII_reverse = chrII.get_coverage(0, 82)
+        recv_chrII_forward, recv_chrII_reverse = chrII[0:82]
         # get coverage start and stop are included, and numbered from 1
         self.assertListEqual(recv_chrII_forward, expec_chrII_forward[:82])
         self.assertListEqual(recv_chrII_reverse, expec_chrII_reverse[:82])
 
+
     def test_parse(self):
         wig_p = WigParser(os.path.join(self._data_dir, 'wig_fixed_w_comment.wig'))
         genome = wig_p.parse()
+
         infos = {'type': 'wiggle_0',
                  'name': "wig de test comment line",
                  'color': '96,144,246',
@@ -468,31 +476,36 @@ class TestWigParser(CRAWTest):
                  'autoScale': 'on',
                  'graphType': 'bar'}
         self.assertDictEqual(genome.infos, infos)
+        self.assertDictEqual(genome.infos, infos)
+        self.assertTrue('chrI' in genome)
+
         ch_name = 'chrI'
         ch = Chromosome(ch_name)
-        genome.add(ch)
         kwargs = {"chrom": ch_name, "start": "1", "step": "10", "span": "5"}
         fx_ck1 = FixedChunk(**kwargs)
         lines = ("1", "2", "3", "4", "5")
         for l in lines:
-            fx_ck1.parse_data_line(l)
-        ch.add_chunk(fx_ck1)
+            fx_ck1.parse_data_line(l, ch)
+
         kwargs = {"chrom": ch_name, "start": "100", "step": "10"}
         fx_ck2 = FixedChunk(**kwargs)
         lines = ("1", "2", "3", "4", "5")
         for l in lines:
-            fx_ck2.parse_data_line(l)
-        ch.add_chunk(fx_ck2)
+            fx_ck2.parse_data_line(l, ch)
+
         kwargs = {"chrom": ch_name, "start": "200"}
         fx_ck3 = FixedChunk(**kwargs)
         lines = ("-1", "-2", "-3", "-4", "-5")
         for l in lines:
-            fx_ck3.parse_data_line(l)
-        ch.add_chunk(fx_ck3)
+            fx_ck3.parse_data_line(l, ch)
 
-        self.assertTrue('chrI' in genome)
         chrI = genome['chrI']
-        self.assertEqual(len(chrI._chunks), 3)
-        self.assertEqual(chrI._chunks[0], fx_ck1)
-        self.assertEqual(chrI._chunks[1], fx_ck2)
-        self.assertEqual(chrI._chunks[2], fx_ck3)
+        chrI_for, chrI_rev = chrI[:250]
+        ch_for, ch_rev = ch[:250]
+        self.assertListEqual(chrI_for, ch_for)
+        self.assertListEqual(chrI_rev, ch_rev)
+
+        wig_p = WigParser(os.path.join(self._data_dir, 'wig_variable_malformed_line.wig'))
+        with self.assertRaises(WigError) as ctx:
+            genome = wig_p.parse()
+        self.assertEqual(str(ctx.exception), 'the line is malformed: 4       6   23')
