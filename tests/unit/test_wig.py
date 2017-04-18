@@ -24,98 +24,17 @@
 import os
 import logging
 
+import numpy as np
+
 try:
     from tests import CRAWTest
 except ImportError as err:
     msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
     raise ImportError("Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err))
 
-from craw.wig import WigError, Coverage, FixedChunk, VariableChunk, Chromosome, Genome, WigParser, _log
+from craw.wig import WigError, FixedChunk, VariableChunk, Chromosome, Genome, WigParser, _log
 
 
-class TestCoverage(CRAWTest):
-
-    def test_coverage_init(self):
-        cov = Coverage(1, 5, 3)
-        self.assertListEqual(cov.coverage, [0.] * 7)
-        cov = Coverage(1, 5, 1)
-        self.assertListEqual(cov.coverage, [0.] * 5)
-
-    def test_len(self):
-        cov = Coverage(1, 5, 3)
-        self.assertEqual(len(cov), 7)
-
-    def test_stop(self):
-        cov = Coverage(1, 5, 3)
-        self.assertEqual(cov.stop, 7)
-
-    def test_start(self):
-        cov = Coverage(1, 5, 3)
-        self.assertEqual(cov.start, 1)
-
-    def test_eq(self):
-        cov1 = Coverage(1, 5, 3)
-        cov2 = Coverage(1, 5, 3)
-        self.assertEqual(cov1, cov2)
-
-    def test_setitem(self):
-        cov = Coverage(1, 5, 3)
-        pos = 2
-        value = 3.0
-        cov[pos] = value
-        expect_cov = [0.] * 7
-        expect_cov[pos - 1] = 3.0
-        self.assertEqual(cov.coverage, expect_cov)
-        cov = Coverage(1, 5, 3)
-        cov[pos:pos + 3] = [3.] * 3
-        expect_cov = [0.] * 7
-        expect_cov[pos - 1: pos + 2] = [3.0, 3.0, 3.0]
-        self.assertEqual(cov.coverage, expect_cov)
-
-        with self.assertRaises(TypeError) as ctx:
-            cov[cov.start:cov.stop] = 3.0
-        self.assertEqual(str(ctx.exception), 'can only assign an iterable')
-
-        with self.assertRaises(ValueError) as ctx:
-            cov[cov.start:cov.stop] = (3.0, 2.0)
-        self.assertEqual(str(ctx.exception), 'can assign only iterable of same length of the slice')
-        with self.assertRaises(IndexError) as ctx:
-            cov[cov.stop + 1] = 3.0
-        self.assertEqual(str(ctx.exception), 'Coverage assignment position 8 out of range[1:7]')
-
-    def test_getitem(self):
-        cov = Coverage(1, 5, 3)
-        pos = 2
-        value = 3.0
-        cov[pos] = value
-        self.assertEqual(cov[pos], value)
-        self.assertEqual(cov[pos - 1:pos + 2], [0.0, value, 0.0])
-        with self.assertRaises(IndexError) as ctx:
-            _ = cov[cov.stop + 2]
-        self.assertEqual(str(ctx.exception), 'Coverage  position 9 out of range[1:7]')
-        with self.assertRaises(IndexError) as ctx:
-            _ = cov[cov.start:cov.stop + 2]
-        self.assertEqual(str(ctx.exception), 'Coverage  position [1:9] out of range [1:7]')
-
-    def test_str(self):
-        cov = Coverage(1, 5, 3)
-        expec_str = """start= 1; stop= 7
-[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"""
-        self.assertEqual(str(cov), expec_str)
-
-    def test_join(self):
-        cov1 = Coverage(1, 5, 3)
-        cov1[2:4] = [2., 3.]
-        cov2 = Coverage(10, 15, 3)
-        cov2[12:14] = [12., 13.]
-        cov = Coverage.join((cov1, cov2))
-        expec_cov = [0.] * 17
-        expec_cov[1:3] = [2., 3.]
-        expec_cov[11:13] = [12., 13.]
-        self.assertEqual(cov.coverage, expec_cov)
-        with self.assertRaises(ValueError) as ctx:
-            _ = Coverage.join([])
-        self.assertEqual(str(ctx.exception), 'No coverage object to join')
 
 
 class TestFixedChunk(CRAWTest):
@@ -124,13 +43,6 @@ class TestFixedChunk(CRAWTest):
     def setUpClass(cls):
         _log.setLevel(logging.ERROR)
 
-    def test_stop(self):
-        lines = ("11", "22", "30", "50")
-        kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
-        fx_ch = FixedChunk(**kwargs)
-        for l in lines:
-            fx_ch.parse_data_line(l)
-        self.assertEqual(fx_ch.stop, 41)
 
     def test_fixed_step(self):
         kwargs = {"chrom": "chr3", "start": "400601"}
@@ -187,52 +99,45 @@ class TestFixedChunk(CRAWTest):
         lines = ("11", "22", "30", "50")
         kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
         fx_ch = FixedChunk(**kwargs)
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
+
         for l in lines:
-            fx_ch.parse_data_line(l)
-        self.assertListEqual(fx_ch.forward, [(10, float(11)), (20, float(22)), (30, float(30)), (40, float(50))])
-        self.assertListEqual(fx_ch.reverse, [])
+            fx_ch.parse_data_line(l, ch)
+        exp_cov = np.full((2, 50), 0.)
+        exp_cov[0, 9:11] = [11] * 2
+        exp_cov[0, 19:21] = [22] * 2
+        exp_cov[0, 29:31] = [30] * 2
+        exp_cov[0, 39:41] = [50] * 2
+        got_forward, got_reverse = ch[:50]
+        print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        print("got_forward", got_forward)
+        print("exp_forward",exp_cov[0].tolist())
+        print("===================================")
+        print("got_reverse", got_reverse)
+        print("exp_reverse",exp_cov[1].tolist())
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
         lines = ("-11", "22", "-30", "50")
         kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
         fx_ch = FixedChunk(**kwargs)
         for l in lines:
-            fx_ch.parse_data_line(l)
-        self.assertListEqual(fx_ch.forward, [(20, float(22)), (40, float(50))])
-        self.assertListEqual(fx_ch.reverse, [(10, float(11)), (30, float(30))])
+            fx_ch.parse_data_line(l, ch)
+        exp_cov[1, 9:11] = [11] * 2
+        exp_cov[0, 19:21] = [22] * 2
+        exp_cov[1, 29:31] = [30] * 2
+        exp_cov[0, 39:41] = [50] * 2
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
-    def test_to_coverages(self):
-        lines = ("11", "22", "30", "50")
-        kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
-        fx_ch = FixedChunk(**kwargs)
-        for l in lines:
-            fx_ch.parse_data_line(l)
-
-        forward, reverse = fx_ch.to_coverages()
-        expected_for = Coverage(10, 40, 2)
-        expected_for[10] = 11.0
-        expected_for[11] = 11.0
-        expected_for[20] = 22.0
-        expected_for[21] = 22.0
-        expected_for[30] = 30.0
-        expected_for[31] = 30.0
-        expected_for[40] = 50.0
-        expected_for[41] = 50.0
-        expected_rev = Coverage(10, 40, 2)
-        self.assertEqual(forward, expected_for)
-        self.assertEqual(reverse, expected_rev)
 
 
 class TestVariableChunk(CRAWTest):
 
-    def test_stop(self):
-        lines = ("10 11", "20 22", "30 -30", "40 -50")
-        kwargs = {"chrom": "chr3", "span": "2"}
-        var_ch = VariableChunk(**kwargs)
-        for l in lines:
-            var_ch.parse_data_line(l)
-        self.assertEqual(var_ch.stop, 41)
 
     def test_variable_step(self):
+
         kwargs = {"chrom": "chr3"}
         var_ch = VariableChunk(**kwargs)
         self.assertEqual(var_ch.chrom, kwargs["chrom"])
@@ -267,32 +172,12 @@ class TestVariableChunk(CRAWTest):
         lines = ("10 11", "20 22", "30 -30", "40 -50")
         kwargs = {"chrom": "chr3", "span": "2"}
         var_ch = VariableChunk(**kwargs)
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
         for l in lines:
-            var_ch.parse_data_line(l)
+            var_ch.parse_data_line(l, ch)
         self.assertListEqual(var_ch.forward, [(10, float(11)), (20, float(22))])
         self.assertListEqual(var_ch.reverse, [(30, float(30)), (40, float(50))])
-
-    def test_to_coverages(self):
-        lines = ("10 11", "20 22", "20 -30", "40 -50")
-        kwargs = {"chrom": "chr3", "span": "2"}
-        var_ch = VariableChunk(**kwargs)
-        for l in lines:
-            var_ch.parse_data_line(l)
-
-        forward, reverse = var_ch.to_coverages()
-        expected_for = Coverage(10, 40, 2)
-        expected_for[10] = 11.0
-        expected_for[11] = 11.0
-        expected_for[20] = 22.0
-        expected_for[21] = 22.0
-
-        expected_rev = Coverage(10, 40, 2)
-        expected_rev[20] = 30.0
-        expected_rev[21] = 30.0
-        expected_rev[40] = 50.0
-        expected_rev[41] = 50.0
-        self.assertEqual(forward, expected_for)
-        self.assertEqual(reverse, expected_rev)
 
 
 class TestChromosome(CRAWTest):
@@ -302,29 +187,8 @@ class TestChromosome(CRAWTest):
         ch = Chromosome(ch_name)
         self.assertEqual(ch.name, ch_name)
 
-    def test_add_chunk(self):
-        ch_name = 'ChrII'
-        ch = Chromosome(ch_name)
 
-        kwargs = {"chrom": ch_name, "start": "10", "step": "10"}
-        fx_ck = FixedChunk(**kwargs)
-        lines = ("11", "22")
-        for l in lines:
-            fx_ck.parse_data_line(l)
-        ch.add_chunk(fx_ck)
-        self.assertListEqual(ch._chunks, [fx_ck])
-
-        span = 2
-        lines = ("10 11", "20 22", "20 -30", "30 -50")
-        kwargs = {"chrom": ch_name, "span": str(span)}
-        var_ck = VariableChunk(**kwargs)
-        for l in lines:
-            var_ck.parse_data_line(l)
-        ch.add_chunk(var_ck)
-        self.assertListEqual(ch._chunks, [fx_ck, var_ck])
-
-
-    def test_get_coverage(self):
+    def test_get_item(self):
         ch_name = 'ChrII'
         ch = Chromosome(ch_name)
 
@@ -332,16 +196,14 @@ class TestChromosome(CRAWTest):
         fx_ck = FixedChunk(**kwargs)
         lines = ("11", "22", "33")
         for l in lines:
-            fx_ck.parse_data_line(l)
-        ch.add_chunk(fx_ck)
+            fx_ck.parse_data_line(l, ch)
 
         span = 2
         lines = ("40 11", "42 22", "40 -30", "42 -50")
         kwargs = {"chrom": ch_name, "span": str(span)}
         var_ck = VariableChunk(**kwargs)
         for l in lines:
-            var_ck.parse_data_line(l)
-        ch.add_chunk(var_ck)
+            var_ck.parse_data_line(l, ch)
 
         fwd = [0.] * 50
         fwd[9:9 + 3] = [11.] * 3
@@ -355,47 +217,47 @@ class TestChromosome(CRAWTest):
         rev[41:41 + 2] = [50.] * 2
 
         # start and stop are in first chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(9, 20)
+        recv_fwd_cov, recv_rev_cov = ch[9:20]
         self.assertEqual(recv_fwd_cov, fwd[9:20])
         self.assertEqual(recv_rev_cov, rev[9:20])
 
         # start is before chunk start stop in first chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(1, 20)
+        recv_fwd_cov, recv_rev_cov = ch[1: 20]
         self.assertEqual(recv_fwd_cov, fwd[1:20])
         self.assertEqual(recv_rev_cov, rev[1:20])
 
         # start and stop are in 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(40, 42)
+        recv_fwd_cov, recv_rev_cov = ch[40: 42]
         self.assertEqual(recv_fwd_cov, fwd[40:42])
         self.assertEqual(recv_rev_cov, rev[40:42])
 
         # stop is beyond the 2nd chunk stop
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(40, 45)
+        recv_fwd_cov, recv_rev_cov = ch[40:45]
         self.assertEqual(recv_fwd_cov, fwd[40:45])
         self.assertEqual(recv_rev_cov, rev[40:45])
 
         # start is in first chunk, stop is in 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(11, 42)
+        recv_fwd_cov, recv_rev_cov = ch[11:42]
         self.assertEqual(recv_fwd_cov, fwd[11:42])
         self.assertEqual(recv_rev_cov, rev[11:42])
 
         # start is before first chunk stop is beyond 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(1, 45)
+        recv_fwd_cov, recv_rev_cov = ch[1: 45]
         self.assertEqual(recv_fwd_cov, fwd[1:45])
         self.assertEqual(recv_rev_cov, rev[1:45])
 
         # start is between first and 2nd chunk, stop is in 2nd chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(34, 42)
+        recv_fwd_cov, recv_rev_cov = ch[34: 42]
         self.assertEqual(recv_fwd_cov, fwd[34:42])
         self.assertEqual(recv_rev_cov, rev[34:42])
 
         # start and stop are beyond last chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(50, 53)
+        recv_fwd_cov, recv_rev_cov = ch[50:53]
         self.assertEqual(recv_fwd_cov, [0.] * 3)
         self.assertEqual(recv_rev_cov, [0.] * 3)
 
         # start and stop are before first chunk
-        recv_fwd_cov, recv_rev_cov = ch.get_coverage(0, 3)
+        recv_fwd_cov, recv_rev_cov = ch[0:3]
         self.assertEqual(recv_fwd_cov, [0.] * 3)
         self.assertEqual(recv_rev_cov, [0.] * 3)
 
