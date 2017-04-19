@@ -22,7 +22,6 @@ coverage:
   script:
     - cd ${CI_PROJECT_DIR}
     - coverage run --source=craw tests/run_tests.py --unit
-    - coverage html
     - coverage report
   except:
     - /^feat.*$/
@@ -43,4 +42,19 @@ releasing:
     - dist/craw*.tar.gz
   only:
     - tags
+    - master
+
+pages:
+  image: registry-gitlab.pasteur.fr/bneron/craw:pages
+  script:
+    - cd ${CI_PROJECT_DIR}
+    - coverage run --source=craw tests/run_tests.py --unit
+    - coverage html
+    - cd ${CI_PROJECT_DIR}/doc/
+    - make html
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/htmlcov
+      - ${CI_PROJECT_DIR}/doc/build/html
+  only:
     - master
