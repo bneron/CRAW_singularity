@@ -191,6 +191,13 @@ class Chromosome:
         #self._coverage = np.full((2, size), np.nan)
         self._coverage = np.full((2, size), 0.)
 
+    def __len__(self):
+        """
+        :return: the actual length of the chromosome
+        :rtype: int
+        """
+        return self._coverage.shape[1]
+
 
     def __setitem__(self, pos, value):
         """

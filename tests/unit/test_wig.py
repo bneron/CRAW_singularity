@@ -255,6 +255,13 @@ class TestChromosome(CRAWTest):
         ch[20] = 20
         self.assertEqual(ch._coverage.shape[1], 40)
 
+    def test_len(self):
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name, size=10)
+        self.assertEqual(len(ch), 10)
+        ch[11] = 20
+        self.assertEqual(len(ch), 20)
+        
 
 class TestGenome(CRAWTest):
 
