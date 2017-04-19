@@ -50,7 +50,7 @@ class Test(CRAWTest):
             pass
 
 
-    def test_with_fixed_window(self):
+    def test_bam_with_fixed_window(self):
         """
         | test if returncode of coverage is 0 and
         | then test if the generated file is the same as a reference file
@@ -110,7 +110,7 @@ class Test(CRAWTest):
         self._check_coverage_file(expected_result, test_result)
 
 
-    def test_with_chr_strand_col(self):
+    def test_bam_with_chr_strand_col(self):
         """
         | test if returncode of coverage is 0 and
         | then test if the generated file is the same as a reference file
@@ -174,7 +174,7 @@ class Test(CRAWTest):
         self._check_coverage_file(expected_result, test_result)
 
 
-    def test_with_var_window(self):
+    def test_bam_with_var_window(self):
         """
         | test if returncode of coverage is 0 and
         | then test if the generated file is the same as a reference file
@@ -234,6 +234,126 @@ class Test(CRAWTest):
         self._check_coverage_file(expected_result, test_result)
 
 
+    def test_wig_with_fixed_window(self):
+        """
+        | test if returncode of coverage is 0 and
+        | then test if the generated file is the same as a reference file
+        """
+        self.out_dir = os.path.join(self.tmp_dir, 'craw_test')
+        os.makedirs(self.out_dir)
+        output_filename = 'wig_fixed_window.cov'
+        test_result_path = os.path.join(self.out_dir, output_filename)
+        command = "{bin} --wig={wig_file} --annot={annot_file} " \
+                  "--before={before} " \
+                  "--after={after} " \
+                  "--ref-col={ref_col} " \
+                  "--qual-thr={qual} " \
+                  "--output={out_file} ".format(
+                                                 bin=self.bin,
+                                                 wig_file=os.path.join(self._data_dir, 'small.wig'),
+                                                 annot_file=os.path.join(self._data_dir, 'annotation_wo_start.txt'),
+                                                 ref_col='Position',
+                                                 before=5,
+                                                 after=3,
+                                                 qual=0,
+                                                 out_file=test_result_path
+                                                )
+        # print("\n@@@", command)
+        if not self.bin:
+            raise RuntimeError('coverage not found, CRAW_HOME must be either in your path or CRAW_HOME must be defined '
+                               'command launch: \n{}'.format(command))
+
+        try:
+            cov_process = Popen(command,
+                                shell=True,
+                                stdin=None,
+                                stderr=PIPE,
+                                close_fds=False
+                                )
+        except Exception as err:
+            msg = "coverage execution failed: command = {0} : {1}".format(command, err)
+            print()
+            print(msg)
+            raise err from None
+
+        cov_process.wait()
+        self.assertEqual(cov_process.returncode, 0,
+                         "coverage finished with non zero exit code: {0} command launched=\n{1}\n{2}".format(
+                            cov_process.returncode,
+                            command,
+                            ''.join([l.decode('utf-8') for l in cov_process.stderr.readlines()]),
+                            ))
+
+        expected_result_path = os.path.join(self._data_dir, output_filename)
+        with open(expected_result_path) as expected_result_file:
+            expected_result = expected_result_file.readlines()
+
+        with open(test_result_path) as test_result_file:
+            test_result = test_result_file.readlines()
+
+        self._check_coverage_file(expected_result, test_result)
+
+
+    def test_wig_with_var_window(self):
+        """
+        | test if returncode of coverage is 0 and
+        | then test if the generated file is the same as a reference file
+        """
+        self.out_dir = os.path.join(self.tmp_dir, 'craw_test')
+        os.makedirs(self.out_dir)
+        output_filename = 'wig_var_window.cov'
+        test_result_path = os.path.join(self.out_dir, output_filename)
+        command = "{bin} --wig={wig_file} --annot={annot_file} " \
+                  "--ref-col={ref_col} " \
+                  "--start-col={start_col} " \
+                  "--stop-col={stop_col} " \
+                  "--qual-thr={qual} " \
+                  "--output={out_file} ".format(
+                                                 bin=self.bin,
+                                                 wig_file=os.path.join(self._data_dir, 'small.wig'),
+                                                 annot_file=os.path.join(self._data_dir, 'annotation_w_start.txt'),
+                                                 ref_col='Position',
+                                                 start_col='beg',
+                                                 stop_col='end',
+                                                 qual=15,
+                                                 out_file=test_result_path
+                                                )
+        # print("\n@@@", command)
+        if not self.bin:
+            raise RuntimeError('coverage not found, CRAW_HOME must be either in your path or CRAW_HOME must be defined '
+                               'command launch: \n{}'.format(command))
+
+        try:
+            cov_process = Popen(command,
+                                shell=True,
+                                stdin=None,
+                                stderr=PIPE,
+                                close_fds=False
+                                )
+        except Exception as err:
+            msg = "coverage execution failed: command = {0} : {1}".format(command, err)
+            print()
+            print(msg)
+            raise err from None
+
+        cov_process.wait()
+        self.assertEqual(cov_process.returncode, 0,
+                         "coverage finished with non zero exit code: {0} command launched=\n{1}\n{2}".format(
+                            cov_process.returncode,
+                            command,
+                            ''.join([l.decode('utf-8') for l in cov_process.stderr.readlines()]),
+                            ))
+
+        expected_result_path = os.path.join(self._data_dir, output_filename)
+        with open(expected_result_path) as expected_result_file:
+            expected_result = expected_result_file.readlines()
+
+        with open(test_result_path) as test_result_file:
+            test_result = test_result_file.readlines()
+
+        self._check_coverage_file(expected_result, test_result)
+
+
     def _check_coverage_file(self, expected_result, test_result):
         for expected, result in zip(expected_result, test_result):
             if expected.startswith("# Version:"):
@@ -242,7 +362,10 @@ class Test(CRAWTest):
                 continue
             elif expected.startswith("# --bam="):
                 continue
+            elif expected.startswith("# --wig="):
+                continue
             elif expected.startswith("# --output="):
                 continue
             else:
                 self.assertEqual(expected, result)
+
