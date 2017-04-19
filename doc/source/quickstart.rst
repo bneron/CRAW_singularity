@@ -16,9 +16,11 @@ craw_coverage
 `craw_coverage` need 2 files as inputs: the bam file and the annotation file.
 
  * the -b or --bam allow to specify the path to the bam file.
+ * or alternatively the -w, --wig option to specify the path to the wig file.
  * the -a --annot allow to specify the path to the annotation file.
 
-These two options are mandatory.
+The --bam and --wig options are mutually exclusive but one of these option is required.
+the --annot option is required.
 
 .. warning::
     At the same place of `bam` file, there must be the corresponding index file (the `bam.bai` file).

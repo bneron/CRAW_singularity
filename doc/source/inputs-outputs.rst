@@ -31,7 +31,10 @@ For more explanation see http://www.htslib.org/doc/ .
 annotation file
 ^^^^^^^^^^^^^^^
 
-The annotation file is a `tsv` file. It's mean that it is a text file with value separated by tabulation (not spaces).
+The annotation file is a `tsv` file by default.
+It's mean that it is a text file with value separated by tabulation (not spaces) or commas.
+But is separator is specified (--sep) it can be a csv file or any columns file.
+
 The first line of the file must be the name of the columns
 the other lines the values. Each line represent a row. ::
 
@@ -125,7 +128,7 @@ coverage_file
 It's a `tsv` file with all columns found in annotation file plus the result of coverage position by position centered
 on the reference position define for each line. for instance ::
 
-    craw_coverage -bam=../data/craw_data_test/WTE1.bam --annot=../data/craw_data_test/annotations.txt
+    craw_coverage --bam=../data/craw_data_test/WTE1.bam --annot=../data/craw_data_test/annotations.txt
     --ref-col=annotation_start --before=0  --after=2000
 
 In the command line above, the column '0' correspond to the annotation_start position the column '1' to annotation_start + 1
