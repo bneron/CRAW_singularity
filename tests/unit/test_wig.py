@@ -261,7 +261,7 @@ class TestChromosome(CRAWTest):
         self.assertEqual(len(ch), 10)
         ch[11] = 20
         self.assertEqual(len(ch), 20)
-        
+
 
 class TestGenome(CRAWTest):
 
