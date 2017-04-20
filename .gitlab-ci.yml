@@ -9,7 +9,7 @@ variables:
 
 testing:
   stage: test
-  image: registry-gitlab.pasteur.fr/bneron/craw:centos-dep-0.6
+  image: registry-gitlab.pasteur.fr/bneron/craw:centos-run-dep
   script:
     - python3 ${CI_PROJECT_DIR}/tests/run_tests.py -vvv
   except:
@@ -22,14 +22,19 @@ coverage:
   script:
     - cd ${CI_PROJECT_DIR}
     - coverage run --source=craw tests/run_tests.py --unit
+    - coverage html
     - coverage report
+  artifacts:
+    paths: htmlcov/
   except:
     - /^feat.*$/
     - /^fix.*$/
 
 releasing:
   stage: release
-  image: registry-gitlab.pasteur.fr/bneron/craw:release-0.6
+  image: registry-gitlab.pasteur.fr/bneron/craw:release
+  dependencies:
+    - test
   script:
     - cd ${CI_PROJECT_DIR}/doc/
     - make html
@@ -39,22 +44,24 @@ releasing:
   artifacts:
     name: craw-"$CI_COMMIT_REF_NAME".tar.gz
     paths:
-    - dist/craw*.tar.gz
+      - dist/craw*.tar.gz
   only:
     - tags
     - master
 
 pages:
-  image: registry-gitlab.pasteur.fr/bneron/craw:pages
+  stage: release
+  image: registry-gitlab.pasteur.fr/bneron/craw:release
+  dependencies:
+    - coverage
   script:
-    - cd ${CI_PROJECT_DIR}
-    - coverage run --source=craw tests/run_tests.py --unit
-    - coverage html
     - cd ${CI_PROJECT_DIR}/doc/
     - make html
+    - cd ${CI_PROJECT_DIR}
+    - mv ${CI_PROJECT_DIR}/doc/build/html/ public
+    - mv htmlcov public/
   artifacts:
     paths:
-      - ${CI_PROJECT_DIR}/htmlcov
-      - ${CI_PROJECT_DIR}/doc/build/html
+      - public
   only:
     - master

@@ -1,4 +1,4 @@
-FROM registry-gitlab.pasteur.fr/bneron/craw:centos-dep-0.6
+FROM registry-gitlab.pasteur.fr/bneron/craw:centos-run-dep
 
 MAINTAINER Bertrand Neron <bneron@pasteur.fr>
 
