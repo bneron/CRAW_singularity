@@ -25,7 +25,8 @@ coverage:
     - coverage html
     - coverage report
   artifacts:
-    paths: htmlcov/
+    paths:
+      - htmlcov/
   except:
     - /^feat.*$/
     - /^fix.*$/
@@ -33,8 +34,6 @@ coverage:
 releasing:
   stage: release
   image: registry-gitlab.pasteur.fr/bneron/craw:release
-  dependencies:
-    - test
   script:
     - cd ${CI_PROJECT_DIR}/doc/
     - make html
