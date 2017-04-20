@@ -22,11 +22,13 @@
 #                                                                         #
 ###########################################################################
 
+import os
 import re
 import collections
 from abc import ABCMeta, abstractmethod
 import logging
 
+import psutil
 import numpy as np
 
 
@@ -187,8 +189,22 @@ class Chromosome:
     """
 
     def __init__(self, name, size=1000000):
+        """
+        
+        :param name: 
+        :type name: str
+        :param size: 
+        :type size: the default size of the chromosome. 
+        Each time we try to set a value greater than the chromosome the chromosome size is doubled.
+        :param mem_thr: The percent of memory usage limit that Chromosome cannot be instantiate any more.
+        This is to protect the machine against memory swapping if the user provide a wig file with very big chromosomes.
+        """
         self.name = name
-        #self._coverage = np.full((2, size), np.nan)
+        # 30 is the memory used to allocated new array of shape (2,1)
+        # it was empirically determined
+        est_avail = self._estimate_memory(size, 30)
+        if est_avail <= 0:
+            raise MemoryError("Not enough memory to create new chromosome".format(self.name))
         self._coverage = np.full((2, size), 0.)
 
     def __len__(self):
@@ -247,9 +263,27 @@ class Chromosome:
 
 
     def _extend(self, size=1000000, fill=0.):
+        # 10 is the memory used to horizontally extend an array with one col and 2 rows fill with 0.
+        # it was empirically determined on linux gentoo plateform with python 3.4.5 and numpy 1.11.2
+        est_avail = self._estimate_memory(size, 10)
+        tot_k_size = self.__len__() + size
+        if est_avail <= 0:
+            for unit in ('', 'K', 'M', 'G'):
+                if tot_k_size < 1000.0:
+                    break
+                tot_k_size /= 1000.0
+            h_size = "{:.1f}{}bp".format(tot_k_size, unit)
+            raise MemoryError("Not enough memory to extend chromosome"
+                              " {} to {})".format(self.name, h_size))
         chunk = np.full((2, size), fill_value=fill)
         self._coverage = np.hstack((self._coverage, chunk))
 
+
+    def _estimate_memory(self, col_nb, mem_per_col):
+        my_process = psutil.Process(self._pid)
+        est_mem = (col_nb * mem_per_col) + my_process.memory_info().rss
+        est_avail = psutil.virtual_memory().available - est_mem
+        return est_avail
 
 
 
