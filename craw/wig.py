@@ -200,11 +200,12 @@ class Chromosome:
         This is to protect the machine against memory swapping if the user provide a wig file with very big chromosomes.
         """
         self.name = name
+        self._pid = os.getpid()
         # 30 is the memory used to allocated new array of shape (2,1)
         # it was empirically determined
         est_avail = self._estimate_memory(size, 30)
         if est_avail <= 0:
-            raise MemoryError("Not enough memory to create new chromosome".format(self.name))
+            raise MemoryError("Not enough memory to create new chromosome {}".format(self.name))
         self._coverage = np.full((2, size), 0.)
 
     def __len__(self):
