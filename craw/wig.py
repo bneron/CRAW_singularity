@@ -264,6 +264,14 @@ class Chromosome:
 
 
     def _extend(self, size=1000000, fill=0.):
+        """
+        Extend this chromosome of the size size and fill with fill.
+        :param size: the size (in bp) we want to increase the chromosome.
+        :type size: int
+        :param fill: the default value to fill the chromosome.
+        :type fill: float or nan
+        :raise MemoryError: if the chromosome extension could overcome the free memory.
+        """
         # 10 is the memory used to horizontally extend an array with one col and 2 rows fill with 0.
         # it was empirically determined on linux gentoo plateform with python 3.4.5 and numpy 1.11.2
         est_avail = self._estimate_memory(size, 10)
@@ -281,6 +289,14 @@ class Chromosome:
 
 
     def _estimate_memory(self, col_nb, mem_per_col):
+        """
+        :param col_nb: the number of column of the new array or the extension 
+        :type col_nb: int
+        :param mem_per_col: the memory needed to create or extend an array with one col and 2 rows fill with 0.0  
+        :type mem_per_col: int_
+        :return: the estimation of free memory available after creating or extending chromosome
+        :rtype: int 
+        """
         my_process = psutil.Process(self._pid)
         est_mem = (col_nb * mem_per_col) + my_process.memory_info().rss
         est_avail = psutil.virtual_memory().available - est_mem
