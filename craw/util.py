@@ -27,9 +27,9 @@ def progress(count, total, status=''):
     filled_len = int(round(bar_len * count / float(total)))
 
     percent = count / total
-    bar = '=' * filled_len + '>' + '.' * (bar_len - filled_len - 1)
+    bar = '=' * filled_len + '>' + ' ' * (bar_len - filled_len - 1)
 
-    sys.stderr.write('[{bar}] {percent:.1%} ... {status}\r'.format(bar=bar, percent=percent, status=status))
+    sys.stderr.write('[{bar}] {percent:.1%} ... of {status} annotations\r'.format(bar=bar, percent=percent, status=total))
     sys.stderr.flush()  # As suggested by Rom Ruben
     # (see: http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console/27871113#comment50529068_27871113)
 
