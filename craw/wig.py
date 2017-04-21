@@ -45,6 +45,9 @@ _log = logging.getLogger(__name__)
 
 
 class WigError(Exception):
+    """
+    Handle error related to wig parsing 
+    """
     pass
 
 
