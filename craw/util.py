@@ -29,8 +29,8 @@ def progress(count, total, status=''):
     percent = count / total
     bar = '=' * filled_len + '>' + '.' * (bar_len - filled_len - 1)
 
-    sys.stdout.write('[{bar}] {percent:.1%} ... {status}\r'.format(bar=bar, percent=percent, status=status))
-    sys.stdout.flush()  # As suggested by Rom Ruben
+    sys.stderr.write('[{bar}] {percent:.1%} ... {status}\r'.format(bar=bar, percent=percent, status=status))
+    sys.stderr.flush()  # As suggested by Rom Ruben
     # (see: http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console/27871113#comment50529068_27871113)
 
 
