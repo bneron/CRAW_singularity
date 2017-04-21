@@ -47,11 +47,12 @@ reference API
    heatmap
    argparse_util
 
+.. only:: html
 
-unit tests coverage
--------------------
+   unit tests coverage
+   -------------------
 
-http://bneron.pages.pasteur.fr/craw/htmlcov
+   http://bneron.pages.pasteur.fr/craw/htmlcov
 
 
 Indices and tables
