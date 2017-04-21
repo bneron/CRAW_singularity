@@ -323,7 +323,7 @@ with sense_file, antisense_file:
 
     for annot_num, annot_entry in enumerate(annotations, 1):
         if verbosity <= logging.INFO:
-            progress(annot_num, annot_line_number, status='compute coverage')
+            progress(annot_num, annot_line_number, status='annotation computed')
         if args.start_col:
             start = annot_entry.start - 1
             stop = annot_entry.stop
