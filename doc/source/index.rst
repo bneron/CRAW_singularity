@@ -48,6 +48,12 @@ reference API
    argparse_util
 
 
+unit tests coverage
+-------------------
+
+http://bneron.pages.pasteur.fr/craw/htmlcov
+
+
 Indices and tables
 ==================
 
