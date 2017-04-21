@@ -234,11 +234,11 @@ parser.add_argument("--version",
 parser.add_argument("-q", "--quiet",
                     action="count",
                     default=0,
-                    help="reduce verbosity.")
+                    help="Reduce verbosity.")
 parser.add_argument("-v","--verbose",
                     action="count",
                     default=0,
-                    help="increase verbosity.")
+                    help="Increase verbosity.")
 
 args = parser.parse_args()
 
@@ -270,7 +270,7 @@ elif not all(group_two):
     raise argparse.ArgumentError(None, "The two options --start-col and --stop-col work together. "
                                  "The both options must be specified in same time")
 
-verbosity = max(20 + (args.quiet - args.verbose) * 10, 1)
+verbosity = max(logging.INFO + (args.quiet - args.verbose) * 10, 1)
 craw.init_logger(verbosity)
 
 annot_line_number = sum(1 for line in open(args.annot))
