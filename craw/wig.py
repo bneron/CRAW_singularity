@@ -89,10 +89,15 @@ class Chunk(metaclass=ABCMeta):
         return NotImplemented
 
     @abstractmethod
-    def parse_data_line(self):
+    def parse_data_line(self, line, chrom):
         """
         parse a line of data and append the results in the corresponding strand
         This is an abstract methods, must be implemented in inherited class.
+        
+        :param line: line of data to parse (the white spaces at the end must be strip)
+        :type line: string
+        :param chrom: the chromosome to add coverage data
+        :type chrom: :class:`Chromosome` object.
         """
         return NotImplemented
 
@@ -130,6 +135,8 @@ class FixedChunk(Chunk):
         add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)
         :param line: line of data to parse (the white spaces at the end must be strip)
         :type line: string
+        :param chrom: the chromosome to add coverage data
+        :type chrom: :class:`Chromosome` object.
         """
         cov = [float(line)] * self.span
         # in FixedChunk we translate the origin to a 0-based position at the __init__
@@ -174,8 +181,11 @@ class VariableChunk(Chunk):
         """
         Parse line of data following a variableStep Declaration.
         Add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)
+       
         :param line: line of data to parse (the white spaces at the end must be strip)
         :type line: string
+        :param chrom: the chromosome to add coverage data
+        :type chrom: :class:`Chromosome` object.
         """
         pos, cov = line.split()
         # we switch from 1-based positions in wig into 0-based position in chromosome
@@ -198,9 +208,9 @@ class Chromosome:
         :type name: str
         :param size: 
         :type size: the default size of the chromosome. 
-        Each time we try to set a value greater than the chromosome the chromosome size is doubled.
-        :param mem_thr: The percent of memory usage limit that Chromosome cannot be instantiate any more.
-        This is to protect the machine against memory swapping if the user provide a wig file with very big chromosomes.
+            Each time we try to set a value greater than the chromosome the chromosome size is doubled.
+            This is to protect the machine against memory swapping if the user 
+            provide a wig file with very big chromosomes.
         """
         self.name = name
         self._pid = os.getpid()
@@ -306,7 +316,6 @@ class Chromosome:
         return est_avail
 
 
-
 class Genome:
     """
     A genome is made of chromosomes and some metadata, called infos
@@ -367,8 +376,6 @@ class Genome:
         if not isinstance(chrom, Chromosome):
             raise TypeError("Genome can contains only Chromosome objects")
         self._chromosomes[chrom.name] = chrom
-
-
 
 
 class WigParser:
@@ -515,7 +522,8 @@ class WigParser:
             self._genome.infos = attrs
 
 
-    def is_comment_line(self, line):
+    @staticmethod
+    def is_comment_line(line):
         """
         :param line: line to parse.
         :type line: string
@@ -523,12 +531,6 @@ class WigParser:
         :rtype: boolean
         """
         return line.startswith('#')
-
-
-
-
-
-
 
 
 
