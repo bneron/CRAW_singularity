@@ -31,7 +31,6 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 _log = logging.getLogger(__name__)
-_log.setLevel(logging.NOTSET)
 
 
 def get_data(coverage_file):
@@ -422,7 +421,6 @@ def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='t
         fig.subplots_adjust(top=0.95)
     fig.canvas.set_window_title(title)
     return fig
-
 
 
 def draw_raw_image(data, out_name, color_map=plt.cm.Blues, format='PNG'):

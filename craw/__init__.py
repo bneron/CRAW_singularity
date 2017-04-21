@@ -24,6 +24,7 @@
 
 
 import sys
+import logging
 
 __version__ = '$VERSION'
 
@@ -42,3 +43,20 @@ def get_version_message():
         version = __version__
     version_text = "craw {0} | Python {1}.{2}".format(version, sys.version_info.major, sys.version_info.minor)
     return version_text
+
+def init_logger(log_level):
+    """
+    Initiate the "root" logger for craw library
+    all logger create in craw package inherits from this root logger
+    This logger write logs on sys.stderr
+    
+    :param log_level: the level of the logger 
+    :type log_level: int 
+    """
+    craw_log = logging.getLogger('craw')
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(fmt='{levelname} : {name} : {message}', style='{')
+    handler.setFormatter(formatter)
+    craw_log.addHandler(handler)
+    craw_log.setLevel(log_level)
+    craw_log.propagate = False

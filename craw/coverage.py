@@ -28,7 +28,6 @@ from pysam.calignmentfile import AlignmentFile
 from .wig import Genome
 
 _log = logging.getLogger(__name__)
-_log.setLevel(logging.NOTSET)
 
 
 def get_coverage_function(input):

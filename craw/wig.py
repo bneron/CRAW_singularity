@@ -32,16 +32,7 @@ import psutil
 import numpy as np
 
 
-root_logger = logging.getLogger()
-handler = logging.StreamHandler()
-formatter = logging.Formatter(fmt='{levelname} : {name} : {message}', style='{')
-handler.setFormatter(formatter)
-root_logger.addHandler(handler)
-root_logger.setLevel(logging.DEBUG)
-
 _log = logging.getLogger(__name__)
-#level = logging.WARNING - (10 * args.verbosity)
-#log.setLevel(logging.NOTSET)
 
 
 class WigError(Exception):
