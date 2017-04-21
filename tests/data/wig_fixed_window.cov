@@ -9,12 +9,13 @@
 # --chr-col=chromosome
 # --output=/tmp/craw_test/small_wig.cov
 # --qual-thr=0
-# --quiet=False
+# --quiet=1
 # --ref-col=Position
 # --sense=mixed
 # --sep=	
 # --strand-col=strand
 # --suffix=cov
+# --verbose=0
 # --wig=/home/bneron/Projects/gwenael/src/tests/data/small.wig
 sense	name	gene	chromosome	strand	Position	-5	-4	-3	-2	-1	0	1	2	3
 S	YEL072W	RMD6	chrV	+	14415	11.0	11.0	11.0	12.0	12.0	12.0	12.0	13.0	13.0

@@ -10,12 +10,13 @@
 # --chr-col=chromosome
 # --output=tests/data/small
 # --qual-thr=0
-# --quiet=False
+# --quiet=1
 # --ref-col=Position
 # --sense=mixed
 # --sep=	
 # --strand-col=strand
 # --suffix=cov
+# --verbose=0
 sense	name	gene	chromosome	strand	Position	-5	-4	-3	-2	-1	0	1	2	3
 S	YEL072W	RMD6	chrV	+	14415	0	0	0	0	0	0	0	0	0
 AS	YEL072W	RMD6	chrV	+	14415	0	0	0	0	0	0	0	0	0

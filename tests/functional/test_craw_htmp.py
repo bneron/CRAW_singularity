@@ -64,6 +64,7 @@ class Test(CRAWTest):
         command = "{bin} " \
                   "--size {size} " \
                   "--out={out_file} " \
+                  "--quiet " \
                   "{cov_file}".format(
                               bin=self.bin,
                               size='raw',
@@ -122,6 +123,7 @@ class Test(CRAWTest):
                   "--size {size} " \
                   "--norm {norm} " \
                   "--out={out_file} " \
+                  "--quiet " \
                   "{cov_file}".format(
                               bin=self.bin,
                               size='raw',
@@ -181,6 +183,7 @@ class Test(CRAWTest):
                   "--size {size} " \
                   "--norm {norm} " \
                   "--out={out_file} " \
+                  "--quiet " \
                   "{cov_file}".format(
                               bin=self.bin,
                               size='raw',
@@ -242,6 +245,7 @@ class Test(CRAWTest):
                   "--size {size} " \
                   "--norm {norm} " \
                   "--out={out_file} " \
+                  "--quiet " \
                   "{cov_file}".format(
                               bin=self.bin,
                               size='raw',

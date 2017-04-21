@@ -64,6 +64,7 @@ class Test(CRAWTest):
                   "--after={after} " \
                   "--ref-col={ref_col} " \
                   "--qual-thr={qual} " \
+                  "--quiet " \
                   "--output={out_file} ".format(
                                                  bin=self.bin,
                                                  bam_file=os.path.join(self._data_dir, 'small.bam'),
@@ -126,6 +127,7 @@ class Test(CRAWTest):
                   "--after={after} " \
                   "--ref-col={ref_col} " \
                   "--qual-thr={qual} " \
+                  "--quiet " \
                   "--output={out_file} ".format(
                                                  bin=self.bin,
                                                  bam_file=os.path.join(self._data_dir, 'small.bam'),
@@ -188,6 +190,7 @@ class Test(CRAWTest):
                   "--start-col={start_col} " \
                   "--stop-col={stop_col} " \
                   "--qual-thr={qual} " \
+                  "--quiet " \
                   "--output={out_file} ".format(
                                                  bin=self.bin,
                                                  bam_file=os.path.join(self._data_dir, 'small.bam'),
@@ -248,6 +251,7 @@ class Test(CRAWTest):
                   "--after={after} " \
                   "--ref-col={ref_col} " \
                   "--qual-thr={qual} " \
+                  "--quiet " \
                   "--output={out_file} ".format(
                                                  bin=self.bin,
                                                  wig_file=os.path.join(self._data_dir, 'small.wig'),
@@ -308,6 +312,7 @@ class Test(CRAWTest):
                   "--start-col={start_col} " \
                   "--stop-col={stop_col} " \
                   "--qual-thr={qual} " \
+                  "--quiet " \
                   "--output={out_file} ".format(
                                                  bin=self.bin,
                                                  wig_file=os.path.join(self._data_dir, 'small.wig'),
