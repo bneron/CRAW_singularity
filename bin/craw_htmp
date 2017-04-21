@@ -39,7 +39,6 @@ try:
 except ImportError as err:
     msg = "Cannot import craw, check your installation or your CRAW_HOME variable : {0!s}".format(err)
     sys.exit(msg)
-from craw import argparse_util
 
 
 root_logger = logging.getLogger()
@@ -288,9 +287,14 @@ The extension 'sense' or 'antisense' will be added between the name and the suff
 
 If no format (determine using the suffix) is given 'png' will be used.""")
 
-parser.add_argument("-v", "--verbosity",
+parser.add_argument("-v", "--verbose",
                     action='count',
+                    default=0,
                     help="Increase output verbosity.")
+parser.add_argument("-q", "--quiet",
+                    action="count",
+                    default=0,
+                    help="Reduce output verbosity.")
 parser.add_argument("--version",
                     action='version',
                     version=get_version_message(),
@@ -300,15 +304,13 @@ try:
 except Exception as err:
     print(err)
 
-if args.verbosity is None:
-    args.verbosity = 0
-level = logging.WARNING - (10 * args.verbosity)
-root_logger.setLevel(level)
-log = logging.getLogger('craw_htmp')
-log.setLevel(logging.NOTSET)
+verbosity = max(logging.INFO + (args.quiet - args.verbose) * 10, 1)
+craw.init_logger(verbosity)
+
+log = logging.getLogger('craw.htmp')
+
 
 log.debug("args={}".format(args))
-
 ###########################
 # validating some options #
 ###########################
@@ -316,13 +318,13 @@ log.debug("args={}".format(args))
 if not os.environ.get('DISPLAY'):
     if args.out is not None:
         _, out_format = os.path.splitext(args.out)
-        from craw import mpl_util
+        from craw.util import non_interactive_backends
         try:
-            backend = mpl_util.non_interactive_backends[out_format.lstrip('.')]
+            backend = non_interactive_backends[out_format.lstrip('.')]
         except KeyError:
             raise RuntimeError("The '{}' format is not supported, choose among {}.".format(
                 out_format,
-                list(mpl_util.non_interactive_backends.keys())
+                list(non_interactive_backends.keys())
             ))
         mtp.use(backend)
     else:
