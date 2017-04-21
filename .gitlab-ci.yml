@@ -39,7 +39,7 @@ releasing:
     - make html
     - make latexpdf
     - cd ${CI_PROJECT_DIR}
-    - python3 sdist
+    - python3 setup.py sdist
   artifacts:
     name: craw-"$CI_COMMIT_REF_NAME".tar.gz
     paths:
