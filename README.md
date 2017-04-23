@@ -1,6 +1,8 @@
 Counter RnAseq Window
 =====================
 
+[![build status](https://gitlab.pasteur.fr/bneron/craw/badges/master/build.svg)](https://gitlab.pasteur.fr/bneron/craw/commits/master)
+[![coverage report](https://gitlab.pasteur.fr/bneron/craw/badges/master/coverage.svg)](https://gitlab.pasteur.fr/bneron/craw/commits/master)
 
 Installation
 ============
