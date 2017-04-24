@@ -280,7 +280,9 @@ class Chromosome:
         """
         # 10 is the memory used to horizontally extend an array with one col and 2 rows fill with 0.
         # it was empirically determined on linux gentoo plateform with python 3.4.5 and numpy 1.11.2
+        print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
         est_avail = self._estimate_memory(size, 10)
+        print("est_avail", est_avail)
         tot_k_size = self.__len__() + size
         if est_avail <= 0:
             for unit in ('', 'K', 'M', 'G'):
@@ -288,7 +290,7 @@ class Chromosome:
                     break
                 tot_k_size /= 1000.0
             h_size = "{:.1f}{}bp".format(tot_k_size, unit)
-            print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
             print("hsize = ", h_size)
             raise MemoryError("Not enough memory to extend chromosome"
                               " {} to {})".format(self.name, h_size))
