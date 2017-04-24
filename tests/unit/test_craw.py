@@ -22,6 +22,8 @@
 #                                                                         #
 ###########################################################################
 
+import logging
+
 try:
     from tests import CRAWTest
 except ImportError as err:
@@ -39,3 +41,12 @@ class MyTestCase(CRAWTest):
         craw.__version__ = 1.0
         self.assertTrue(craw.get_version_message().startswith("craw 1.0 | Python 3."))
 
+
+    def test_init_logger(self):
+        log_level = 30
+        craw.init_logger(log_level)
+
+        craw_log = logging.getLogger('craw')
+        self.assertEqual(len(craw_log.handlers), 1)
+        self.assertEqual(craw_log.handlers[0].__class__.__name__, 'StreamHandler')
+        self.assertEqual(craw_log.getEffectiveLevel(), log_level)
