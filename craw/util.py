@@ -1,7 +1,7 @@
 import sys
 
 
-def progress(count, total, status=''):
+def progress(count, total, status='', file=sys.stderr):
     """
     Display ay progress bar on stderr like
     
@@ -13,6 +13,8 @@ def progress(count, total, status=''):
     :type totol: int or float
     :param status: the message to display at the right of progress bar
     :type status: str
+    :param file: where to write the progress bar (by default sys.stderr). 
+    :type file: file like object
     """
     # The MIT License (MIT)
     # Copyright (c) 2016 Vladimir Ignatev
@@ -41,8 +43,8 @@ def progress(count, total, status=''):
     percent = count / total
     bar = '=' * filled_len + '>' + ' ' * (bar_len - filled_len - 1)
 
-    sys.stderr.write('[{bar}] {percent:.1%} ... of {status} annotations\r'.format(bar=bar, percent=percent, status=total))
-    sys.stderr.flush()  # As suggested by Rom Ruben
+    file.write('[{bar}] {percent:.1%} ... of {status} annotations\r'.format(bar=bar, percent=percent, status=total))
+    file.flush()  # As suggested by Rom Ruben
     # (see: http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console/27871113#comment50529068_27871113)
 
 
