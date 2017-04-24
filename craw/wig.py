@@ -155,8 +155,10 @@ class VariableChunk(Chunk):
       
     will give coverages starting at position 10 and ending at 26 for both strands and with 
     the following coverages values
-    for = [11.0, 11.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 22.0, 22.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    rev = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 30.0, 0.0, 0.0, 0.0, 50.0, 50.0]
+    
+    
+    | for = [11.0, 11.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 22.0, 22.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    | rev = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 30.0, 0.0, 0.0, 0.0, 50.0, 50.0]
     """
 
 
@@ -259,7 +261,7 @@ class Chromosome:
     def __getitem__(self, pos):
         """
         :param pos: a position or a slice (0 based)
-        if pos is a slice the left indice is excluded
+                   if pos is a slice the left indice is excluded
         :return: the coverage at this position or corresponding to this slice.
         :rtype: a list of 2 list of float [[float,...],[float, ...]]
         :raise IndexError: if pos is not in coverage or one bound of slice is out the coverage
@@ -297,7 +299,7 @@ class Chromosome:
         :param col_nb: the number of column of the new array or the extension 
         :type col_nb: int
         :param mem_per_col: the memory needed to create or extend an array with one col and 2 rows fill with 0.0  
-        :type mem_per_col: int_
+        :type mem_per_col: int
         :return: the estimation of free memory available after creating or extending chromosome
         :rtype: int 
         """
