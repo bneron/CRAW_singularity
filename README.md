@@ -125,7 +125,7 @@ are on the forward strand whereas the negative ones are on the reverse strand. :
 In the example above the coverage on the Chromosome I for the positions 72, 73, 74, 75 
 are 12, 35, 70, 127 on the forward strand and 88, 42, 12, 1 on the reverse strand.
 
-
+The --bam and --wig options are mutually exclusive but one of these option is required.
 
 #### annotation file
 
