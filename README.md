@@ -73,8 +73,8 @@ Quickstart
 
 A detailed documentation is available 
     
-    * online: [latest documentaion for master](http://bneron.pages.pasteur.fr/craw/)
-    * installed along craw in INSTALL_DIR/share/craw/doc/(html|pdf) 
+* online: [latest documentation for master](http://bneron.pages.pasteur.fr/craw/)
+* installed along craw in INSTALL_DIR/share/craw/doc/(html|pdf) 
 
 
 Inputs / Outputs
