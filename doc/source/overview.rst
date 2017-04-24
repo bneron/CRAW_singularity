@@ -8,7 +8,7 @@ overview
 of RNA seq experiment.
 
 The craw package contains two scripts `craw_coverage` and `craw_htmp`.
-`craw_coverage` compute the coverage, whereas craw_htmp allow to represent graphically the results
+`craw_coverage` compute the coverage, whereas `craw_htmp` allow to represent graphically the results
 of `craw_coverage` with a heat map.
 
 

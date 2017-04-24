@@ -23,7 +23,7 @@ This function is called for each entry of the annotation file.
 get_wig_coverage
 ================
 
-Get coverage from :class:`wig.Genome` instance for reference (*chromosome*) for an interval of positions, on both strand.
+Get coverage from :class:`craw.wig.Genome` instance for reference (*chromosome*) for an interval of positions, on both strand.
 The quality parameter is here just to have the same signature as get_bam_coverage but will be ignores .
 It also aligned all coverages return by the Chromosome on the reference position by padding left and right by ``None``.
 

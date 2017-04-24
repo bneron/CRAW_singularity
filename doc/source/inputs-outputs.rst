@@ -11,11 +11,13 @@ craw_coverage
 Inputs
 ------
 
+craw_coverage* need a file bam or wig to compute coverage and an annotation file
+to specify on which regions to compute these coverages.
 
 bam file
 ^^^^^^^^
 
-*craw_coverage* need a file of alignment reads called bam file.
+*craw_coverage* can use a file of alignment reads called bam file.
 a bam file is a short DNA sequence read alignments in the Binary Alignment/Map format (.bam).
 *craw_coverage* needs also the corresponding index file (bai). The index file must be located beside the bam file
 with the same name instead to have the *.bam* extension it end by *.bai* extension.
@@ -27,13 +29,37 @@ To index a bam file you need samtools. The command line is ::
 
 For more explanation see http://www.htslib.org/doc/ .
 
+wig file
+^^^^^^^^
+
+*craw_coverage* can compute coverage also from wig file
+see https://wiki.nci.nih.gov/display/tcga/wiggle+format+specification and
+http://genome.ucsc.edu/goldenPath/help/wiggle.html .
+for format specifications. Compare d to these specifications
+craw support coverages on both strands. the positive coverages scores
+are on the forward strand whereas the negative ones are on the reverse strand. ::
+
+    track type=wiggle_0 name="demo" color=96,144,246 altColor=96,144,246 autoScale=on  graphType=bar
+    variableStep chrom=chrI span=1
+    72      12.0000
+    73      35.0000
+    74      70.0000
+    75      127.0000
+    ...
+    72      -88.0000
+    73      -42.0000
+    74      -12.0000
+    75      -1.0000
+
+In the example above the coverage on the Chromosome I for the positions 72, 73, 74, 75
+are 12, 35, 70, 127 on the forward strand and 88, 42, 12, 1 on the reverse strand.
 
 annotation file
 ^^^^^^^^^^^^^^^
 
 The annotation file is a `tsv` file by default.
 It's mean that it is a text file with value separated by tabulation (not spaces) or commas.
-But is separator is specified (--sep) it can be a csv file or any columns file.
+But if a  separator is specified (--sep) it can be a csv file or any columns file.
 
 The first line of the file must be the name of the columns
 the other lines the values. Each line represent a row. ::
@@ -103,7 +129,7 @@ If we want to compute coverage on variable window size, 2 extra columns whose na
 
 ::
 
-    craw_coverage --bam file.bam --annot annot.txt --ref-col annotation_start --start-col annotation_start --stop-col annotation_end
+    craw_coverage --wig file.wig --annot annot.txt --ref-col annotation_start --start-col annotation_start --stop-col annotation_end
 
 
 The position of reference must be between start and end.
@@ -128,25 +154,31 @@ coverage_file
 It's a `tsv` file with all columns found in annotation file plus the result of coverage position by position centered
 on the reference position define for each line. for instance ::
 
-    craw_coverage --bam=../data/craw_data_test/WTE1.bam --annot=../data/craw_data_test/annotations.txt
+    craw_coverage --wig=../data/small.wig --annot=../data/annotations.txt
     --ref-col=annotation_start --before=0  --after=2000
 
 In the command line above, the column '0' correspond to the annotation_start position the column '1' to annotation_start + 1
 on so on until '2000' (here we display only the first 3 columns of the coverage). ::
 
-    # Running Counter RnAseq Window
+    # Running Counter RnAseq Window craw_coverage
     # Version: craw NOT packaged, it should be a development version | Python 3.4
     # Using: pysam 0.9.1.4 (samtools 1.3.1)
     #
-    # craw_coverage ran with the following arguments:
-    # --after=2000
-    # --annot=../data/craw_data_test/annotations.txt
-    # --bam=../data/craw_data_test/WTE1.bam
-    # --before=0
-    # --output=WTE1_0+2000.new.cov
-    # --qual-thr=15
-    # --ref-col=annotation_start
+    # craw_coverage run with the following arguments:
+    # --after=3
+    # --annot=../data/annotation_wo_start.txt
+    # --before=5
+    # --chr-col=chromosome
+    # --output=small_wig.cov
+    # --qual-thr=0
+    # --quiet=1
+    # --ref-col=Position
+    # --sense=mixed
+    # --sep=
+    # --strand-col=strand
     # --suffix=cov
+    # --verbose=0
+    # --wig=../data/small.wig
     sense   name    gene    type    chromosome      strand  annotation_start        annotation_end  has_transcript  transcription_end       transcription_start     0       1       2
     S       YEL072W RMD6    gene    chrV    +       13720   14415   1       14745   13569   7       7       7
     AS      YEL072W RMD6    gene    chrV    +       13720   14415   1       14745   13569   0       0       0
@@ -173,6 +205,14 @@ Outputs
 
 The default output of *craw_htmp* (if --out is omitted) is grapical window on the screen.
 The figure display on the screen can be saved using the window menu.
+
+.. container::
+
+    .. image:: _static/craw_htmp_sense_on_left.png
+       :width: 30%
+       :alt: --sense-on-left
+
+
 It is also possible to generate directly a image file in various format by specifying the --out option.
 The output format will be deduced form the filename extension provide to --out option. ::
 

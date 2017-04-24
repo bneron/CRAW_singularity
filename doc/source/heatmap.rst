@@ -44,7 +44,7 @@ drawing heatmap
 
 There are 2 way to generates figures, the first one is to generate a figures containing 2 heatmap for sense or antisense
 with axis, legend on so on. But in this representation it's not possible to display a figure with no scaling out/in.
-So the information of one pixel is not accessible. This representation is generate by :func:`craw.heatmap.drwa_heatmap`
+So the information of one pixel is not accessible. This representation is generate by :func:`craw.heatmap.draw_heatmap`
 and use matplotlib.
 
 The second representation is to produce raw image where one nucleotide (one position for one gene) is represent by one pixel

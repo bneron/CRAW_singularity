@@ -13,7 +13,9 @@ Quick start
 craw_coverage
 =============
 
-`craw_coverage` need 2 files as inputs: the bam file and the annotation file.
+
+craw_coverage* need a file bam or wig to compute coverage and an annotation file
+to specify on which regions to compute these coverages.
 
  * the -b or --bam allow to specify the path to the bam file.
  * or alternatively the -w, --wig option to specify the path to the wig file.
