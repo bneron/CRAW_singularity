@@ -258,15 +258,13 @@ class TestChromosome(CRAWTest):
         self.assertEqual(ch._coverage.shape[1], 40)
         import psutil
         print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-        print(psutil.virtual_memory())
-        print(ch._estimate_memory(1000 * 1000 * 1000 * 1000, 10))
+        print("virtual_memory =", psutil.virtual_memory())
+        print("estimate_memory", ch._estimate_memory(1000 * 1000 * 1000 * 1000, 10))
         with self.assertRaises(MemoryError) as ctx:
             # 1 billion
             ch[1000 * 1000 * 1000 * 1000] = 10
             import psutil
-            print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-            print(psutil.virtual_memory())
-            print(ch._estimate_memory(1000 * 1000 * 1000 * 1000, 10))
+            print("        IN self.assertRaises(MemoryError)   ")
             print(str(ctx.exception))
         self.assertTrue(str(ctx.exception).startswith("Not enough memory to extend chromosome"))
 

@@ -282,7 +282,7 @@ class Chromosome:
         # it was empirically determined on linux gentoo plateform with python 3.4.5 and numpy 1.11.2
         print("\n######################################################")
         est_avail = self._estimate_memory(size, 10)
-        print("est_avail", est_avail)
+        print("_extend size", size, "est_avail", est_avail)
         tot_k_size = self.__len__() + size
         if est_avail <= 0:
             for unit in ('', 'K', 'M', 'G'):
