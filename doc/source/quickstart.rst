@@ -95,12 +95,15 @@ This command will compute coverage using WTE1.bam and with annotations.txt file.
 
 Other options
 -------------
-The folowing option are not mandatory:
+The following option are not mandatory:
 
 * **-q QUAL_THR, \-\-qual-thr QUAL_THR** The minimal quality of read mapping to take it in account. (default=15)
 * **-s SUFFIX, \-\-suffix SUFFIX** The name of the suffix to use for the output file. (default= `.cov`)
 * **-o OUTPUT, \-\-output OUTPUT** The path of the output (default= base name of annotation file with --suffix)
 * **\-\-version** display version information and quit.
+* **\-\-verbose, \-v** increase the verbosity of the output (this option can be repeat several times as -vv).
+* **\-\-quiet** decrease verbosity of the output. By default craw_coverage is slightly verbose and display a progress
+  bar. This option can be useful to disable any progression information on batch run.
 * **-h --help** disply the inline help and exit.
 
 .. warning::
@@ -112,6 +115,7 @@ The folowing option are not mandatory:
 .. warning::
     the coverage file can be huge depending on the number of gene to compute the coverage and the size of the window
     for instance for 6000 genes with a window of 15000 nt the cov file will weight almost 900Mb.
+
 
 craw_htmp
 =========
@@ -219,7 +223,7 @@ Other options
 * **-h, \-\-help**  Display the help message and exit
 * **\-\-out OUT**  The name of the file (the format will based on the extension) to save the figure.
   Instead of displaying the figure on the screen, save it directly in this file.
-* **-v, \-\-verbosity** Increase output verbosity. By default craw_htmp is relatively quiet (display only warning and error),
+* **-v, \-\-verbose** Increase output verbosity. By default craw_htmp is relatively quiet (display only warning and error),
   if you want to display also the processing step just add -v on the commandline (or -vv to display also the debugging message).
 * **\-\-version** Display version information and quit.
 
