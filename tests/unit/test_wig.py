@@ -259,7 +259,7 @@ class TestChromosome(CRAWTest):
         import psutil
         print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
         print(psutil.virtual_memory())
-        print(ch._estimate_memory(1000 * 1000 * 1000 * 1000, 10))
+        print(ch._estimate_memory(1000 * 1000 * 1000, 10))
         with self.assertRaises(MemoryError) as ctx:
             # 1 billion
             ch[1000 * 1000 * 1000 * 1000] = 10
