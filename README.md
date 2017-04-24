@@ -11,6 +11,7 @@ requirements
 ------------
 
 - python > 3
+- psutil >= 4.0
 - pysam >= 0.9.1.4
 - pandas >= 0.17.1
 - numpy >= 1.11.2
@@ -46,11 +47,14 @@ from repository
 
 clone the project and install with the setup.py
 
-`git clone https://gitlab.pasteur.fr/bneron/craw.git`
+```git clone https://gitlab.pasteur.fr/bneron/craw.git```
 
-`cd craw`
+```cd craw```
 
-`python3 setup.py install`
+```python3 setup.py sdist
+   pip3 install dist/craw-master-devxxxxx.tar.gz
+```
+
 
 You can also use the package without install it.
 You have to export the **CRAW_HOME** environment variable.
@@ -68,7 +72,10 @@ to test if everything is correctly installed.
 Quickstart
 ==========
 
-A detailed documentation is available in html and pdf format in INSTALL_DIR/share/craw/doc/(html|pdf) 
+A detailed documentation is available 
+    
+    * online: [latest documentaion for master](http://bneron.pages.pasteur.fr/craw/)
+    * installed along craw in INSTALL_DIR/share/craw/doc/(html|pdf) 
 
 
 Inputs / Outputs
@@ -93,6 +100,31 @@ To index a bam file you need samtools. The command line is
     samtools index file.bam
 
 For more explanation see http://www.htslib.org/doc/ .
+
+#### wig file
+
+*craw_coverage* can compute coverage also from wig file
+see https://wiki.nci.nih.gov/display/tcga/wiggle+format+specification and
+http://genome.ucsc.edu/goldenPath/help/wiggle.html .
+for format specifications. Compare d to these specifications
+craw support coverages on both strands. the positive coverages scores
+are on the forward strand whereas the negative ones are on the reverse strand. ::
+
+    track type=wiggle_0 name="demo" color=96,144,246 altColor=96,144,246 autoScale=on  graphType=bar
+    variableStep chrom=chrI span=1
+    72      12.0000
+    73      35.0000
+    74      70.0000
+    75      127.0000
+    ...
+    72      -88.0000
+    73      -42.0000
+    74      -12.0000
+    75      -1.0000
+
+In the example above the coverage on the Chromosome I for the positions 72, 73, 74, 75 
+are 12, 35, 70, 127 on the forward strand and 88, 42, 12, 1 on the reverse strand.
+
 
 
 #### annotation file
