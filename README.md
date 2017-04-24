@@ -45,15 +45,14 @@ The craw documentation (html and pdf) is located in /Library/Framework/Python.Fr
 from repository
 ---------------
 
-clone the project and install with the setup.py
+clone the project and install with the setup.py ::
 
-```git clone https://gitlab.pasteur.fr/bneron/craw.git```
+    git clone https://gitlab.pasteur.fr/bneron/craw.git
 
-```cd craw```
+    cd craw
 
-```python3 setup.py sdist
-   pip3 install dist/craw-master-devxxxxx.tar.gz
-```
+    python3 setup.py sdist
+    pip3 install dist/craw-master-devxxxxx.tar.gz
 
 
 You can also use the package without install it.
