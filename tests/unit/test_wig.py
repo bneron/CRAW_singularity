@@ -23,7 +23,7 @@
 ###########################################################################
 import os
 import logging
-
+import psutil
 import numpy as np
 
 try:
@@ -193,8 +193,9 @@ class TestChromosome(CRAWTest):
         ch_name = 'ChrII'
         ch = Chromosome(ch_name)
         self.assertEqual(ch.name, ch_name)
+        mem_avail = psutil.virtual_memory().available
         with self.assertRaises(MemoryError) as ctx:
-            Chromosome(ch_name, size=10000000000000)
+            Chromosome(ch_name, size=mem_avail)
         self.assertEqual(str(ctx.exception), "Not enough memory to create new chromosome {}".format(ch_name))
 
     def test_get_item(self):
@@ -256,10 +257,12 @@ class TestChromosome(CRAWTest):
         self.assertEqual(ch._coverage.shape[1], 10)
         ch[20] = 20
         self.assertEqual(ch._coverage.shape[1], 40)
+        avail_mem = psutil.virtual_memory().available
+        ch = Chromosome(ch_name, size=int(avail_mem / 40))
         with self.assertRaises(MemoryError) as ctx:
             # 1 billion
-            ch[1000 * 1000 * 1000] = 10
-        #self.assertTrue(str(ctx.exception).startswith("Not enough memory to extend chromosome"))
+            ch[avail_mem] = 10
+        self.assertTrue(str(ctx.exception).startswith("Not enough memory to extend chromosome"))
 
 
     def test_len(self):
