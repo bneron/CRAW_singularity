@@ -259,10 +259,7 @@ class TestChromosome(CRAWTest):
         with self.assertRaises(MemoryError) as ctx:
             # 1 billion
             ch[1000 * 1000 * 1000 * 1000] = 10
-            import psutil
             print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-            print(psutil.virtual_memory())
-            print(ch._estimate_memory(1000 * 1000 * 1000 * 1000, 10))
             print(str(ctx.exception))
         self.assertTrue(str(ctx.exception).startswith("Not enough memory to extend chromosome"))
 
