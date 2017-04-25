@@ -193,8 +193,9 @@ class TestChromosome(CRAWTest):
         ch_name = 'ChrII'
         ch = Chromosome(ch_name)
         self.assertEqual(ch.name, ch_name)
+        mem_avail = psutil.virtual_memory().available
         with self.assertRaises(MemoryError) as ctx:
-            Chromosome(ch_name, size=10000000000000)
+            Chromosome(ch_name, size=mem_avail)
         self.assertEqual(str(ctx.exception), "Not enough memory to create new chromosome {}".format(ch_name))
 
     def test_get_item(self):
