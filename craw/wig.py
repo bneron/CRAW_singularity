@@ -288,8 +288,6 @@ class Chromosome:
                     break
                 tot_k_size /= 1000.0
             h_size = "{:.1f}{}bp".format(tot_k_size, unit)
-            print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-            print("hsize = ", h_size)
             raise MemoryError("Not enough memory to extend chromosome"
                               " {} to {})".format(self.name, h_size))
         chunk = np.full((2, size), fill_value=fill)
