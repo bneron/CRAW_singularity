@@ -54,6 +54,14 @@ reference API
 
    http://bneron.pages.pasteur.fr/craw/htmlcov
 
+Release notes
+-------------
+
+.. toctree::
+   :maxdepth: 2
+
+   release_notes
+
 
 Indices and tables
 ==================
