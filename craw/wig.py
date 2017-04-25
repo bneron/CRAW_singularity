@@ -280,7 +280,7 @@ class Chromosome:
         """
         # 10 is the memory used to horizontally extend an array with one col and 2 rows fill with 0.
         # it was empirically determined on linux gentoo plateform with python 3.4.5 and numpy 1.11.2
-        print("\n######################################################")
+        print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
         est_avail = self._estimate_memory(size, 10)
         print("est_avail", est_avail)
         tot_k_size = self.__len__() + size
