@@ -24,7 +24,13 @@
 
 import logging
 
-from pysam.calignmentfile import AlignmentFile
+try:
+    # for pysam>=0.9.1.4
+    from pysam.calignmentfile import AlignmentFile
+except ModuleNotFoundError:
+    # for pysam>=0.10
+    from pysam import AlignmentFile
+
 from .wig import Genome
 
 _log = logging.getLogger(__name__)
