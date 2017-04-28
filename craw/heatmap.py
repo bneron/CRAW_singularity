@@ -52,11 +52,10 @@ def split_data(data):
     :param data: the coverage data to split
     :type data: a 2 dimension :class:`pandas.DataFrame` object
     :return: two matrix
-    :rtype: tuple of two :class:`pandas.DataFrame` object
+    :rtype: tuple of two :class:`pandas.DataFrame` object (sense pandas.DataFrame, antisense pandas.DataFrame)
     """
-    sense = data.loc[data['sense'] == 'S']
-    antisense = data.loc[data['sense'] == 'AS']
-    return sense, antisense
+    grp = data.groupby(by=['sense'])
+    return grp.get_group('S').copy(), grp.get_group('AS').copy()
 
 
 def sort(data, criteria, **kwargs):
