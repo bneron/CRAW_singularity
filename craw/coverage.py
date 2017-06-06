@@ -186,10 +186,11 @@ def get_bam_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, 
             window_cov.append(cov_A + cov_T + cov_C + cov_G)
         if real_start:
             window_cov = [None] * abs(real_start) + window_cov
+        if strand == '-':
+            window_cov.reverse()
         return window_cov
 
-    pad_left = [None] * (max_left - (annot_entry.ref - start))
-    pad_right = [None] * (max_right - (stop - annot_entry.ref))
+
     forward_cov = coverage_one_strand(sam_file,
                                       annot_entry.chromosome,
                                       start,
@@ -197,7 +198,10 @@ def get_bam_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, 
                                       qual_thr,
                                       '+'
                                       )
+    pad_left = [None] * (max_left - (annot_entry.ref - start))
+    pad_right = [None] * (max_right - (stop - annot_entry.ref))
     forward_cov = pad_left + forward_cov + pad_right
+
     reverse_cov = coverage_one_strand(sam_file,
                                       annot_entry.chromosome,
                                       start,
@@ -205,6 +209,8 @@ def get_bam_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, 
                                       qual_thr,
                                       '-'
                                       )
+    pad_right = [None] * (max_right - (annot_entry.ref - start))
+    pad_left = [None] * (max_left - (stop - annot_entry.ref))
     reverse_cov = pad_left + reverse_cov + pad_right
     return forward_cov, reverse_cov
 

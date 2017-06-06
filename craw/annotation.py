@@ -271,6 +271,10 @@ class AnnotationParser:
             for entry in self.get_annotations():
                 left = entry.ref - entry.start
                 right = entry.stop - entry.ref
+                if entry.strand == '-':
+                    # for coverages on reverse strand the sense of scores
+                    # must be reversed, so the computation of padding must be too
+                    left, right = right, left
                 if left > max_left:
                     max_left = left
                 if right > max_right:
