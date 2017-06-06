@@ -77,7 +77,7 @@ class TestCoverage(CRAWTest):
                      'rev': [0, 0, 0, 0, 0, 0, 0, 0]
                      },
                     {'for': [None, None, 0, 0, 0, 0, 0, 0],
-                     'rev': [None, None, 0, 0, 0, 0, 0, 0]
+                     'rev': [0, 0, 0, 0, 0, 0, None, None]
                      }
                     ]
         # get_bam_coverage work with 0-based positions
@@ -88,6 +88,39 @@ class TestCoverage(CRAWTest):
                                                         annot_entry,
                                                         start=values[-1] - 5 - 1,
                                                         stop=values[-1] + 3 - 1,
+                                                        qual_thr=0,
+                                                        max_left=0,
+                                                        max_right=0)
+            self.assertListEqual(forward_cov, exp_val['for'])
+            self.assertListEqual(reverse_cov, exp_val['rev'])
+
+
+    def test_get_bam_coverage_strand_rev(self):
+        sam_path = os.path.join(self._data_dir, 'small.bam')
+        sam_file = pysam.AlignmentFile(sam_path, "rb")
+        annot_fields = ['name', 'gene', 'chromosome', 'strand', 'Position']
+        entry_cls_name = 'foo'
+        ref_col = 'Position'
+        ne_class = new_entry_type(entry_cls_name, annot_fields, ref_col)
+        value_lines = [['YEL071W', 'DLD3', 'chrV', '+', 17848],
+                       ['YEL077C', 'YEL077C', 'chrV', '-', 264]]
+
+        expected = [
+                    {'for': [227, 227, 227, 227, 227, 226, 225, 224, 224],
+                     'rev': [0, 0, 0, 0, 0, 0, 0, 0, 0]
+                     },
+                    {'for': [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                     'rev': [12, 12, 12, 12, 12, 12, 12, 12, 8]
+                    }
+                    ]
+        # get_bam_coverage work with 0-based positions
+        # whereas annot_entry with 1-based positions
+        for values, exp_val in zip(value_lines, expected):
+            annot_entry = ne_class([str(v) for v in values])
+            forward_cov, reverse_cov = get_bam_coverage(sam_file,
+                                                        annot_entry,
+                                                        start=values[-1] - 5 - 1,
+                                                        stop=values[-1] + 3,
                                                         qual_thr=0,
                                                         max_left=0,
                                                         max_right=0)
@@ -106,10 +139,10 @@ class TestCoverage(CRAWTest):
                        ['YEL071W', 'DLD3', 'chrV', '+', 17848, 17840, 17850]]
 
         expected = [{'for': [None, None, None, None, 0, 0, 0, 0, 0, 0, 0, None, None],
-                     'rev': [None, None, None, None, 0, 0, 0, 0, 0, 0, 0, None, None]
+                     'rev': [None, None, None, None, None, 0, 0, 0, 0, 0, 0, 0, None]
                      },
                     {'for': [227, 227, 227, 227, 227, 227, 227, 227, 226, 225, None, None, None, None],
-                     'rev': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, None, None, None, None]
+                     'rev': [None, None, None, None, None, None, None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                      }
                     ]
         # get_bam_coverage work with 0-based positions
