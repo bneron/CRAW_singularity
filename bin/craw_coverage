@@ -325,11 +325,20 @@ with sense_file, antisense_file:
         if verbosity <= logging.INFO:
             progress(annot_num, annot_line_number)
         if args.start_col:
+            # pos in get_coverage functions are
+            # 0 based whereas in annotation they are 1 based
+            # start is included, stop is excluded
             start = annot_entry.start - 1
             stop = annot_entry.stop
         else:
-            start = annot_entry.ref - args.before - 1
-            stop = annot_entry.ref + args.after
+            if annot_entry.strand == '+':
+                start = annot_entry.ref - args.before - 1
+                stop = annot_entry.ref + args.after
+            else:
+                # if  feature is on reverse strand
+                # the before and after are inverted
+                start = annot_entry.ref - args.after - 1
+                stop = annot_entry.ref + args.before
         forward_cov, reverse_cov = get_coverage(input_data,
                                                 annot_entry,
                                                 start=start, stop=stop,
