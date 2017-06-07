@@ -54,7 +54,6 @@ def get_coverage_function(input):
                            "'pysam.calignmentfile.AlignmentFile' as Input, not {}".format(input.__class__.__name__))
 
 
-
 def get_wig_coverage(genome, annot_entry, start=None, stop=None, max_left=0, max_right=0, qual_thr=None):
     """
     
@@ -186,8 +185,6 @@ def get_bam_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, 
             window_cov.append(cov_A + cov_T + cov_C + cov_G)
         if real_start:
             window_cov = [None] * abs(real_start) + window_cov
-        if strand == '-':
-            window_cov.reverse()
         return window_cov
 
 
@@ -198,10 +195,6 @@ def get_bam_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, 
                                       qual_thr,
                                       '+'
                                       )
-    pad_left = [None] * (max_left - (annot_entry.ref - start))
-    pad_right = [None] * (max_right - (stop - annot_entry.ref))
-    forward_cov = pad_left + forward_cov + pad_right
-
     reverse_cov = coverage_one_strand(sam_file,
                                       annot_entry.chromosome,
                                       start,
@@ -209,8 +202,18 @@ def get_bam_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, 
                                       qual_thr,
                                       '-'
                                       )
-    pad_right = [None] * (max_right - (annot_entry.ref - start))
-    pad_left = [None] * (max_left - (stop - annot_entry.ref))
+
+    if annot_entry.strand == '+':
+        #  -1 because the ref must not be take in account in pad
+        pad_left = [None] * (max_left - (annot_entry.ref - start - 1))
+        pad_right = [None] * (max_right - (stop - annot_entry.ref))
+    else:
+        pad_left = [None] * (max_left - (stop - annot_entry.ref))
+        pad_right = [None] * (max_right - (annot_entry.ref - start - 1))
+        forward_cov.reverse()
+        reverse_cov.reverse()
+
+    forward_cov = pad_left + forward_cov + pad_right
     reverse_cov = pad_left + reverse_cov + pad_right
     return forward_cov, reverse_cov
 
