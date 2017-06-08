@@ -4,11 +4,11 @@
 #
 # craw_coverage run with the following arguments:
 # --after=3
-# --annot=tests/data/annotation_wo_start.txt
-# --bam=tests/data/small.bam
+# --annot=/home/bneron/Projects/gwenael/src/tests/data/annotation_wo_start.txt
+# --bam=/home/bneron/Projects/gwenael/src/tests/data/small.bam
 # --before=5
 # --chr-col=chromosome
-# --output=tests/data/small
+# --output=/tmp/craw_test/small.cov
 # --qual-thr=0
 # --quiet=1
 # --ref-col=Position
@@ -28,3 +28,5 @@ S	YEL043W	YEL043W	chrV	+	73348	0	0	0	0	0	0	0	0	0
 AS	YEL043W	YEL043W	chrV	+	73348	0	0	0	0	0	0	0	0	0
 S	YPR036W	VMA13	chrXVI	+	645272	0	0	0	0	0	0	0	0	0
 AS	YPR036W	VMA13	chrXVI	+	645272	0	0	0	0	0	0	0	0	0
+AS	YEL077C	YEL077C	chrV	-	262	0	0	0	0	0	0	0	0	0
+S	YEL077C	YEL077C	chrV	-	262	12	12	12	12	12	12	12	12	8

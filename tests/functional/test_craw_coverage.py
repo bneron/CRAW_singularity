@@ -26,6 +26,7 @@ import shutil
 import tempfile
 import os
 from subprocess import Popen, PIPE
+from itertools import zip_longest
 
 from tests import CRAWTest, which
 
@@ -360,7 +361,7 @@ class Test(CRAWTest):
 
 
     def _check_coverage_file(self, expected_result, test_result):
-        for expected, result in zip(expected_result, test_result):
+        for expected, result in zip_longest(expected_result, test_result, fillvalue=''):
             if expected.startswith("# Version:"):
                 continue
             if expected.startswith("# --annot="):
