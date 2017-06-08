@@ -84,10 +84,18 @@ def get_wig_coverage(genome, annot_entry, start=None, stop=None, max_left=0, max
 
     chromosome = genome[annot_entry.chromosome]
     forward_cov, reverse_cov = chromosome[start:stop]
-    pad_left = [None] * (max_left - (annot_entry.ref - start))
-    pad_right = [None] * (max_right - (stop - annot_entry.ref))
-    forward_cov = pad_neg_start + pad_left + forward_cov + pad_right
-    reverse_cov = pad_neg_start + pad_left + reverse_cov + pad_right
+    if annot_entry.strand == '+':
+        pad_left = [None] * (max_left - (annot_entry.ref - 1 - start))
+        pad_right = [None] * (max_right - (stop - annot_entry.ref - 1))
+        pad_left += pad_neg_start
+    else:
+        pad_left = [None] * (max_left - (stop - annot_entry.ref - 1))
+        pad_right = [None] * (max_right - (stop - annot_entry.ref - 1))
+        pad_right += pad_neg_start
+        forward_cov.reverse()
+        reverse_cov.reverse()
+    forward_cov = pad_left + forward_cov + pad_right
+    reverse_cov = pad_left + reverse_cov + pad_right
     return forward_cov, reverse_cov
 
 
@@ -205,11 +213,12 @@ def get_bam_coverage(sam_file, annot_entry, start=None, stop=None, qual_thr=15, 
 
     if annot_entry.strand == '+':
         #  -1 because the ref must not be take in account in pad
-        pad_left = [None] * (max_left - (annot_entry.ref - start - 1))
-        pad_right = [None] * (max_right - (stop - annot_entry.ref))
+        # start and stop are 0 based (see docstring)
+        pad_left = [None] * (max_left - (annot_entry.ref - 1 - start))
+        pad_right = [None] * (max_right - (stop - annot_entry.ref - 1))
     else:
-        pad_left = [None] * (max_left - (stop - annot_entry.ref))
-        pad_right = [None] * (max_right - (annot_entry.ref - start - 1))
+        pad_left = [None] * (max_left - (stop - annot_entry.ref - 1))
+        pad_right = [None] * (max_right - (annot_entry.ref - 1 - start))
         forward_cov.reverse()
         reverse_cov.reverse()
 
