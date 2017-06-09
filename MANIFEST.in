@@ -1,4 +1,5 @@
 include README.md
+include RELEASE_NOTES.md
 include COPYRIGHT
 include COPYING
 include requirements.txt
