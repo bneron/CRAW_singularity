@@ -327,6 +327,7 @@ class TestAnnotationParser(CRAWTest):
                    ne_class(['snR67', 'SNR67', 'chrV', '+', '61433', '61425', '61439']),
                    ne_class(['YEL043W', 'YEL043W', 'chrV', '+', '73348', '73345', '73350']),
                    ne_class(['YPR036W', 'VMA13', 'chrXVI', '+', '645272', '645270', '645272']),
+                   ne_class(['YEL077C', 'YEL077C', 'chrV', '-', '264', '259', '268']),
                    ]
         it = ap.get_annotations()
         for i, e in enumerate(it):
@@ -365,6 +366,7 @@ class TestAnnotationParser(CRAWTest):
                    ne_class(['snR67', 'SNR67', 'chrV', '+', '61433']),
                    ne_class(['YEL043W', 'YEL043W', 'chrV', '+', '73348']),
                    ne_class(['YPR036W', 'VMA13', 'chrXVI', '+', '645272']),
+                   ne_class(['YEL077C', 'YEL077C', 'chrV', '-', '262'])
                    ]
         it = ap.get_annotations()
         for i, e in enumerate(it):
