@@ -86,11 +86,11 @@ def get_wig_coverage(genome, annot_entry, start=None, stop=None, max_left=0, max
     forward_cov, reverse_cov = chromosome[start:stop]
     if annot_entry.strand == '+':
         pad_left = [None] * (max_left - (annot_entry.ref - 1 - start))
-        pad_right = [None] * (max_right - (stop - annot_entry.ref - 1))
+        pad_right = [None] * (max_right - (stop - annot_entry.ref))
         pad_left += pad_neg_start
     else:
-        pad_left = [None] * (max_left - (stop - annot_entry.ref - 1))
-        pad_right = [None] * (max_right - (stop - annot_entry.ref - 1))
+        pad_left = [None] * (max_left - (stop - annot_entry.ref))
+        pad_right = [None] * (max_right - (annot_entry.ref - 1 - start))
         pad_right += pad_neg_start
         forward_cov.reverse()
         reverse_cov.reverse()

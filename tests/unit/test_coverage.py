@@ -26,6 +26,8 @@
 import os
 import pysam
 import logging
+from itertools import zip_longest
+
 try:
     from tests import CRAWTest
 except ImportError as err:
@@ -134,15 +136,19 @@ class TestCoverage(CRAWTest):
                      'rev': [None, None, None, None, None, None, None, 12, 12, 12, 12, None, None, None]
                      }
                     ]
-        # get_bam_coverage work with 0-based positions
-        # whereas annot_entry with 1-based positions
-        # start is included whereas stop is excluded
         for values, exp_val in zip(value_lines, expected):
             annot_entry = ne_class([str(v) for v in values])
+            # get_bam_coverage work with 0-based positions
+            # whereas annot_entry with 1-based positions
+            # in annot_entry start and stop are included
+            # in get_bam_coverage start is included
+            # whereas stop is excluded
+            start = annot_entry.start - 1
+            stop = annot_entry.stop
             forward_cov, reverse_cov = get_bam_coverage(sam_file,
                                                         annot_entry,
-                                                        start=annot_entry.start - 1,
-                                                        stop=annot_entry.stop ,
+                                                        start=start,
+                                                        stop=stop,
                                                         qual_thr=0,
                                                         max_left=8,
                                                         max_right=5)
@@ -150,76 +156,109 @@ class TestCoverage(CRAWTest):
             self.assertListEqual(reverse_cov, exp_val['rev'])
 
 
-    # def test_get_wig_coverage_fix_window(self):
-    #     wig_parser = WigParser(os.path.join(self._data_dir, 'small_fixed.wig'))
-    #     genome = wig_parser.parse()
-    #     annot_fields = ['name', 'gene', 'chromosome', 'strand', 'Position']
-    #     entry_cls_name = 'foo'
-    #     ref_col = 'Position'
-    #     ne_class = new_entry_type(entry_cls_name, annot_fields, ref_col)
-    #     value_lines = [['YEL072W', 'RMD6', 'chrV', '+', 15],
-    #                    ['YEL071W', 'DLD3', 'chrV', '+', 20],
-    #                    ['YEL071W', 'DLD3', 'chrV', '+', 4]
-    #                    ]
-    #     exp_values = [
-    #         {'for': [0., 150., 150., 150., 150., 150., 100., 100.],
-    #          'rev': [0., 0., 0., 0., 0., 0., 0., 0.]
-    #          },
-    #         {'for': [150., 100., 100., 100., 100., 100., 5., 5.],
-    #          'rev': [0., 0., 0., 0., 0., 0., 0., 0.]
-    #          },
-    #         {'for': [None, None, 0., 0., 0., 0., 0., 0.],
-    #          'rev': [None, None, 0., 0., 0., 0., 0., 0.]
-    #          },
-    #     ]
-    #
-    #     # get_wig_coverage work with 0-based positions
-    #     # whereas annot_entry with 1-based positions
-    #     for values, exp_val in zip(value_lines, exp_values):
-    #         annot_entry = ne_class([str(v) for v in values])
-    #         start = values[-1] - 5
-    #         stop = values[-1] + 3
-    #         forward_cov, reverse_cov = get_wig_coverage(genome,
-    #                                                     annot_entry,
-    #                                                     start=start - 1,
-    #                                                     stop=stop - 1,
-    #                                                     qual_thr=0,
-    #                                                     max_left=0,
-    #                                                     max_right=0)
-    #
-    #         self.assertListEqual(forward_cov, exp_val['for'])
-    #         self.assertListEqual(reverse_cov, exp_val['rev'])
-    #
-    #
-    # def test_get_wig_coverage_var_window(self):
-    #     wig_parser = WigParser(os.path.join(self._data_dir, 'small_variable.wig'))
-    #     genome = wig_parser.parse()
-    #     annot_fields = ['name', 'gene', 'chromosome', 'strand', 'Position', 'beg', 'end']
-    #     entry_cls_name = 'foo'
-    #     ref_col = 'Position'
-    #     ne_class = new_entry_type(entry_cls_name, annot_fields, ref_col, start_col='beg', stop_col='end')
-    #     value_lines = [['YEL072W', 'RMD6', 'chrV', '+', 15, 12, 19],
-    #                    ['YEL071W', 'DLD3', 'chrV', '+', 8, 5, 17]]
-    #
-    #     exp_values = [
-    #         {'for': [2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, None, None, None, None, None, None, None, None, None],
-    #          'rev': [12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, None, None, None, None, None, None, None, None, None]
-    #          }
-    #         ]
-    #
-    #     # get_wig_coverage work with 0-based positions
-    #     # whereas annot_entry with 1-based positions
-    #     for values, exp_val in zip(value_lines, exp_values):
-    #         annot_entry = ne_class([str(v) for v in values])
-    #         forward_cov, reverse_cov = get_wig_coverage(genome,
-    #                                                     annot_entry,
-    #                                                     start=annot_entry.start - 1,
-    #                                                     stop=annot_entry.stop - 1,
-    #                                                     qual_thr=0,
-    #                                                     max_left=3,
-    #                                                     max_right=12)
-    #         self.assertListEqual(forward_cov, exp_val['for'])
-    #         self.assertListEqual(reverse_cov, exp_val['rev'])
-    #
+    def test_get_wig_coverage_fix_window(self):
+        wig_parser = WigParser(os.path.join(self._data_dir, 'small_fixed.wig'))
+        genome = wig_parser.parse()
+        annot_fields = ['name', 'gene', 'chromosome', 'strand', 'Position']
+        entry_cls_name = 'foo'
+        ref_col = 'Position'
+        ne_class = new_entry_type(entry_cls_name, annot_fields, ref_col)
+        value_lines = [['YEL072W', 'RMD6', 'chrV', '+', 15],
+                       ['YEL071W', 'DLD3', 'chrV', '+', 20],
+                       ['YEL071W', 'DLD3', 'chrV', '+', 4],
+                       ['YEL077C', 'DLD3', 'chrV', '-', 13],
+                       ]
+        exp_values = [
+            {'for': [0., 150., 150., 150., 150., 150., 100., 100., 100.],
+             'rev': [0.] * 9
+             },
+            {'for': [150., 100., 100., 100., 100., 100., 5., 5., 5.],
+             'rev': [0.] * 9
+             },
+            {'for': [None, None, 0., 0., 0., 0., 0., 0., 0.],
+             'rev': [None, None, 0., 0., 0., 0., 0., 0., 0.]
+             },
+            {'for': [100., 100., 100., 150., 150., 150., 150., 150., 0.],
+             'rev': [0.] * 9
+             }
+        ]
+
+        before = 5
+        after = 3
+        for values, exp_val in zip_longest(value_lines, exp_values):
+            annot_entry = ne_class([str(v) for v in values])
+            # get_wig_coverage work with 0-based positions
+            # whereas annot_entry with 1-based positions
+            # in annot_entry start and stop are included
+            # in get_bam_coverage start is included
+            # whereas stop is excluded
+            if annot_entry.strand == '+':
+                start = (values[-1] - 1) - before
+                stop = (values[-1] - 1) + after + 1
+            else:
+                # if feature is on reverse strand
+                # before and after are inverted
+                start = (values[-1] - 1) - after
+                stop = (values[-1] - 1) + before + 1
+
+            forward_cov, reverse_cov = get_wig_coverage(genome,
+                                                        annot_entry,
+                                                        start=start,
+                                                        stop=stop,
+                                                        qual_thr=0,
+                                                        max_left=0,
+                                                        max_right=0)
+            self.assertListEqual(forward_cov, exp_val['for'])
+            self.assertListEqual(reverse_cov, exp_val['rev'])
+
+
+    def test_get_wig_coverage_var_window(self):
+        wig_parser = WigParser(os.path.join(self._data_dir, 'small_variable.wig'))
+        genome = wig_parser.parse()
+        annot_fields = ['name', 'gene', 'chromosome', 'strand', 'Position', 'beg', 'end']
+        entry_cls_name = 'foo'
+        ref_col = 'Position'
+        ne_class = new_entry_type(entry_cls_name, annot_fields, ref_col, start_col='beg', stop_col='end')
+        value_lines = [
+                       ['YEL072W', 'RMD6', 'chrV', '+', 15, 12, 19],
+                       ['YEL071W', 'DLD3', 'chrV', '+', 8, 5, 17],
+                       ['YEL077C', '077C', 'chrV', '-', 15, 13, 20]
+                       ]
+
+        exp_values = [
+            {'for': [None, None, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, None, None, None, None, None],
+             'rev': [None, None, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, None, None, None, None, None]
+             },
+            {'for': [None, None, 0, 0, 0, 0, 0, 0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+             'rev': [None, None, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]
+             },
+            {'for': [20.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, None, None, None, None, None, None, None],
+             'rev': [20.0, 19.0, 18.0, 17.0, 16.0, 15.0, 14.0, 13.0, None, None, None, None, None, None, None]
+             }
+            ]
+
+        # get_wig_coverage work with 0-based positions
+        # whereas annot_entry with 1-based positions
+        print()
+        for values, exp_val in zip_longest(value_lines, exp_values):
+            annot_entry = ne_class([str(v) for v in values])
+            # get_bam_coverage work with 0-based positions
+            # whereas annot_entry with 1-based positions
+            # in annot_entry start and stop are included
+            # in get_bam_coverage start is included
+            # whereas stop is excluded
+            start = annot_entry.start - 1
+            stop = annot_entry.stop
+            forward_cov, reverse_cov = get_wig_coverage(genome,
+                                                        annot_entry,
+                                                        start=start,
+                                                        stop=stop,
+                                                        qual_thr=0,
+                                                        max_left=5,
+                                                        max_right=9)
+
+            self.assertListEqual(forward_cov, exp_val['for'])
+            self.assertListEqual(reverse_cov, exp_val['rev'])
+
 
 
