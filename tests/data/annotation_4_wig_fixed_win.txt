@@ -1,0 +1,5 @@
+name	gene	chromosome	strand	Position
+YEL072W	RMD6	chrV	+	15
+YEL071W	DLD3	chrV	+	20
+YEL071W	DLD3	chrV	+	4
+YEL077C	DLD3	chrV	-	13

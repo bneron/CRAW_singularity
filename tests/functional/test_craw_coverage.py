@@ -47,6 +47,7 @@ class Test(CRAWTest):
     def tearDown(self):
         try:
             shutil.rmtree(self.out_dir)
+            pass
         except:
             pass
 
@@ -255,8 +256,8 @@ class Test(CRAWTest):
                   "--quiet " \
                   "--output={out_file} ".format(
                                                  bin=self.bin,
-                                                 wig_file=os.path.join(self._data_dir, 'small.wig'),
-                                                 annot_file=os.path.join(self._data_dir, 'annotation_wo_start.txt'),
+                                                 wig_file=os.path.join(self._data_dir, 'small_fixed.wig'),
+                                                 annot_file=os.path.join(self._data_dir, 'annotation_4_wig_fixed_win.txt'),
                                                  ref_col='Position',
                                                  before=5,
                                                  after=3,
@@ -316,8 +317,8 @@ class Test(CRAWTest):
                   "--quiet " \
                   "--output={out_file} ".format(
                                                  bin=self.bin,
-                                                 wig_file=os.path.join(self._data_dir, 'small.wig'),
-                                                 annot_file=os.path.join(self._data_dir, 'annotation_w_start.txt'),
+                                                 wig_file=os.path.join(self._data_dir, 'small_variable.wig'),
+                                                 annot_file=os.path.join(self._data_dir, 'annotation_4_wig_var_win.txt'),
                                                  ref_col='Position',
                                                  start_col='beg',
                                                  stop_col='end',

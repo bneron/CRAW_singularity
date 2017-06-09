@@ -1,0 +1,4 @@
+name	gene	chromosome	strand	Position	beg	end
+YEL072W	RMD6	chrV	+	15	12	19
+YEL071W	DLD3	chrV	+	8	5	17
+YEL077C	077C	chrV	-	15	13	20
