@@ -464,7 +464,7 @@ class WigParser:
                     elif self.is_declaration_line(line):
                         self.parse_declaration_line(line)
                     elif self.is_track_line(line):
-                        self.parse_track_line(line)
+                        self.parse_track_line(line, strand_type=strand_type)
                     elif not line or self.is_comment_line(line):
                         continue
                     else:
@@ -495,6 +495,10 @@ class WigParser:
 
     def is_declaration_line(self, line):
         """
+        A single line, beginning with one of the identifiers variableStep or fixedStep, followed by attribute/value pairs
+        for instance:
+          fixedStep chrom=chrI start=1 step=10 span=5
+        
         :param line: line to parse.
         :type line: string
         :return: True if line is a declaration line. False otherwise.
@@ -534,6 +538,10 @@ class WigParser:
     @staticmethod
     def is_track_line(line):
         """
+        A track line begins with the identifier track and followed by attribute/value pairs 
+        for instance:
+          track type=wiggle_0 name="fixedStep" description="fixedStep format" visibility=full autoScale=off 
+        
         :param line: line to parse.
         :type line: string
         :return: True if line is a track line. False otherwise.
@@ -542,7 +550,7 @@ class WigParser:
         return line.startswith('track')
 
 
-    def parse_track_line(self, line):
+    def parse_track_line(self, line, strand_type=''):
         """
         fill the genome infos with the information found on the track.
 
@@ -556,8 +564,12 @@ class WigParser:
         if 'type' not in attrs:
             raise WigError('wiggle type is not present: {}.'.format(line))
         else:
-            self._genome.infos = attrs
-
+            if strand_type == '+':
+                self._genome.infos['forward'] = attrs
+            elif strand_type == '-':
+                self._genome.infos['reverse'] = attrs
+            else:
+                self._genome.infos = attrs
 
     @staticmethod
     def is_comment_line(line):

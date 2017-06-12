@@ -577,12 +577,12 @@ class TestWigParser(CRAWTest):
         self.assertListEqual(recv_chrII_reverse, expec_chrII_reverse[:82])
 
 
-    def test_parse(self):
-        wig_p = WigParser(os.path.join(self._data_dir, 'wig_fixed_w_comment.wig'))
+    def test_parse_mixed_wig(self):
+        wig_p = WigParser(mixed_wig=os.path.join(self._data_dir, 'wig_fixed_mixed.wig'))
         genome = wig_p.parse()
 
         infos = {'type': 'wiggle_0',
-                 'name': "wig de test comment line",
+                 'name': "wig de test with forward AND reverse strand",
                  'color': '96,144,246',
                  'altColor': '96,144,246',
                  'autoScale': 'on',
@@ -617,7 +617,59 @@ class TestWigParser(CRAWTest):
         self.assertListEqual(chrI_for, ch_for)
         self.assertListEqual(chrI_rev, ch_rev)
 
+    def test_parse_variable_wig_w_malformed_line(self):
+
         wig_p = WigParser(os.path.join(self._data_dir, 'wig_variable_malformed_line.wig'))
         with self.assertRaises(WigError) as ctx:
             genome = wig_p.parse()
         self.assertEqual(str(ctx.exception), 'the line is malformed: 4       6   23')
+
+
+    def test_parse_split_wig(self):
+        wig_p = WigParser(for_wig=os.path.join(self._data_dir, 'wig_fixed_forward.wig'),
+                          rev_wig=os.path.join(self._data_dir, 'wig_fixed_reverse.wig'))
+        genome = wig_p.parse()
+
+        infos_for = {'type': 'wiggle_0',
+                     'name': "wig de test forward strand",
+                     'color': '96,144,246',
+                     'altColor': '96,144,246',
+                     'autoScale': 'on',
+                     'graphType': 'bar'}
+        infos_rev = {'type': 'wiggle_0',
+                     'name': "wig de test reverse strand",
+                     'color': '96,144,246',
+                     'altColor': '96,144,246',
+                     'autoScale': 'on',
+                     'graphType': 'bar'}
+        infos = {'forward': infos_for,
+                 'reverse': infos_rev}
+        self.assertDictEqual(genome.infos, infos)
+        self.assertDictEqual(genome.infos, infos)
+        self.assertTrue('chrI' in genome)
+
+        ch_name = 'chrI'
+        ch = Chromosome(ch_name)
+        kwargs = {"chrom": ch_name, "start": "1", "step": "10", "span": "5"}
+        fx_ck1 = FixedChunk(**kwargs)
+        lines = ("1", "2", "3", "4", "5")
+        for l in lines:
+            fx_ck1.parse_data_line(l, ch, '+')
+
+        kwargs = {"chrom": ch_name, "start": "100", "step": "10"}
+        fx_ck2 = FixedChunk(**kwargs)
+        lines = ("1", "2", "3", "4", "5")
+        for l in lines:
+            fx_ck2.parse_data_line(l, ch, 'mixed')
+
+        kwargs = {"chrom": ch_name, "start": "200"}
+        fx_ck3 = FixedChunk(**kwargs)
+        lines = ("-1", "-2", "-3", "-4", "-5")
+        for l in lines:
+            fx_ck3.parse_data_line(l, ch, 'mixed')
+
+        chrI = genome['chrI']
+        chrI_for, chrI_rev = chrI[:250]
+        ch_for, ch_rev = ch[:250]
+        self.assertListEqual(chrI_for, ch_for)
+        self.assertListEqual(chrI_rev, ch_rev)
