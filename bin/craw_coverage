@@ -257,18 +257,18 @@ parser.add_argument("-v", "--verbose",
 
 args = parser.parse_args()
 
-input_group = (args.bam, args.wig, args.for_wig, args.rev_wig)
-wig_group = (args.wig, args.for_wig, args.rev_wig)
+input_opt_group = (args.bam, args.wig, args.for_wig, args.rev_wig)
+wig_opt_group = (args.wig, args.for_wig, args.rev_wig)
 
 #############################
 # Check wig and bam options #
 #############################
-if not any(input_group):
+if not any(input_opt_group):
     raise argparse.ArgumentError(None, "At least one of these options must be specified"
                                        " --bam, --wig , --wig-for, --wig-rev.")
-elif all(input_grp):
+elif all(input_opt_group):
     raise argparse.ArgumentError(None, "--bam, --wig , --wig-for, --wig-rev cannot specify at the same time.")
-elif args.bam and any(wig_group):
+elif args.bam and any(wig_opt_group):
     raise argparse.ArgumentError(None,"--bam option cannot be specified in the same time as"
                                       " --wig, --wig-for or --wig-rev options.")
 elif args.wig and any((args.for_wig, args.rev_wig)):
@@ -327,7 +327,7 @@ if args.bam:
 elif args.wig:
     # input_data is a wig.Genome object
     input_file = args.wig
-    wig_parser = WigParser(wig_mixed=args.wig)
+    wig_parser = WigParser(mixed_wig=args.wig)
     input_data = wig_parser.parse()
 else:
     # input_data is a wig.Genome object
