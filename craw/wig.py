@@ -80,7 +80,7 @@ class Chunk(metaclass=ABCMeta):
         return NotImplemented
 
     @abstractmethod
-    def parse_data_line(self, line, chrom):
+    def parse_data_line(self, line, chrom, strand_type):
         """
         parse a line of data and append the results in the corresponding strand
         This is an abstract methods, must be implemented in inherited class.
@@ -89,8 +89,22 @@ class Chunk(metaclass=ABCMeta):
         :type line: string
         :param chrom: the chromosome to add coverage data
         :type chrom: :class:`Chromosome` object.
+        :param strand_type: which kind of wig is parsing: forward, reverse, or mixed strand
+        :type strand_type: string '+' , '-', 'mixed' 
         """
         return NotImplemented
+
+    @staticmethod
+    def _convert_cov(strand_type, cov):
+        if strand_type == 'mixed':
+            cov = float(cov)
+        elif strand_type == '-':
+            cov = - abs(float(cov))
+        elif strand_type == '+':
+            cov = abs(float(cov))
+        else:
+            raise ValueError("value: '{}' is not allowed for strand parameter.".format(strand_type))
+        return cov
 
 
 class FixedChunk(Chunk):
@@ -120,7 +134,7 @@ class FixedChunk(Chunk):
         return True
 
 
-    def parse_data_line(self, line, chrom):
+    def parse_data_line(self, line, chrom, strand_type):
         """
         parse line of data following a fixedStep Declaration.
         add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)
@@ -128,8 +142,11 @@ class FixedChunk(Chunk):
         :type line: string
         :param chrom: the chromosome to add coverage data
         :type chrom: :class:`Chromosome` object.
+        :param strand_type: which kind of wig is parsing: forward, reverse, or mixed strand
+        :type strand_type: string '+' , '-', 'mixed' 
         """
-        cov = [float(line)] * self.span
+        # the line is already striped
+        cov = [self._convert_cov(strand_type, line)] * self.span
         # in FixedChunk we translate the origin to a 0-based position at the __init__
         pos = self._current_pos
         chrom[pos:pos + self.span] = cov
@@ -170,7 +187,7 @@ class VariableChunk(Chunk):
         return False
 
 
-    def parse_data_line(self, line, chrom):
+    def parse_data_line(self, line, chrom, strand_type):
         """
         Parse line of data following a variableStep Declaration.
         Add the result on the corresponding strand (forward if coverage value is positive, reverse otherwise)
@@ -179,12 +196,15 @@ class VariableChunk(Chunk):
         :type line: string
         :param chrom: the chromosome to add coverage data
         :type chrom: :class:`Chromosome` object.
+        :param strand_type: which kind of wig is parsing: forward, reverse, or mixed strand
+        :type strand_type: string '+' , '-', 'mixed'
+        :raise ValueError: if strand_type is different than 'mixed', '-', '+'
         """
         pos, cov = line.split()
         # we switch from 1-based positions in wig into 0-based position in chromosome
         # to have the same behavior as in bam
         pos = int(pos) - 1
-        cov = [float(cov)] * self.span
+        cov = [self._convert_cov(strand_type, cov)] * self.span
         chrom[pos:pos + self.span] = cov
 
 
@@ -377,15 +397,34 @@ class WigParser:
     at the end of parsing it returns a :class:`Genome` object.
     """
 
-    def __init__(self, path):
+    def __init__(self, mixed_wig='', for_wig='', rev_wig=''):
         """
-        :param path: the path of the wig file to parse.
-        :type path: string
+        :param mixed_wig: The path of the wig file to parse.
+                           The wig file code for the 2 strands: 
+                             - The positive coverage values for the forward strand
+                             - The negative coverage values for the reverse strand
+                           This parameter is incompatible with for_wig and rev_wig parameter.
+        :type mixed_wig: string
+        :param for_wig: The path of the wig file to parse. 
+                        The wig file code for forward strand only.
+                        This parameter is incompatible with mixed_wig parameter.
+        :type for_wig: string
+        :param rev_wig: The path of the wig file to parse. 
+                         The wig file code for reverse strand only.
+                         This parameter is incompatible with mixed_wig parameter.
+        :type rev_wig: string
         """
+        if not any((mixed_wig, for_wig, rev_wig)):
+            raise WigError("The path for one or two wig files must be specify")
+        elif mixed_wig and any((for_wig, rev_wig)):
+            raise WigError("Cannot specify the path for mixed wig and forward or reverse wig in same time")
+
         self.declaration_type_pattern = re.compile('fixedStep|variableStep')
         self.trackline_pattern = re.compile("""(\w+)=(".+?"|'.+?'|\S+)""")
         self.data_line_pattern = re.compile('^-?\d+(\s+-?\d+(\.\d+)?)?$')
-        self._path = path
+        self._path_mixed = mixed_wig
+        self._path_for = for_wig
+        self._path_rev = rev_wig
         self._genome = None
         self._current_chunk = None
         self._current_chrom = None
@@ -405,48 +444,53 @@ class WigParser:
         - http://genome.ucsc.edu/goldenPath/help/wiggle.html
         for wig specifications.
         This parser does not fully follow these specification. When a score is negative,
-        it means that the coverage is on the reverse strand. So some positions can apear twice
+        it means that the coverage is on the reverse strand. So some positions can appear twice
         in one block of declaration (what I call a chunk).
 
-        :return: a Genome coverage corresponding to te wig file
+        :return: a Genome coverage corresponding to the wig files (mixed strand on one wig or two separate wig)
         :rtype: :class:`Genome` object
         """
-        with open(self._path, 'r') as wig_file:
-            self._genome = Genome()
-            for line in wig_file:
-                line = line.strip()
-                if self.is_data_line(line):
-                    self._current_chunk.parse_data_line(line, self._current_chrom)
-                elif self.is_declaration_line(line):
-                    self.parse_declaration_line(line)
-                elif self.is_track_line(line):
-                    self.parse_track_line(line)
-                elif not line or self.is_comment_line(line):
-                    continue
-                else:
-                    raise WigError("the line is malformed: {}".format(line))
+        self._genome = Genome()
+        if self._path_mixed:
+            wig_paths = [(self._path_mixed, 'mixed')]
+        else:
+            wig_paths = [(self._path_for, '+'), (self._path_rev, '-')]
+        for path, strand_type in wig_paths:
+            with open(path, 'r') as wig_file:
+                for line in wig_file:
+                    line = line.strip()
+                    if self.is_data_line(line):
+                        self.parse_data_line(line, strand_type)
+                    elif self.is_declaration_line(line):
+                        self.parse_declaration_line(line)
+                    elif self.is_track_line(line):
+                        self.parse_track_line(line)
+                    elif not line or self.is_comment_line(line):
+                        continue
+                    else:
+                        raise WigError("the line is malformed: {}".format(line))
         return self._genome
 
 
     def is_data_line(self, line):
         """
 
-        :param line: 
-        :return: 
+        :param line: line to parse.
+        :return: True if it's a data line, False otherwise
         """
         return bool(re.match(self.data_line_pattern, line))
 
 
-    def parse_data_line(self, line):
+    def parse_data_line(self, line, strand_type):
         """
         :param line: line to parse. It must not a comment_line, neither a track line nor a declaration line.
         :type line: string
-        :return:
-        :rtype: 
+        :type strand_type: string '+' , '-', 'mixed'
+        :raise ValueError: if strand_type is different than 'mixed', '-', '+'
         """
         if self._current_chunk is None:
             raise WigError("this data line '{}' is not preceded by declaration".format(line))
-        self._current_chunk.parse_data_line(line, self._current_chrom)
+        self._current_chunk.parse_data_line(line, self._current_chrom, strand_type)
 
 
     def is_declaration_line(self, line):

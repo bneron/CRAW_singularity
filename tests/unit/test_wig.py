@@ -103,7 +103,7 @@ class TestFixedChunk(CRAWTest):
         ch = Chromosome(ch_name)
 
         for l in lines:
-            fx_ch.parse_data_line(l, ch)
+            fx_ch.parse_data_line(l, ch, 'mixed')
         exp_cov = np.full((2, 50), 0.)
         exp_cov[0, 9:11] = [11] * 2
         exp_cov[0, 19:21] = [22] * 2
@@ -117,7 +117,7 @@ class TestFixedChunk(CRAWTest):
         kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
         fx_ch = FixedChunk(**kwargs)
         for l in lines:
-            fx_ch.parse_data_line(l, ch)
+            fx_ch.parse_data_line(l, ch, 'mixed')
         exp_cov[1, 9:11] = [11] * 2
         exp_cov[0, 19:21] = [22] * 2
         exp_cov[1, 29:31] = [30] * 2
@@ -176,7 +176,7 @@ class TestVariableChunk(CRAWTest):
         ch_name = 'ChrII'
         ch = Chromosome(ch_name)
         for l in lines:
-            var_ch.parse_data_line(l, ch)
+            var_ch.parse_data_line(l, ch, 'mixed')
         exp_cov = np.full((2, 50), 0.)
         exp_cov[0, 9:11] = [11] * 2
         exp_cov[0, 19:21] = [22] * 2
@@ -206,14 +206,14 @@ class TestChromosome(CRAWTest):
         fx_ck = FixedChunk(**kwargs)
         lines = ("11", "22", "33")
         for l in lines:
-            fx_ck.parse_data_line(l, ch)
+            fx_ck.parse_data_line(l, ch, 'mixed')
 
         span = 2
         lines = ("40 11", "42 22", "40 -30", "42 -50")
         kwargs = {"chrom": ch_name, "span": str(span)}
         var_ck = VariableChunk(**kwargs)
         for l in lines:
-            var_ck.parse_data_line(l, ch)
+            var_ck.parse_data_line(l, ch, 'mixed')
 
         exp_cov = np.full((2, 50), 0.)
         exp_cov[0, 9:9 + 3] = [11.] * 3
@@ -379,9 +379,9 @@ class TestWigParser(CRAWTest):
         ch_name = 'chr3'
         ch = Chromosome(ch_name, size=30)
         wip_p._current_chrom = ch
-        wip_p.parse_data_line("3")
+        wip_p.parse_data_line("3", 'mixed')
         self.assertEqual(ch[9:14][0], [3.] * 5)
-        wip_p.parse_data_line("-5")
+        wip_p.parse_data_line("-5", 'mixed')
         self.assertEqual(ch[109:114][1], [5.] * 5)
 
         kwargs = {"chrom": "chr3", "span": "5"}
@@ -389,14 +389,14 @@ class TestWigParser(CRAWTest):
         ch_name = 'chr3'
         ch = Chromosome(ch_name, size=150)
         wip_p._current_chrom = ch
-        wip_p.parse_data_line("10 3")
+        wip_p.parse_data_line("10 3", 'mixed')
         self.assertEqual(ch[9:14][0], [3.0] * 5)
-        wip_p.parse_data_line("10 -5")
+        wip_p.parse_data_line("10 -5", 'mixed')
         self.assertEqual(ch[9:14][1], [5.] * 5)
 
         wip_p = WigParser('toto')
         with self.assertRaises(WigError) as ctx:
-            wip_p.parse_data_line("3")
+            wip_p.parse_data_line("3", 'mixed')
         self.assertEqual(str(ctx.exception), "this data line '3' is not preceded by declaration")
 
 
@@ -502,19 +502,19 @@ class TestWigParser(CRAWTest):
         fx_ck1 = FixedChunk(**kwargs)
         lines = ("1", "2", "3", "4", "5")
         for l in lines:
-            fx_ck1.parse_data_line(l, ch)
+            fx_ck1.parse_data_line(l, ch, 'mixed')
 
         kwargs = {"chrom": ch_name, "start": "100", "step": "10"}
         fx_ck2 = FixedChunk(**kwargs)
         lines = ("1", "2", "3", "4", "5")
         for l in lines:
-            fx_ck2.parse_data_line(l, ch)
+            fx_ck2.parse_data_line(l, ch, 'mixed')
 
         kwargs = {"chrom": ch_name, "start": "200"}
         fx_ck3 = FixedChunk(**kwargs)
         lines = ("-1", "-2", "-3", "-4", "-5")
         for l in lines:
-            fx_ck3.parse_data_line(l, ch)
+            fx_ck3.parse_data_line(l, ch, 'mixed')
 
         chrI = genome['chrI']
         chrI_for, chrI_rev = chrI[:250]
