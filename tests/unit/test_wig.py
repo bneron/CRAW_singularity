@@ -169,7 +169,7 @@ class TestVariableChunk(CRAWTest):
         self.assertFalse(var_ch.is_fixed_step())
 
 
-    def test_parse_data_line(self):
+    def test_parse_mixed_data_line(self):
         lines = ("10 11", "20 22", "30 -30", "40 -50")
         kwargs = {"chrom": "chr3", "span": "2"}
         var_ch = VariableChunk(**kwargs)
@@ -186,6 +186,39 @@ class TestVariableChunk(CRAWTest):
         self.assertListEqual(exp_cov[0].tolist(), got_forward)
         self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
+    def test_parse_for_data_line(self):
+        lines = ("10 11", "20 22", "30 -30", "40 -50")
+        kwargs = {"chrom": "chr3", "span": "2"}
+        var_ch = VariableChunk(**kwargs)
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
+        for l in lines:
+            var_ch.parse_data_line(l, ch, '+')
+        exp_cov = np.full((2, 50), 0.)
+        exp_cov[0, 9:11] = [11] * 2
+        exp_cov[0, 19:21] = [22] * 2
+        exp_cov[0, 29:31] = [30] * 2
+        exp_cov[0, 39:41] = [50] * 2
+        got_forward, got_reverse = ch[:50]
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
+
+    def test_parse_rev_data_line(self):
+        lines = ("10 11", "20 22", "30 -30", "40 -50")
+        kwargs = {"chrom": "chr3", "span": "2"}
+        var_ch = VariableChunk(**kwargs)
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
+        for l in lines:
+            var_ch.parse_data_line(l, ch, '-')
+        exp_cov = np.full((2, 50), 0.)
+        exp_cov[1, 9:11] = [11] * 2
+        exp_cov[1, 19:21] = [22] * 2
+        exp_cov[1, 29:31] = [30] * 2
+        exp_cov[1, 39:41] = [50] * 2
+        got_forward, got_reverse = ch[:50]
+        self.assertListEqual(exp_cov[0].tolist(), got_forward)
+        self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
 class TestChromosome(CRAWTest):
 
