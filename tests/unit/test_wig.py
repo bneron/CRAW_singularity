@@ -617,13 +617,6 @@ class TestWigParser(CRAWTest):
         self.assertListEqual(chrI_for, ch_for)
         self.assertListEqual(chrI_rev, ch_rev)
 
-    def test_parse_variable_wig_w_malformed_line(self):
-
-        wig_p = WigParser(os.path.join(self._data_dir, 'wig_variable_malformed_line.wig'))
-        with self.assertRaises(WigError) as ctx:
-            genome = wig_p.parse()
-        self.assertEqual(str(ctx.exception), 'the line is malformed: 4       6   23')
-
 
     def test_parse_split_wig(self):
         wig_p = WigParser(for_wig=os.path.join(self._data_dir, 'wig_fixed_forward.wig'),
@@ -673,3 +666,31 @@ class TestWigParser(CRAWTest):
         ch_for, ch_rev = ch[:250]
         self.assertListEqual(chrI_for, ch_for)
         self.assertListEqual(chrI_rev, ch_rev)
+
+
+    def test_parse_variable_wig_w_malformed_line(self):
+        wig_p = WigParser(os.path.join(self._data_dir, 'wig_variable_malformed_line.wig'))
+        with self.assertRaises(WigError) as ctx:
+            genome = wig_p.parse()
+        self.assertEqual(str(ctx.exception), 'the line is malformed: 4       6   23')
+
+
+    def test_WigParser(self):
+        with self.assertRaises(WigError) as ctx:
+            wig_p = WigParser()
+        self.assertEqual(str(ctx.exception),
+                         "The path for one or two wig files must be specify")
+
+        with self.assertRaises(WigError) as ctx:
+            wig_p = WigParser(mixed_wig=os.path.join(self._data_dir, 'wig_fixed_mixed.wig'),
+                             for_wig=os.path.join(self._data_dir, 'wig_fixed_forward.wig'))
+        self.assertEqual(str(ctx.exception),
+                         "Cannot specify the path for mixed wig and forward or reverse wig in same time")
+
+        wig_p = WigParser(mixed_wig=os.path.join(self._data_dir, 'wig_fixed_mixed.wig'))
+        self.assertTrue(isinstance(wig_p, WigParser))
+        wig_p = WigParser(for_wig=os.path.join(self._data_dir, 'wig_fixed_forward.wig'))
+        self.assertTrue(isinstance(wig_p, WigParser))
+        wig_p = WigParser(rev_wig=os.path.join(self._data_dir, 'wig_fixed_reverse.wig'))
+        self.assertTrue(isinstance(wig_p, WigParser))
+
