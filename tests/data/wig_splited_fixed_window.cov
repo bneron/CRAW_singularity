@@ -1,0 +1,29 @@
+# Running Counter RnAseq Window craw_coverage
+# Version: craw NOT packaged, it should be a development version | Python 3.4
+# Using: pysam 0.9.1.4 (samtools 1.3.1)
+#
+# craw_coverage run with the following arguments:
+# --after=3
+# --annot=/home/bneron/Projects/gwenael/src/tests/data/annotation_4_wig_fixed_win.txt
+# --before=5
+# --chr-col=chromosome
+# --output=/tmp/craw_test/wig_splited_fixed_window.cov
+# --qual-thr=0
+# --quiet=1
+# --ref-col=Position
+# --sense=mixed
+# --sep=	
+# --strand-col=strand
+# --suffix=cov
+# --verbose=0
+# --wig-for=/home/bneron/Projects/gwenael/src/tests/data/small_fixed.wig
+# --wig-rev=/home/bneron/Projects/gwenael/src/tests/data/small_fixed_reverse.wig
+sense	name	gene	chromosome	strand	Position	-5	-4	-3	-2	-1	0	1	2	3
+S	YEL072W	RMD6	chrV	+	15	0.0	150.0	150.0	150.0	150.0	150.0	100.0	100.0	100.0
+AS	YEL072W	RMD6	chrV	+	15	20.0	15.0	15.0	15.0	15.0	15.0	10.0	10.0	10.0
+S	YEL071W	DLD3	chrV	+	20	150.0	100.0	100.0	100.0	100.0	100.0	5.0	5.0	5.0
+AS	YEL071W	DLD3	chrV	+	20	15.0	10.0	10.0	10.0	10.0	10.0	15.0	15.0	15.0
+S	YEL071W	DLD3	chrV	+	4	None	None	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+AS	YEL071W	DLD3	chrV	+	4	None	None	10.0	10.0	10.0	10.0	10.0	20.0	20.0
+AS	YEL077C	DLD3	chrV	-	13	100.0	100.0	100.0	150.0	150.0	150.0	150.0	150.0	0.0
+S	YEL077C	DLD3	chrV	-	13	10.0	10.0	10.0	15.0	15.0	15.0	15.0	15.0	20.0
