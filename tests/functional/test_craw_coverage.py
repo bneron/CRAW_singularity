@@ -713,6 +713,10 @@ class Test(CRAWTest):
                 continue
             elif expected.startswith("# --wig="):
                 continue
+            elif expected.startswith("# --wig-for="):
+                continue
+            elif expected.startswith("# --wig-rev="):
+                continue
             elif expected.startswith("# --output="):
                 continue
             else:
