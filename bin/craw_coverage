@@ -152,12 +152,12 @@ The file encode the coverage for the both strand.
 The positive coverage ar on the forward strand whereas the negative coverage a located on the reverse one.
 The --wig option is incompatible with both --bam or --wig-for or --wig-reverse options.""")
 input_grp.add_argument("--wig-for",
-                       dest="for_wig", metavar='FORWARD WIG',
+                       metavar='FORWARD WIG',
                        help="""The path of a wig file to analyse.
 This file encode the coverage for the forward strand. 
 The --wig-for option is incompatible with both --bam or --wig options.""")
 input_grp.add_argument("--wig-rev",
-                       dest="rev_wig", metavar='REVERSE WIG',
+                       metavar='REVERSE WIG',
                        help="""The path of a wig file to analyse.
 This file encode the coverage for the reverse strand. 
 The --wig-rev option is incompatible with both --bam or --wig options.""")
@@ -257,23 +257,23 @@ parser.add_argument("-v", "--verbose",
 
 args = parser.parse_args()
 
-input_opt_group = (args.bam, args.wig, args.for_wig, args.rev_wig)
-wig_opt_group = (args.wig, args.for_wig, args.rev_wig)
+input_opt_group = (args.bam, args.wig, args.wig_for, args.wig_rev)
+wig_opt_group = (args.wig, args.wig_for, args.wig_rev)
 
 #############################
 # Check wig and bam options #
 #############################
 if not any(input_opt_group):
     raise argparse.ArgumentError(None, "At least one of these options must be specified"
-                                       " --bam, --wig , --wig-for, --wig-rev.")
+                                       " '--bam', '--wig' , '--wig-for', '--wig-rev'.")
 elif all(input_opt_group):
-    raise argparse.ArgumentError(None, "--bam, --wig , --wig-for, --wig-rev cannot specify at the same time.")
+    raise argparse.ArgumentError(None, "'--bam', '--wig' , '--wig-for', '--wig-rev' cannot specify at the same time.")
 elif args.bam and any(wig_opt_group):
-    raise argparse.ArgumentError(None,"--bam option cannot be specified in the same time as"
-                                      " --wig, --wig-for or --wig-rev options.")
-elif args.wig and any((args.for_wig, args.rev_wig)):
-    raise argparse.ArgumentError(None,"--ig option cannot be specified in the same time as"
-                                      " --wig-for or --wig-rev options.")
+    raise argparse.ArgumentError(None,"'--bam' option cannot be specified in the same time as"
+                                      " '--wig', '--wig-for' or '--wig-rev' options.")
+elif args.wig and any((args.wig_for, args.wig_rev)):
+    raise argparse.ArgumentError(None,"'--wig' option cannot be specified in the same time as"
+                                      " '--wig-for' or '--wig-rev' options.")
 ###########################
 # Checking window options #
 ###########################
@@ -332,7 +332,7 @@ elif args.wig:
 else:
     # input_data is a wig.Genome object
     input_file = args.wig_for
-    wig_parser = WigParser(for_wig=args.for_wig, rev_wig=args.rev_wig)
+    wig_parser = WigParser(for_wig=args.wig_for, rev_wig=args.wig_rev)
     input_data = wig_parser.parse()
 
 annotations = annot_parser.get_annotations()
