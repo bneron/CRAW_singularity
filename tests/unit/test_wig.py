@@ -189,6 +189,16 @@ class TestFixedChunk(CRAWTest):
         self.assertListEqual(exp_cov[1].tolist(), got_reverse)
 
 
+    def test_parse_data_line_bad_type(self):
+        line = "11"
+        kwargs = {"chrom": "chr3", "start": "10", "step": "10", "span": "2"}
+        fx_ch = FixedChunk(**kwargs)
+        ch_name = 'ChrII'
+        ch = Chromosome(ch_name)
+        with self.assertRaises(ValueError) as ctx:
+            fx_ch.parse_data_line(line, ch, 'foo')
+        self.assertEqual(str(ctx.exception), "value: 'foo' is not allowed for strand parameter.")
+
 
 class TestVariableChunk(CRAWTest):
 
