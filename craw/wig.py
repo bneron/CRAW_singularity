@@ -454,7 +454,11 @@ class WigParser:
         if self._path_mixed:
             wig_paths = [(self._path_mixed, 'mixed')]
         else:
-            wig_paths = [(self._path_for, '+'), (self._path_rev, '-')]
+            wig_paths = []
+            if self._path_for:
+                wig_paths.append((self._path_for, '+'))
+            if self._path_rev:
+                wig_paths.append((self._path_rev, '-'))
         for path, strand_type in wig_paths:
             with open(path, 'r') as wig_file:
                 for line in wig_file:
