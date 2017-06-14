@@ -307,7 +307,7 @@ def remove_metadata(data):
     return coverage_data
 
 
-def draw_one_matrix(mat, ax, cmap=plt.cm.Blues, y_label=None):
+def draw_one_matrix(mat, ax, cmap=plt.cm.Blues, y_label=None, marks=None):
     """
     Draw a matrix using matplotlib imshow object
 
@@ -340,10 +340,13 @@ def draw_one_matrix(mat, ax, cmap=plt.cm.Blues, y_label=None):
         tick.set_visible(False)
     if y_label is not None:
         ax.set_ylabel(y_label, size='large')
+    if marks:
+        for mark in marks:
+            ax.axvline(x=mark.to_px(), linewidth=0.5, color=mark.rgb_float())
     return mat_img
 
 
-def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='top', size=None):
+def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='top', size=None, marks=None):
     """
     Create a figure with subplot to represent the data as heat map.
 
@@ -405,10 +408,10 @@ def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='t
 
     if draw_sense:
         _log.info("Drawing sense matrix")
-        sense_img = draw_one_matrix(sense, sense_subplot, cmap=color_map, y_label="Sense")
+        sense_img = draw_one_matrix(sense, sense_subplot, cmap=color_map, y_label="Sense", marks=marks)
     if draw_antisense:
         _log.info("Drawing antisense matrix")
-        antisense_img = draw_one_matrix(antisense, antisense_subplot, cmap=color_map, y_label="Anti sense")
+        antisense_img = draw_one_matrix(antisense, antisense_subplot, cmap=color_map, y_label="Anti sense", marks=marks)
 
     fig.suptitle(title,
                  fontsize=12,
