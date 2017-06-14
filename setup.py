@@ -201,22 +201,22 @@ def expand_data(data_to_expand):
 
 
 setup(name="craw",
-      version='branch0.8-dev{}'.format(time.strftime('%Y%m%d')),
+      version='0.9.0rc1',
       author='Bertrand Néron',
       author_email='bneron@pasteur.fr',
       url="https://gitlab.pasteur.fr/bneron/craw",
       classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Operating System :: Unix',
         'Programming Language :: Python :: 3 :: Only',
         'Topic :: Scientific/Engineering :: Bio-Informatics'
         ],
-      description="Compute the coverage at specified regions",
-      long_description="""From a bam file and a file containing regions,
-coverage compute the coverage for each positions of these regions in sense and antisense.
-It can also display results graphically as a heatmap""",
+      description="Counter RNA seq Window is a package which aim to compute and visualize the coverage of RNA seq experiment.",
+      long_description="""From a bam or wig file(s) and a file containing region of interest,
+craw_coverage compute the coverage for each positions of these regions in sense and antisense.
+The craw_htmp display the results graphically as a heatmap""",
       platforms=["Unix"],
       install_requires=['pysam>=0.9.1.4', 'matplotlib>=1.5.3', 'pandas>=0.17.1', 'numpy>=1.11.2', 'pillow>=3.4.2',
                         'psutil>=4.0.0'],
