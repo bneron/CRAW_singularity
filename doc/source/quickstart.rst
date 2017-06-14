@@ -14,15 +14,30 @@ craw_coverage
 =============
 
 
-craw_coverage* need a file bam or wig to compute coverage and an annotation file
+*craw_coverage* need a file bam or wig to compute coverage and an annotation file
 to specify on which regions to compute these coverages.
 
  * the -b or --bam allow to specify the path to the bam file.
- * or alternatively the -w, --wig option to specify the path to the wig file.
- * the -a --annot allow to specify the path to the annotation file.
+ * or alternatively the
 
-The --bam and --wig options are mutually exclusive but one of these option is required.
-the --annot option is required.
+    * \-w, \-\-wig option to specify the path to the wig file if the both strand aer encode in same file (negative value are on reverse strand)
+    * \-\-wig\-for and \-\-wig\-rev to specify the paths to the wig files for the forward and reverse strand respectively
+
+ * the -a \-\-annot allow to specify the path to the annotation file.
+
+The \-\-bam and \-\-wig options are mutually exclusive but one of these option is required.
+\-\-wig and \-\-wig\-for or \-\-wig\-rev are also mutually exclusive.
+the \-\-annot option is required.
+
+::
+
+    craw_coverage --bam ../WTE1.bam --annot ../annotations.txt --ref-col Position --before 100 --after 500
+    craw_coverage --wig ../WTE1.wig --annot ../annotations.txt --ref-col Position --before 100 --after 500
+    craw_coverage --wig-for ../WTE1_forward_strand.wig --wig-rev ../WTE1_reverse_strand.wig --annot ../annotations.txt \
+    --ref-col Position --before 100 --after 500
+
+
+
 
 .. warning::
     At the same place of `bam` file, there must be the corresponding index file (the `bam.bai` file).
@@ -46,7 +61,7 @@ The window will computed using this reference position.
     an error will occur.
 
 
-two way to determine the window:
+two ways to determine the window:
 
 with --window option for a window centered on the reference position.
 
@@ -171,17 +186,19 @@ Figure options
 * **\-\-norm** Which normalization to apply to the data before display them.
 
     * **lin** a linear normalization is applied on the whole matrix.
-    * **log** a 10 base logarithm will be applied on the data before matrix
-      normalization.
+    * **log** a 10 base logarithm will be applied on the data before matrix normalization.
     * **row** mean that a linear normalisation is compute row by row.
-    * **log+row** mean a 10 base logarithm will be applied before a normalisation
-      row by row. ('row+log' is an alias for 'log+row').
-      (default: lin)
+    * **log+row** mean a 10 base logarithm will be applied before a normalisation row by row.
+
+    ('row+log' is an alias for 'log+row'). (default: lin)
 
 * **\-\-dpi DPI** The resolution of the output (default=100).
+
   This option work only if **\-\-out** option is specified. |br|
   To set the right dpi for screen displaying use the :ref:`matplotlibrc` file.
+
 * **\-\-size SIZE** Specify the figure size
+
   The value must be widexheight[unit] or 'raw'.
   If value is 'raw' it will be produce two image files (for sense and antisense)
   with one pixel correspond to one coverage value.
@@ -192,6 +209,23 @@ Figure options
   * 70x100mm for 70 mm by 100 mm.
 
   default=7x10 or 10x7 depending of the figure orientation (see layout).
+
+* **\-\-mark** POS <COLOR> will draw a vertical line at the position POS with the color <COLOR>
+
+  COLOR can be the name of the most common html color red, yellow, ... or a value of a RGB in hexadecimal format
+  like #rgb or #rrggbb for instance #ff0000 represent pure red.
+  (don't forget to surround the color with  quote on commandline)
+  If COLOR is omitted the color of the highest value of the color map used for the drawing will be used
+  (The default color map is Blues).
+  \-\-mark 0 '#ffff00' for a mark on position 0 in yellow or \-\-mark \-15 green for a mark in \-15 position in green.
+  The --mark option can be set several times on the command line
+
+.. warning::
+    The \-\-mark option must not be the last option on the command line (just before the coverage file),
+    otherwise an error will occurred.::
+
+        craw_htmp --out my_fig.png --mark 10 red --mark 0  WTE1_0_2000.cov => raise an error
+        craw_htmp --mark 10 red --mark 0 --out my_fig.png WTE1_0_2000.cov => work
 
 
 Layout options

@@ -5,6 +5,29 @@
 Release notes
 =============
 
+Release 0.9.0
+=============
+
+BUG FIX
+-------
+
+* **craw_coverage** When feature is located on reverse strand the coverage must be reverse to be read in 5'->3'
+
+ (`issue 27 <https://gitlab.pasteur.fr/bneron/craw/issues/27>`_)
+
+
+New Feature
+-----------
+
+* **craw_coverage** add support of 2 wig files one for the forward strand the other for the reverse.
+
+  (`issue 26 <https://gitlab.pasteur.fr/bneron/craw/issues/26>`_)
+
+* **craw_htmp** allow to draw a vertical line in a given color at a given position.
+
+  see \-\-mark option (`issue 25 <https://gitlab.pasteur.fr/bneron/craw/issues/25>`_)
+
+
 Release 0.8.0
 =============
 

@@ -15,18 +15,53 @@ of `craw_coverage` with a heat map.
 craw_coverage:
 ==============
 
-`craw_coverage` take as input a bam file and a file of annotation. The file of annotation describe
-which gene the scripts must compute the coverage.
+`craw_coverage` take as input a bam file or wig file and an annotation file.
+**The annotation file** describe on which gene the craw_coverage must compute the coverage.
 The script compute a coverage for each position of this gene on a specified window
 around a position of reference on both sense and put the results on a matrix.
 The region of interest can be fixed for all genes (specified by the command line)
-or variable specified in the this case the annotation file must contains two columns to specify
-beginning and the end of the region.
+or variable. In the this case the annotation file must contains two columns to specify
+beginning and the end of the region to take in account.
 The results in the matrix are centered on the position of reference of each gene.
 In the case of variable length of window the results are padded on left and right if necessary with
 `None` value.
 The results is saved in a file as a tabulated separated value by default with the same name as the bam file
 with the `.cov` extension (see :ref:`cov_out` for more details).
+
+Below an example to illustrate how craw_coverage work.
+If we consider the following genome and we want to analyze 3 gene *foo*, *bar*, *buz*
+
+.. image:: _static/genome.png
+   :width: 40%
+   :alt: genome
+
+On the figure above
+
+* The first line represent the positions on the genome (1-based)
+
+       * The bold position indicate the boundaries of region we want to analyse.
+       * the red highlighted positions indicate, for each region, the position of reference.
+
+* the second line represent the genes and their respective sense.
+* the 2 last lines the coverage at each position of the genome for each strand
+
+
+So to analyse these genes, we create an annotation file like following.
+
+.. image:: _static/annotation_file.png
+   :width: 30%
+   :alt: annotation
+
+the run a command line like::
+
+   craw_coverage --bam mygenome.bam --annot my_annotation --ref-col ref --start-col start --stop-col stop
+
+will produce the following coverage matrix
+
+.. image:: _static/coverage_matrix.png
+   :width: 30%
+   :alt: coverage matrix
+
 
 
 craw_htmp:
