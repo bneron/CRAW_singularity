@@ -115,7 +115,7 @@ class TestHeatmap(CRAWTest):
 
         received_data = htmp._sort_by_gene_size(data, start_col='Position', stop_col='gene_stop')
         assert_frame_equal(expected_data, received_data)
-        received_data = htmp._sort_by_gene_size(expected_data, start_col='Position', 
+        received_data = htmp._sort_by_gene_size(expected_data, start_col='Position',
                                                 stop_col='gene_stop', ascending=False)
         assert_frame_equal(data, received_data)
 
@@ -317,11 +317,11 @@ class TestMark(CRAWTest):
         m = htmp.Mark(pos, data, color_map)
         self.assertEqual(m.pos, pos)
         color = tuple([int(round(c * 255)) for c in color_map(1.0)][:-1])
-        self.assertEqual(m.color, color)
+        self.assertEqual(m._color, color)
 
         m = htmp.Mark(pos, data, color_map, color='red')
         self.assertEqual(m.pos, pos)
-        self.assertEqual(m.color, (255, 0, 0))
+        self.assertEqual(m._color, (255, 0, 0))
 
         with self.assertRaises(ValueError) as ctx:
             htmp.Mark(-5, data, color_map, color='red')
@@ -330,6 +330,32 @@ class TestMark(CRAWTest):
         with self.assertRaises(ValueError) as ctx:
             htmp.Mark(pos, data, color_map, color='foo')
         self.assertEqual("foo is not a valid color", str(ctx.exception))
+
+    def test_rgb_int(self):
+        data = pd.DataFrame([
+            ['foo_1', '+', '214',  0, 1, 10, 100, 1000],
+            ['foo_2', '-', '142', 1000, 100, 10, 1, 0],
+            ['foo_3', '+', '241', 10, 100, 10,  100, 10],
+            ['foo_4', '-', '421', 1000, 100, 1000, 100, 1000]
+            ],
+            columns=['name', 'strand', 'Position', '-1', '0', '1', '2', '3'])
+        color_map = plt.cm.get_cmap('Blues')
+        pos = 2
+        m = htmp.Mark(pos, data, color_map, color='red')
+        self.assertEqual(m.rgb_int(), (255, 0, 0))
+
+    def test_rgb_float(self):
+        data = pd.DataFrame([
+            ['foo_1', '+', '214', 0, 1, 10, 100, 1000],
+            ['foo_2', '-', '142', 1000, 100, 10, 1, 0],
+            ['foo_3', '+', '241', 10, 100, 10, 100, 10],
+            ['foo_4', '-', '421', 1000, 100, 1000, 100, 1000]
+        ],
+            columns=['name', 'strand', 'Position', '-1', '0', '1', '2', '3'])
+        color_map = plt.cm.get_cmap('Blues')
+        pos = 2
+        m = htmp.Mark(pos, data, color_map, color='red')
+        self.assertEqual(m.rgb_float(), (1.0, 0.0, 0.0))
 
 
     def test_get_matrix_bound(self):
