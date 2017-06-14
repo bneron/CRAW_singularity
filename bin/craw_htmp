@@ -509,7 +509,8 @@ else:
                                color_map=color_map,
                                title=title,
                                sense_on=sense_on,
-                               size=args.size)
+                               size=args.size,
+                               marks=args.mark)
 
     if args.out:
         if os.path.exists(args.out):
