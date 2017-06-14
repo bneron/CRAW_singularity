@@ -26,7 +26,7 @@
 import os
 import logging
 import pandas as pd
-
+import matplotlib.pyplot as plt
 from pandas.util.testing import assert_frame_equal
 
 try:
@@ -299,5 +299,67 @@ class TestHeatmap(CRAWTest):
 
 
 
+class TestMark(CRAWTest):
+
+    @classmethod
+    def setUpClass(cls):
+        htmp._log.setLevel(logging.ERROR)
+
+    def test_mark(self):
+        data = pd.DataFrame([
+            ['foo_1', '+', '214',  0, 1, 10, 100, 1000],
+            ['foo_2', '-', '142', 1000, 100, 10, 1, 0],
+            ['foo_3', '+', '241', 10, 100, 10,  100, 10],
+            ['foo_4', '-', '421', 1000, 100, 1000, 100, 1000]
+            ],
+            columns=['name', 'strand', 'Position', '-1', '0', '1', '2', '3'])
+        color_map = plt.cm.get_cmap('Blues')
+        pos = 2
+        m = htmp.Mark(pos, data, color_map)
+        self.assertEqual(m.pos, pos)
+        color = tuple([int(round(c * 255)) for c in color_map(1.0)][:-1])
+        self.assertEqual(m.color, color)
+
+        m = htmp.Mark(pos, data, color_map, color='red')
+        self.assertEqual(m.pos, pos)
+        self.assertEqual(m.color, (255, 0, 0))
+
+        with self.assertRaises(ValueError) as ctx:
+            htmp.Mark(-5, data, color_map, color='red')
+        self.assertEqual("mark position must be -1 >= pos >= 3: provide -5", str(ctx.exception))
+
+        with self.assertRaises(ValueError) as ctx:
+            htmp.Mark(pos, data, color_map, color='foo')
+        self.assertEqual("foo is not a valid color", str(ctx.exception))
 
 
+    def test_get_matrix_bound(self):
+        data = pd.DataFrame([
+            ['foo_1', '+', '214',  0, 1, 10, 100, 1000],
+            ['foo_2', '-', '142', 1000, 100, 10, 1, 0],
+            ['foo_3', '+', '241', 10, 100, 10,  100, 10],
+            ['foo_4', '-', '421', 1000, 100, 1000, 100, 1000]
+            ],
+            columns=['name', 'strand', 'Position', '-1', '0', '1', '2', '3'])
+
+        color_map = plt.cm.get_cmap('Blues')
+        pos = 2
+        m = htmp.Mark(pos, data, color_map)
+
+        mbb = m._get_matrix_bound(data)
+        self.assertEqual(mbb, (-1, 3))
+
+
+    def to_px(self):
+        data = pd.DataFrame([
+            ['foo_1', '+', '214',  0, 1, 10, 100, 1000],
+            ['foo_2', '-', '142', 1000, 100, 10, 1, 0],
+            ['foo_3', '+', '241', 10, 100, 10,  100, 10],
+            ['foo_4', '-', '421', 1000, 100, 1000, 100, 1000]
+            ],
+            columns=['name', 'strand', 'Position', '-1', '0', '1', '2', '3'])
+
+        color_map = plt.cm.get_cmap('Blues')
+        pos = 2
+        m = htmp.Mark(pos, data, color_map)
+        self.assertEqual(m.to_px(), 3)
