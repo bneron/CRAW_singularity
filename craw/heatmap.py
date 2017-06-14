@@ -451,7 +451,7 @@ def draw_raw_image(data, out_name, color_map=plt.cm.Blues, format='PNG', marks=N
         width, height = im.size
         draw = ImageDraw.Draw(im)
         for mark in marks:
-            draw.line([(mark.to_px(), 0), (mark.to_px(), height)], fill=mark.color)
+            draw.line([(mark.to_px(), 0), (mark.to_px(), height)], fill=mark.rgb_int)
     im.save(out_name, format=format)
 
 
@@ -479,10 +479,16 @@ class Mark:
         else:
             raise ValueError("mark position must be {} >= pos >= {}: provide {}".format(self._min, self._max, pos))
         self.color_map = color_map
-        self.color = self._get_color(color, data)
+        self._color = self._color_converter(color, data)
+
+    def rgb_int(self):
+        return self._color
+
+    def rgb_float(self):
+        return tuple([c / 255 for c in self._color])
 
 
-    def _get_color(self, color, data):
+    def _color_converter(self, color, data):
         """
         
         :param color: the color of the line, the supported formats are
