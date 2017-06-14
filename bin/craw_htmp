@@ -28,6 +28,7 @@ import sys
 import os
 import argparse
 import logging
+
 import matplotlib as mtp
 
 
@@ -136,6 +137,7 @@ def _size_fig_parser(value):
             height = px2in(height)
 
         return wide, height
+
 
 def get_version_message():
     """
@@ -257,6 +259,19 @@ fig_grp.add_argument("--norm",
    row by row. ('row+log' is an alias for 'log+row').
    (default: lin""")
 
+fig_grp.add_argument("--mark",
+                     action='append',
+                     nargs='*',
+                     metavar='POS [COLOR]',
+                     help="""* POS is mandatory and must be a positive integer.
+* COLOR is optional
+  The supported color formats are:
+  - Hexadecimal color specifiers, given as '#rgb' or '#rrggbb'. For example, '#ff0000' specifies pure red.
+  - Common HTML color names.
+
+If COLOR is omitted the color corresponding to the highest value in the color map (--cmap) will be used.
+(this option cannot be the last one just before the coverage file, on the command line.)""")
+
 layout = fig_grp.add_mutually_exclusive_group()
 layout.add_argument("--sense-on-left",
                     action="store_true",
@@ -356,8 +371,21 @@ if args.out:
         log.error(msg)
         raise RuntimeError(msg)
 
+
 log.info("Parsing coverage file")
 data = heatmap.get_data(args.cov_file)
+
+
+def mark_converter(data, marks):
+    converted_marks = []
+    for value in marks:
+        pos = int(value[0])
+        color = value[1] if len(value) == 2 else None
+        converted_marks.append(heatmap.Mark(pos, data, color_map, color=color))
+    return converted_marks
+
+if args.mark is not None:
+    args.mark = mark_converter(data, args.mark)
 
 sense_data, antisense_data = heatmap.split_data(data)
 
@@ -453,7 +481,7 @@ if args.size == 'raw':
         log.info("Drawing {}".format(sense))
         data = globals()[sense + '_data']
         if data is not None:
-            heatmap.draw_raw_image(data, out_filename[sense], color_map)
+            heatmap.draw_raw_image(data, out_filename[sense], color_map, marks=args.mark)
         else:
             log.warning("{} data are empty: skip drawing.".format(sense))
 else:

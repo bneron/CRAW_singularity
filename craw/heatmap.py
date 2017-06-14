@@ -28,7 +28,7 @@ import logging
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from PIL import Image
+from PIL import Image, ImageDraw, ImageColor
 
 _log = logging.getLogger(__name__)
 
@@ -422,7 +422,7 @@ def draw_heatmap(sense, antisense, color_map=plt.cm.Blues, title='', sense_on='t
     return fig
 
 
-def draw_raw_image(data, out_name, color_map=plt.cm.Blues, format='PNG'):
+def draw_raw_image(data, out_name, color_map=plt.cm.Blues, format='PNG', marks=None):
     """
     Generate an image file with one pixel for each values of the data matrix.
     the data can be either the coverage on sense or on antisense.
@@ -447,4 +447,84 @@ def draw_raw_image(data, out_name, color_map=plt.cm.Blues, format='PNG'):
     if data.max().max() > 1 or data.min().min() < 0:
         raise RuntimeError("data must be normalized (between [0,1])")
     im = Image.fromarray(np.uint8(color_map(data)*255))
+    if marks:
+        width, height = im.size
+        draw = ImageDraw.Draw(im)
+        for mark in marks:
+            draw.line([(mark.to_px(), 0), (mark.to_px(), height)], fill=mark.color)
     im.save(out_name, format=format)
+
+
+class Mark:
+    """A mark is a position and a color tight together. 
+    It is used to draw a colored vertical line at the given position on the heatmap"""
+
+    def __init__(self, pos, data, color_map, color=None):
+        """
+        
+        :param pos: The position where to draw a mark, the position is relative to the reference position (0)
+        :type pos: int
+        :param data: the coverage matrix 
+        :type data: :class:`pandas.DataFrame` object
+        :param color_map: the color map used to draw the heatmap
+        :type color_map: class`:matplotlib.pyplot.ColorMap` object
+        :param color: the color of the line, the supported formats are
+                        - hexadecimal values as #rgb or #rrggbb, for instance #ff0000 is pure red.
+                        - common html color names
+                        
+        """
+        self._min, self._max = self._get_matrix_bound(data)
+        if self._min <= pos <= self._max:
+            self.pos = pos
+        else:
+            raise ValueError("mark position must be {} >= pos >= {}: provide {}".format(self._min, self._max, pos))
+        self.color_map = color_map
+        self.color = self._get_color(color, data)
+
+
+    def _get_color(self, color, data):
+        """
+        
+        :param color: the color of the line, the supported formats are
+                        - hexadecimal values as #rgb or #rrggbb, for instance #ff0000 is pure red.
+                        - common html color names
+        :type color: string
+        :param data: the matrix coverage
+        :type data: :class:`pandas.DataFrame` object
+        :return: rgb color
+        :rtype: tuple with 3 int between 0 and 255  
+        """
+        if color:
+            try:
+                color = ImageColor.getrgb(color)
+            except ValueError:
+                raise ValueError("{} is not a valid color".format(color))
+        else:
+            color = tuple([int(round(c * 255)) for c in self.color_map(1.0)][:-1])
+        return color
+
+
+    def _get_matrix_bound(self, data):
+        """
+        :param data: the matrix coverage
+        :type data: :class:`pandas.DataFrame` object 
+        :return: the most right and left position of the coverage 
+        :rtype: tuple of 2 int
+        """
+        for col in data.columns:
+            try:
+                int(col)
+            except ValueError:
+                continue
+            else:
+                break
+        return int(col), int(data.columns[-1])
+
+
+    def to_px(self):
+        """
+        tanslate the position of the mark relative to the reference in pixel.
+        :return: the position of the mark in pixel.
+        :rtype: positive int
+        """
+        return self.pos - self._min
