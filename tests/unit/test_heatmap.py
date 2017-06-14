@@ -115,7 +115,8 @@ class TestHeatmap(CRAWTest):
 
         received_data = htmp._sort_by_gene_size(data, start_col='Position', stop_col='gene_stop')
         assert_frame_equal(expected_data, received_data)
-        received_data = htmp._sort_by_gene_size(expected_data, start_col='Position', stop_col='gene_stop', ascending=False)
+        received_data = htmp._sort_by_gene_size(expected_data, start_col='Position', 
+                                                stop_col='gene_stop', ascending=False)
         assert_frame_equal(data, received_data)
 
 
@@ -295,8 +296,6 @@ class TestHeatmap(CRAWTest):
         self.assertIsNone(htmp.log_norm_row_by_row(None))
         empty_df = pd.DataFrame()
         assert_frame_equal(empty_df, htmp.log_norm_row_by_row(empty_df))
-
-
 
 
 class TestMark(CRAWTest):
