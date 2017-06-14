@@ -205,6 +205,7 @@ setup(name="craw",
       author='Bertrand Néron',
       author_email='bneron@pasteur.fr',
       url="https://gitlab.pasteur.fr/bneron/craw",
+      keywords=['bioinformatics', 'RNAseq', 'coverage'],
       classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
