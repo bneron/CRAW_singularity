@@ -199,9 +199,18 @@ def expand_data(data_to_expand):
                 data_struct.append((base_dest_dir, [one_src]))
     return data_struct
 
+try:
+    from pypandoc import convert
+    def read_md(f):
+        return convert(f, 'rst')
+except ImportError:
+    print("warning: pypandoc module not found, "
+          "could not convert Markdown to RST")
+
+    def read_md(f): return open(f, 'r').read()
 
 setup(name="craw",
-      version='0.9.0rc1',
+      version='0.9.0rc4',
       author='Bertrand Néron',
       author_email='bneron@pasteur.fr',
       url="https://gitlab.pasteur.fr/bneron/craw",
@@ -215,9 +224,10 @@ setup(name="craw",
         'Topic :: Scientific/Engineering :: Bio-Informatics'
         ],
       description="Counter RNA seq Window is a package which aim to compute and visualize the coverage of RNA seq experiment.",
-      long_description="""From a bam or wig file(s) and a file containing region of interest,
-craw_coverage compute the coverage for each positions of these regions in sense and antisense.
-The craw_htmp display the results graphically as a heatmap""",
+      # gitlab and github use md format for README whereas pypi use restructuredtext
+      # so to display correctly the readme on the pypi page we need
+      # to convert md -> rst using pandoc/pypandoc
+      long_description=read_md('README.md'),
       platforms=["Unix"],
       install_requires=['pysam>=0.9.1.4', 'matplotlib>=1.5.3', 'pandas>=0.17.1', 'numpy>=1.11.2', 'pillow>=3.4.2',
                         'psutil>=4.0.0'],
