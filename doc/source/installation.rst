@@ -33,7 +33,7 @@ Installation from package
 
 Using pip ::
 
-    pip install craw-x.x.x.tar.gz
+    pip install craw
 
 Do not forget to configure the `matplotlib` backend, specially if you use virtualenv.
 Otherwise on some platform there won't any output.
@@ -43,7 +43,7 @@ See :ref:`matplotlibrc` for more explanation.
     On MacOS install python > 3 from image on http://python.org . Then
     install craw using pip ::
 
-        pip3 install craw-x.x.x.tar.gz
+        pip3 install craw
 
     craw will be installed in `/Library/Framework/Python.Framework/Version/3.6/`
     So if you want to use directly craw_coverage and craw_htmp just create a symbolic linc like this::
