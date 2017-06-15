@@ -27,7 +27,7 @@ import logging
 try:
     # for pysam>=0.9.1.4
     from pysam.calignmentfile import AlignmentFile
-except ModuleNotFoundError:
+except ImportError:
     # for pysam>=0.10
     from pysam import AlignmentFile
 
