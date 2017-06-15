@@ -23,7 +23,7 @@ from package
 
 using pip
 
-`pip install craw-x.x.x.tar.gz`
+`pip install craw`
 
 if you use virtualenv do not forget to configure the matplotlib backend
 
@@ -32,10 +32,10 @@ if you use virtualenv do not forget to configure the matplotlib backend
 On MacOS install python > 3 from image on http://python.org . 
 Then install craw using pip 
 
-    pip3 install craw-x.x.x.tar.gz
+    pip3 install craw
 
 craw will be installed in `/Library/Framework/Python.Framework/Version/3.6/`
-So if you want to use directly craw_coverage and craw_htmp just create a symbolic linc like this::
+So if you want to use directly craw_coverage and craw_htmp just create a symbolic linc like this
 
     ln -s /Library/Framework/Python.Framework/Version/3.6/bin/craw_coverage /usr/local/bin/craw_coverage
     ln -s /Library/Framework/Python.Framework/Version/3.6/bin/craw_htmp /usr/local/bin/craw_htmp
@@ -45,7 +45,7 @@ The craw documentation (html and pdf) is located in /Library/Framework/Python.Fr
 from repository
 ---------------
 
-clone the project and install with the setup.py ::
+clone the project and install with the setup.py
 
     git clone https://gitlab.pasteur.fr/bneron/craw.git
 
@@ -107,7 +107,7 @@ see https://wiki.nci.nih.gov/display/tcga/wiggle+format+specification and
 http://genome.ucsc.edu/goldenPath/help/wiggle.html .
 for format specifications. Compare d to these specifications
 craw support coverages on both strands. the positive coverages scores
-are on the forward strand whereas the negative ones are on the reverse strand. ::
+are on the forward strand whereas the negative ones are on the reverse strand.
 
     track type=wiggle_0 name="demo" color=96,144,246 altColor=96,144,246 autoScale=on  graphType=bar
     variableStep chrom=chrI span=1
@@ -187,7 +187,7 @@ The position of reference must be between start and end.
 The authorized values are positive integers.
 
 
-The position of reference can be used to define the reference and the start ot the end of the window. ::
+The position of reference can be used to define the reference and the start ot the end of the window.
 
      craw_coverage --bam file.bam --annot annot.txt --ref-col annotation_start --start-col annotation_start --stop-col annotation_end
 
@@ -202,13 +202,13 @@ Outputs
 
 
 It's a `tsv` file with all columns found in annotation file plus the result of coverage position by position centered
-on the reference position define for each line. for instance ::
+on the reference position define for each line. for instance 
 
     craw_coverage -bam=../data/craw_data_test/WTE1.bam --annot=../data/craw_data_test/annotations.txt
     --ref-col=annotation_start --before=0  --after=2000
 
 In the command line above, the column '0' correspond to the annotation_start position the column '1' to annotation_start + 1
-on so on until '2000' (here we display only the first 3 columns of the coverage). ::
+on so on until '2000' (here we display only the first 3 columns of the coverage).
 
     # Running Counter RnAseq Window
     # Version: craw NOT packaged, it should be a development version | Python 3.4
