@@ -7,7 +7,7 @@ Counter RnAseq Window
 Installation
 ============
 
-requirements
+Requirements
 ------------
 
 - python > 3
@@ -18,7 +18,7 @@ requirements
 - matplotlib >= 1.5.3
 - pillow >= 3.4.2
 
-from package
+From package
 ------------
 
 using pip
@@ -42,7 +42,7 @@ So if you want to use directly craw_coverage and craw_htmp just create a symboli
 
 The craw documentation (html and pdf) is located in /Library/Framework/Python.Framework/Version/3.6/share/craw/
 
-from repository
+From repository
 ---------------
 
 clone the project and install with the setup.py
@@ -59,8 +59,8 @@ You can also use the package without install it.
 You have to export the **CRAW_HOME** environment variable.
 Then you can use it directly
 
-Testing my installation
------------------------
+### Testing my installation
+
 
 The release come from with some unit and functional tests.
 to test if everything work fine.
@@ -269,7 +269,7 @@ will produce *Xyzzy.sense.jpeg* and *Xyzzy.antisense.jpeg*
    
    
 
-command line options
+Command line options
 --------------------
 
 there is many option for each craw scripts to have an exhausted list of options use --help options
