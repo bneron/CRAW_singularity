@@ -62,11 +62,14 @@ Then you can use it directly
 Testing my installation
 -----------------------
 
-The package come from with some functional tests.
-to test if everything is correctly installed.
+The release come from with some unit and functional tests.
+to test if everything work fine.
 
-`python3 tests/run_tests.py -vvv`
+    cd craw
+    python3 tests/run_tests.py -vvv
 
+This step is only available from the sources (a *clone* of the repository or a *tarball* release). 
+You **cannot** perform tests if you installed craw from pypi (*pip install craw*)
 
 Quickstart
 ==========
