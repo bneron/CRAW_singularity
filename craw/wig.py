@@ -399,19 +399,22 @@ class WigParser:
 
     def __init__(self, mixed_wig='', for_wig='', rev_wig=''):
         """
+
         :param mixed_wig: The path of the wig file to parse.
-                           The wig file code for the 2 strands: 
+                          The wig file code for the 2 strands:
+                          
                              - The positive coverage values for the forward strand
                              - The negative coverage values for the reverse strand
-                           This parameter is incompatible with for_wig and rev_wig parameter.
+
+                          This parameter is incompatible with for_wig and rev_wig parameter.
         :type mixed_wig: string
         :param for_wig: The path of the wig file to parse. 
                         The wig file code for forward strand only.
                         This parameter is incompatible with mixed_wig parameter.
         :type for_wig: string
         :param rev_wig: The path of the wig file to parse. 
-                         The wig file code for reverse strand only.
-                         This parameter is incompatible with mixed_wig parameter.
+                        The wig file code for reverse strand only.
+                        This parameter is incompatible with mixed_wig parameter.
         :type rev_wig: string
         """
         if not any((mixed_wig, for_wig, rev_wig)):
@@ -500,7 +503,8 @@ class WigParser:
     def is_declaration_line(self, line):
         """
         A single line, beginning with one of the identifiers variableStep or fixedStep, followed by attribute/value pairs
-        for instance:
+        for instance: ::
+
           fixedStep chrom=chrI start=1 step=10 span=5
         
         :param line: line to parse.
@@ -543,8 +547,9 @@ class WigParser:
     def is_track_line(line):
         """
         A track line begins with the identifier track and followed by attribute/value pairs 
-        for instance:
-          track type=wiggle_0 name="fixedStep" description="fixedStep format" visibility=full autoScale=off 
+        for instance: ::
+
+          track type=wiggle_0 name="fixedStep" description="fixedStep format" visibility=full autoScale=off
         
         :param line: line to parse.
         :type line: string
