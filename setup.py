@@ -210,7 +210,7 @@ except ImportError:
     def read_md(f): return open(f, 'r').read()
 
 setup(name="craw",
-      version='0.9.0rc5',
+      version='branch0.9-dev{}'.format(time.strftime('%Y%m%d')),
       author='Bertrand Néron',
       author_email='bneron@pasteur.fr',
       url="https://gitlab.pasteur.fr/bneron/craw",
