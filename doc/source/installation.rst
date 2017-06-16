@@ -73,6 +73,12 @@ Clone the project and install with the setup.py ::
 This project is documented using `sphinx <http://www.sphinx-doc.org/en/stable/index.html>`_.
 So if you use a clone, you have to generate the documentation from the source.
 
+The project come from with some unit and functional tests.
+to test if everything work fine.
+
+    cd $CRAW_HOME
+    python3 tests/run_tests.py -vvv
+
 .. _matplotlibrc:
 
 matplotlib configuration
